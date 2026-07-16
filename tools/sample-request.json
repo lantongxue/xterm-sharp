@@ -1,0 +1,7 @@
+{
+  "options": { "cols": 10, "rows": 3, "scrollback": 10 },
+  "operations": [
+    { "type": "write", "data": "\u001b[32mhello\u001b[0m\r\nworld" },
+    { "type": "resize", "columns": 12, "rows": 4 }
+  ]
+}

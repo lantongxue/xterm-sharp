@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>XtermSharp.TestMap</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../tests/XtermSharp.Tests/XtermSharp.Tests.csproj" />
+    <ProjectReference Include="../../tests/XtermSharp.ReferenceTests/XtermSharp.ReferenceTests.csproj" />
+    <ProjectReference Include="../../tests/XtermSharp.TestSupport/XtermSharp.TestSupport.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.extensibility.core" Version="3.2.2" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
