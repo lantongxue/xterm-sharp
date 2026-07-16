@@ -182,6 +182,7 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
     public event EventHandler<TerminalScrollEventArgs>? Scrolled;
     public event EventHandler<TerminalTitleChangedEventArgs>? TitleChanged;
     public event EventHandler<TerminalColorRequestEventArgs>? ColorRequested;
+    public event EventHandler<TerminalOptionsChangedEventArgs>? OptionsChanged;
     public event EventHandler<TerminalEventArgs>? WriteParsed;
 
     public ValueTask WriteAsync(string data, CancellationToken cancellationToken = default)
@@ -288,6 +289,31 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
             0,
             cancellationToken);
     }
+
+    public ValueTask PasteAsync(string data, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+        return EnqueueMutationAsync(
+            engine =>
+            {
+                engine.Paste(data);
+                return ValueTask.CompletedTask;
+            },
+            false,
+            0,
+            cancellationToken);
+    }
+
+    public ValueTask SendFocusAsync(bool focused, CancellationToken cancellationToken = default) =>
+        EnqueueMutationAsync(
+            engine =>
+            {
+                engine.SendFocus(focused);
+                return ValueTask.CompletedTask;
+            },
+            false,
+            0,
+            cancellationToken);
 
     public ValueTask SendMouseAsync(TerminalMouseEvent value, CancellationToken cancellationToken = default) =>
         EnqueueMutationAsync(
@@ -570,6 +596,14 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
                         new TerminalColorRequestEventArgs(
                             revision,
                             terminalEvent.ColorRequests ?? Array.Empty<TerminalColorRequest>()));
+                    break;
+                case EngineEventKind.OptionsChanged:
+                    Raise(
+                        OptionsChanged,
+                        new TerminalOptionsChangedEventArgs(
+                            revision,
+                            terminalEvent.PreviousOptions!,
+                            terminalEvent.CurrentOptions!));
                     break;
                 case EngineEventKind.WriteParsed:
                     Raise(WriteParsed, new TerminalEventArgs(revision));

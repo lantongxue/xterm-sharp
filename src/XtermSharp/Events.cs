@@ -38,6 +38,16 @@ public sealed class TerminalRenderEventArgs(long revision, int startRow, int end
     public int EndRow { get; } = endRow;
 }
 
+public sealed class TerminalOptionsChangedEventArgs(
+    long revision,
+    TerminalOptions previous,
+    TerminalOptions current)
+    : TerminalEventArgs(revision)
+{
+    public TerminalOptions Previous { get; } = previous;
+    public TerminalOptions Current { get; } = current;
+}
+
 /// <summary>The action requested by an OSC color control sequence.</summary>
 public enum TerminalColorRequestType
 {

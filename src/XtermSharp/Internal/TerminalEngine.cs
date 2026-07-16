@@ -17,6 +17,7 @@ internal enum EngineEventKind
     Scroll,
     TitleChanged,
     ColorRequest,
+    OptionsChanged,
     WriteParsed
 }
 
@@ -25,7 +26,9 @@ internal readonly record struct EngineEvent(
     string? Text = null,
     int First = 0,
     int Second = 0,
-    IReadOnlyList<TerminalColorRequest>? ColorRequests = null);
+    IReadOnlyList<TerminalColorRequest>? ColorRequests = null,
+    TerminalOptions? PreviousOptions = null,
+    TerminalOptions? CurrentOptions = null);
 
 internal sealed class TerminalEngine : IDisposable
 {
@@ -449,7 +452,7 @@ internal sealed class TerminalEngine : IDisposable
                 BufferLine line = _active.GetViewportLine(row);
                 for (int column = 0; column < Columns; column++)
                 {
-                    line[column] = CellData.FromRune(new Rune('E'), 1, _style);
+                    line.SetCell(column, CellData.FromRune(new Rune('E'), 1, _style));
                 }
             }
             MarkDirty(0, Rows - 1);
@@ -1003,6 +1006,10 @@ internal sealed class TerminalEngine : IDisposable
             MarkDirty(0, Rows - 1);
             ScrollChanged();
         }
+        _events.Add(new EngineEvent(
+            EngineEventKind.OptionsChanged,
+            PreviousOptions: previous,
+            CurrentOptions: next));
         return next;
     }
 
@@ -1064,6 +1071,26 @@ internal sealed class TerminalEngine : IDisposable
             ScrollChanged();
         }
         _events.Add(new EngineEvent(EngineEventKind.Data, data));
+    }
+
+    public void Paste(string data)
+    {
+        string prepared = data.Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\n', '\r');
+        if (_modes.BracketedPaste)
+        {
+            prepared = prepared.Replace("\x1b", "\u241b", StringComparison.Ordinal);
+            prepared = $"\x1b[200~{prepared}\x1b[201~";
+        }
+        SendInput(prepared, wasUserInput: true);
+    }
+
+    public void SendFocus(bool focused)
+    {
+        if (_modes.SendFocus)
+        {
+            SendInput(focused ? "\x1b[I" : "\x1b[O", wasUserInput: false);
+        }
     }
 
     public void SendMouse(TerminalMouseEvent value)

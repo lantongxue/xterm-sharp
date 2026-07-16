@@ -41,3 +41,9 @@ option value, while buffers, snapshots and resize events report two effective co
 Events are raised after a command commits and carry the resulting revision.
 They run on the terminal processor task without capturing a synchronization
 context. Subscriber exceptions are logged and do not stop other subscribers.
+
+Optional UI rendering is implemented in separate packages. The rendering
+controller turns immutable viewport snapshots into backend-neutral display
+lists, the Skia package executes those lists with HarfBuzz shaping, and the
+Avalonia control owns platform dispatch, DPI, input, clipboard and IME. See
+[rendering-architecture.md](rendering-architecture.md) for the detailed contract.

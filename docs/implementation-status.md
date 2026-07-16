@@ -28,6 +28,16 @@
   checked against the pinned xterm.js headless build.
 - Manifest generation and auditing enforce unique upstream-to-C# bindings with
   no pending applicable cases.
+- Ordered `PasteAsync` and focus reporting APIs keep UI protocol decisions on
+  the terminal processor queue; runtime option changes carry committed revisions.
+- Unchanged buffer lines reuse immutable line snapshots, avoiding repeated cell
+  materialization for full-buffer publication.
+- `XtermSharp.Rendering` provides backend-neutral frame coordination, themes,
+  selection extraction, synchronized-output throttling and display lists.
+- `XtermSharp.Rendering.Skia` provides SkiaSharp 3.119.4 and HarfBuzz shaping,
+  font fallback, styled lines and retained row pictures.
+- `XtermSharp.Avalonia` provides an externally bound `TerminalView` with DPI-aware
+  resizing, keyboard/mouse protocols, local selection, clipboard, focus and IME preedit.
 
 ## Still required before 1.0
 
@@ -39,6 +49,8 @@
 - Implement complete Unicode 11 tables and full extended grapheme clustering.
 - Add marker tracking through scroll/reflow and richer hyperlink metadata APIs.
 - Add fuzzing for parser chunk boundaries and benchmark-driven packed-cell storage.
+- Add WPF/WinUI controls, native Windows rendering backends, accessibility,
+  OSC 8 interaction, decorations and renderer-specific differential fixtures.
 
 Any intentional behavioral difference from xterm.js must be recorded here before
 a stable release.

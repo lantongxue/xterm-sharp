@@ -580,12 +580,12 @@ internal sealed class TerminalBuffer : IDisposable
                         {
                             break;
                         }
-                        target[column] = cell;
+                        target.SetCell(column, cell);
                         if (width == 2 && column + 1 < columns)
                         {
-                            target[column + 1] = source + 1 < cells.Count && cells[source + 1].Width == 0
+                            target.SetCell(column + 1, source + 1 < cells.Count && cells[source + 1].Width == 0
                                 ? cells[source + 1]
-                                : new CellData { Width = 0, Style = cell.Style };
+                                : new CellData { Width = 0, Style = cell.Style });
                         }
                         source += width;
                         column += width;

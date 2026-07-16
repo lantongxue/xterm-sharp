@@ -9,7 +9,9 @@ internal sealed class BufferLine
     private readonly BufferLineStringCache? _stringCache;
     private string? _cachedString;
     private bool _cachedStringIsTrimmed;
+    private TerminalLineSnapshot? _cachedSnapshot;
     private int _allocatedColumns;
+    private bool _isWrapped;
 
     public BufferLine(int columns, CellStyle eraseStyle, bool isWrapped = false, BufferLineStringCache? stringCache = null)
         : this(columns, CellData.Blank(eraseStyle), isWrapped, stringCache)
@@ -25,13 +27,29 @@ internal sealed class BufferLine
         IsWrapped = isWrapped;
     }
 
-    public bool IsWrapped { get; set; }
+    public bool IsWrapped
+    {
+        get => _isWrapped;
+        set
+        {
+            if (_isWrapped == value)
+            {
+                return;
+            }
+            _isWrapped = value;
+            _cachedSnapshot = null;
+        }
+    }
     public int Length => _cells.Length;
     public int AllocatedColumns => _allocatedColumns;
     public string? CachedString => _cachedString;
     public bool IsCachedStringTrimmed => _cachedStringIsTrimmed;
 
-    public ref CellData this[int index] => ref _cells[index];
+    public CellData this[int index]
+    {
+        get => _cells[index];
+        set => SetCell(index, value);
+    }
 
     public CellData GetCell(int index) => _cells[index];
 
@@ -354,15 +372,24 @@ internal sealed class BufferLine
 
     public TerminalLineSnapshot CreateSnapshot()
     {
+        if (_cachedSnapshot is not null)
+        {
+            return _cachedSnapshot;
+        }
         var cells = ImmutableArray.CreateBuilder<TerminalCellSnapshot>(_cells.Length);
         foreach (CellData cell in _cells)
         {
             cells.Add(cell.ToSnapshot());
         }
-        return new TerminalLineSnapshot(IsWrapped, cells.MoveToImmutable());
+        _cachedSnapshot = new TerminalLineSnapshot(IsWrapped, cells.MoveToImmutable());
+        return _cachedSnapshot;
     }
 
-    private void InvalidateStringCache() => ClearCachedString();
+    private void InvalidateStringCache()
+    {
+        ClearCachedString();
+        _cachedSnapshot = null;
+    }
 
     private static CellData EmptyWithWidthOne(CellData fillCell) => new()
     {

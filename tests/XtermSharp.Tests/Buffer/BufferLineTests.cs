@@ -6,6 +6,25 @@ public sealed class BufferLineTests
 {
     private static readonly CellData Blank = CellData.Blank(CellStyle.Default);
 
+    [Fact]
+    public void Snapshot_IsReusedUntilLineContentChanges()
+    {
+        var line = new BufferLine(3, Blank);
+        TerminalLineSnapshot first = line.CreateSnapshot();
+        Assert.Same(first, line.CreateSnapshot());
+
+        line.SetCell(0, CellData.FromText("x", 1, CellStyle.Default));
+        TerminalLineSnapshot changed = line.CreateSnapshot();
+        Assert.NotSame(first, changed);
+        Assert.Equal("x", changed.Cells[0].Text);
+        Assert.Same(changed, line.CreateSnapshot());
+
+        line.IsWrapped = true;
+        TerminalLineSnapshot wrapped = line.CreateSnapshot();
+        Assert.NotSame(changed, wrapped);
+        Assert.True(wrapped.IsWrapped);
+    }
+
     [UpstreamFact("XTJS-0065", "AttributeData extended attributes hasExtendedAttrs")]
     public void AttributeData_HasExtendedAttributes()
     {

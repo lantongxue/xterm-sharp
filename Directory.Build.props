@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
+    <AvaloniaVersion>12.1.0</AvaloniaVersion>
+    <SkiaSharpVersion>3.119.4</SkiaSharpVersion>
   </PropertyGroup>
 </Project>
-

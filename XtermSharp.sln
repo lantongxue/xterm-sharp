@@ -4,6 +4,12 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp", "src\XtermSharp\XtermSharp.csproj", "{DC386387-1512-41B8-B25F-E863CF6BFA5B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Rendering", "src\XtermSharp.Rendering\XtermSharp.Rendering.csproj", "{8D1F7B90-2C05-4ED5-B50A-D06F4026C253}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Rendering.Skia", "src\XtermSharp.Rendering.Skia\XtermSharp.Rendering.Skia.csproj", "{90F13B8D-1DBC-43D7-97CD-3C859C03A0F5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Avalonia", "src\XtermSharp.Avalonia\XtermSharp.Avalonia.csproj", "{B4B07514-F3FF-4BA5-BD57-7B0CA322C289}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Tests", "tests\XtermSharp.Tests\XtermSharp.Tests.csproj", "{AEFE31DC-C8A0-4451-AC76-988683E115F5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.TestSupport", "tests\XtermSharp.TestSupport\XtermSharp.TestSupport.csproj", "{9DD7C325-31D6-45A6-8F86-F3D251ED6EBB}"
@@ -16,6 +22,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Conformance", "t
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.TestMap", "tools\XtermSharp.TestMap\XtermSharp.TestMap.csproj", "{E3A776FA-C173-464A-92D4-446F14A09479}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Rendering.Tests", "tests\XtermSharp.Rendering.Tests\XtermSharp.Rendering.Tests.csproj", "{1C1E9EFB-B983-4BD7-B3F4-A7AA2623E9F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Rendering.Skia.Tests", "tests\XtermSharp.Rendering.Skia.Tests\XtermSharp.Rendering.Skia.Tests.csproj", "{287C9A3A-5A48-4AD5-BF49-BA61A10BA4B4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Avalonia.Tests", "tests\XtermSharp.Avalonia.Tests\XtermSharp.Avalonia.Tests.csproj", "{C97F5C15-61F1-468B-AA57-7CA08D6333CB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Avalonia.Demo", "samples\XtermSharp.Avalonia.Demo\XtermSharp.Avalonia.Demo.csproj", "{4D5F8311-97A6-455B-AC40-CD7B8ACFE9E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +40,18 @@ Global
 		{DC386387-1512-41B8-B25F-E863CF6BFA5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC386387-1512-41B8-B25F-E863CF6BFA5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC386387-1512-41B8-B25F-E863CF6BFA5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D1F7B90-2C05-4ED5-B50A-D06F4026C253}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D1F7B90-2C05-4ED5-B50A-D06F4026C253}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D1F7B90-2C05-4ED5-B50A-D06F4026C253}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D1F7B90-2C05-4ED5-B50A-D06F4026C253}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90F13B8D-1DBC-43D7-97CD-3C859C03A0F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90F13B8D-1DBC-43D7-97CD-3C859C03A0F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90F13B8D-1DBC-43D7-97CD-3C859C03A0F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90F13B8D-1DBC-43D7-97CD-3C859C03A0F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4B07514-F3FF-4BA5-BD57-7B0CA322C289}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4B07514-F3FF-4BA5-BD57-7B0CA322C289}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4B07514-F3FF-4BA5-BD57-7B0CA322C289}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4B07514-F3FF-4BA5-BD57-7B0CA322C289}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AEFE31DC-C8A0-4451-AC76-988683E115F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AEFE31DC-C8A0-4451-AC76-988683E115F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEFE31DC-C8A0-4451-AC76-988683E115F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -50,5 +76,21 @@ Global
 		{E3A776FA-C173-464A-92D4-446F14A09479}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E3A776FA-C173-464A-92D4-446F14A09479}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E3A776FA-C173-464A-92D4-446F14A09479}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C1E9EFB-B983-4BD7-B3F4-A7AA2623E9F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C1E9EFB-B983-4BD7-B3F4-A7AA2623E9F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C1E9EFB-B983-4BD7-B3F4-A7AA2623E9F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C1E9EFB-B983-4BD7-B3F4-A7AA2623E9F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{287C9A3A-5A48-4AD5-BF49-BA61A10BA4B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{287C9A3A-5A48-4AD5-BF49-BA61A10BA4B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{287C9A3A-5A48-4AD5-BF49-BA61A10BA4B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{287C9A3A-5A48-4AD5-BF49-BA61A10BA4B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C97F5C15-61F1-468B-AA57-7CA08D6333CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C97F5C15-61F1-468B-AA57-7CA08D6333CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C97F5C15-61F1-468B-AA57-7CA08D6333CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C97F5C15-61F1-468B-AA57-7CA08D6333CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D5F8311-97A6-455B-AC40-CD7B8ACFE9E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D5F8311-97A6-455B-AC40-CD7B8ACFE9E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D5F8311-97A6-455B-AC40-CD7B8ACFE9E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D5F8311-97A6-455B-AC40-CD7B8ACFE9E3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

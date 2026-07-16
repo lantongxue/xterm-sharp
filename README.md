@@ -1,13 +1,14 @@
 # XtermSharp
 
-XtermSharp is an experimental pure C# headless terminal emulator for .NET 10,
-aligned with the common/headless behavior of xterm.js 6.0.0. It parses terminal
-output, maintains normal and alternate screen buffers, and exposes immutable
-snapshots for server-side processing, testing, recording, or renderer adapters.
+XtermSharp is an experimental pure C# terminal emulator for .NET 10, aligned
+with the common/headless behavior of xterm.js 6.0.0. The core package parses
+terminal output and exposes immutable snapshots; optional rendering packages
+provide a backend-neutral display list, a SkiaSharp/HarfBuzz backend and an
+interactive Avalonia control.
 
 > Current version: `0.1.0-alpha.1`. All 1,307 headless-applicable cases in the
 > pinned upstream inventory are covered by C# tests. XtermSharp remains a
-> pre-release package and does not include a PTY or renderer. See the detailed
+> pre-release package and does not include a PTY. See the detailed
 > [implementation status](docs/implementation-status.md).
 
 ## Highlights
@@ -24,6 +25,10 @@ snapshots for server-side processing, testing, recording, or renderer adapters.
   synchronized output, OSC titles, OSC 8 hyperlinks and DSR responses.
 - Immutable viewport or full-buffer snapshots, terminal events, markers,
   addons and pluggable Unicode providers.
+- Backend-neutral terminal display lists with damage tracking and immutable
+  frame publication.
+- SkiaSharp/HarfBuzz rendering and an Avalonia `TerminalView` with selection,
+  clipboard, keyboard, mouse, focus, scrolling and IME preedit support.
 
 ## Usage
 
@@ -51,20 +56,36 @@ All state-changing operations use one ordered asynchronous command queue.
 only while waiting for queue capacity; an admitted write always finishes in
 order so the terminal byte stream cannot be corrupted.
 
+### Avalonia control
+
+Reference `XtermSharp.Avalonia` and bind an externally owned terminal instance:
+
+```csharp
+var terminal = new Terminal(new TerminalOptions { Columns = 80, Rows = 24 });
+var view = new XtermSharp.Avalonia.TerminalView { Terminal = terminal };
+
+terminal.Data += (_, e) => pty.Write(e.Data);
+await terminal.WriteAsync("\x1b[32mhello from Skia\x1b[0m\r\n");
+```
+
+The control subscribes to the terminal but never disposes it. Applications
+continue to own PTY/session wiring and the terminal lifetime.
+
 ## Conformance
 
 The compatibility baseline is xterm.js 6.0.0 at commit
 `b1aee19ac6d6f4e4d11e4a10a3731b852956bdb7`. The expanded upstream inventory
-contains 1,361 common/headless cases: 54 front-end renderer cases are outside
-the package scope, and all 1,307 applicable cases have verified C# bindings.
+contains 1,361 common/headless cases: 54 front-end renderer cases remain outside
+the headless conformance inventory, and all 1,307 applicable cases have verified C# bindings.
 Of those bindings, 1,306 are direct ports and `XTJS-0799` is a documented
 architecture-equivalent streaming test.
 
 The current verification results are:
 
-- 1,422/1,422 main xUnit tests passing, including all 1,307 upstream bindings,
-  all 76 escape-sequence fixtures, two manifest audits and 37 local parser and
+- 1,425/1,425 main xUnit tests passing, including all 1,307 upstream bindings,
+  all 76 escape-sequence fixtures, two manifest audits and 40 local parser and
   safety regressions.
+- Seven rendering tests passing across the backend-neutral, Skia and Avalonia suites.
 - 1/1 reference infrastructure test passing.
 - 1,307 unique manifest bindings with no pending applicable cases.
 - All 76 escape-sequence fixtures matching the pinned xterm.js headless oracle.
@@ -79,6 +100,9 @@ node tools/generate-upstream-tests.mjs --check
 dotnet build XtermSharp.sln --no-restore -m:1
 dotnet test --project tests/XtermSharp.Tests/XtermSharp.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.ReferenceTests/XtermSharp.ReferenceTests.csproj --no-build
+dotnet test --project tests/XtermSharp.Rendering.Tests/XtermSharp.Rendering.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Rendering.Skia.Tests/XtermSharp.Rendering.Skia.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.csproj --no-build
 dotnet run --project tools/XtermSharp.TestMap/XtermSharp.TestMap.csproj --no-build -- --check
 node tools/compare-reference.mjs tools/sample-request.json
 node tools/compare-fixtures.mjs
@@ -104,8 +128,9 @@ dotnet run --project benchmarks/XtermSharp.Benchmarks/XtermSharp.Benchmarks.cspr
 ## Scope and limitations
 
 The core package does not start processes and does not implement PTY, SSH,
-browser, DOM, canvas, WebGL, accessibility rendering, Avalonia, WPF or WinUI
-integration. Those belong in separate adapter or renderer packages.
+browser, DOM, canvas, WebGL or accessibility rendering. Avalonia and Skia live
+in separate optional packages; WPF, WinUI, GDI and Direct2D backends remain out
+of scope for the current release.
 
 Before a stable 1.0 release, the project still needs broader differential and
 parser fuzz coverage, additional resize/reflow hardening for complex cells,

@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>XtermSharp.Rendering.Skia</RootNamespace>
+    <AssemblyName>XtermSharp.Rendering.Skia</AssemblyName>
+    <PackageId>XtermSharp.Rendering.Skia</PackageId>
+    <Version>0.1.0-alpha.1</Version>
+    <Description>SkiaSharp and HarfBuzz rendering backend for XtermSharp.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/xterm-sharp/xterm-sharp</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../XtermSharp.Rendering/XtermSharp.Rendering.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="$(SkiaSharpVersion)" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="$(SkiaSharpVersion)" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../NOTICE.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
+    <None Include="../../docs/rendering-architecture.md" Pack="true" PackagePath="docs/" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>XtermSharp.Rendering.Skia.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>
