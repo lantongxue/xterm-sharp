@@ -4,6 +4,47 @@ namespace XtermSharp.Tests.Headless;
 
 public sealed class TerminalTests
 {
+    [Fact]
+    public async Task Paste_NormalizesLinesAndHonorsBracketedPasteMode()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        await using var terminal = new Terminal();
+        var data = new List<string>();
+        terminal.Data += (_, args) => data.Add(args.Data);
+
+        await terminal.PasteAsync("a\r\nb\nc", cancellationToken);
+        await terminal.WriteAsync("\x1b[?2004h", cancellationToken);
+        await terminal.PasteAsync("x\x1by", cancellationToken);
+
+        Assert.Equal("a\rb\rc", data[0]);
+        Assert.Equal("\x1b[200~x\u241by\x1b[201~", data[^1]);
+    }
+
+    [Fact]
+    public async Task FocusAndOptionsEventsUseCommittedRevision()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        await using var terminal = new Terminal();
+        var focusData = new List<(long Revision, string Data)>();
+        var optionEvents = new List<TerminalOptionsChangedEventArgs>();
+        terminal.Data += (_, args) => focusData.Add((args.Revision, args.Data));
+        terminal.OptionsChanged += (_, args) => optionEvents.Add(args);
+
+        await terminal.SendFocusAsync(true, cancellationToken);
+        Assert.Empty(focusData);
+
+        await terminal.WriteAsync("\x1b[?1004h", cancellationToken);
+        await terminal.SendFocusAsync(true, cancellationToken);
+        await terminal.SendFocusAsync(false, cancellationToken);
+        await terminal.UpdateOptionsAsync(new TerminalOptionsUpdate { FontSize = 17 }, cancellationToken);
+
+        Assert.Equal(["\x1b[I", "\x1b[O"], focusData.Select(value => value.Data));
+        Assert.All(focusData, value => Assert.True(value.Revision > 0));
+        TerminalOptionsChangedEventArgs changed = Assert.Single(optionEvents);
+        Assert.Equal(15, changed.Previous.FontSize);
+        Assert.Equal(17, changed.Current.FontSize);
+        Assert.Equal(terminal.Revision, changed.Revision);
+    }
     [UpstreamFact("XTJS-1317", "Headless API Tests Default options")]
     public void DefaultOptions_UseEightyColumnsAndTwentyFourRows()
     {

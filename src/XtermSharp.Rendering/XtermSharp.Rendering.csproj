@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>XtermSharp.Rendering</RootNamespace>
+    <AssemblyName>XtermSharp.Rendering</AssemblyName>
+    <PackageId>XtermSharp.Rendering</PackageId>
+    <Version>0.1.0-alpha.1</Version>
+    <Description>Backend-neutral rendering engine for XtermSharp.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/xterm-sharp/xterm-sharp</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../XtermSharp/XtermSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../NOTICE.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
+    <None Include="../../docs/rendering-architecture.md" Pack="true" PackagePath="docs/" />
+  </ItemGroup>
+</Project>

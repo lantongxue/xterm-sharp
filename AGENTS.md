@@ -8,12 +8,14 @@
   `b1aee19ac6d6f4e4d11e4a10a3731b852956bdb7`.
 - `xterm.js/` is the pinned development reference. Do not modify it or change its commit unless the
   task is explicitly an upstream-baseline upgrade.
-- The core scope is common/headless terminal behavior. Browser, DOM, canvas, WebGL, accessibility
-  rendering, PTY, SSH, Avalonia, WPF and WinUI integration are intentionally outside this package.
+- `XtermSharp` remains a common/headless package. Optional `XtermSharp.Rendering`,
+  `XtermSharp.Rendering.Skia` and `XtermSharp.Avalonia` packages provide display-list, Skia and
+  Avalonia integration without adding UI dependencies to the core package. Browser, DOM, WebGL,
+  accessibility rendering, PTY, SSH, WPF and WinUI integration remain outside the current scope.
 
 ## Current conformance status
 
-Last fully verified on 2026-07-16. Update this section whenever the pinned baseline or counts change.
+Last fully verified on 2026-07-17. Update this section whenever the pinned baseline or counts change.
 
 | Item | Current result |
 | --- | ---: |
@@ -24,15 +26,16 @@ Last fully verified on 2026-07-16. Update this section whenever the pinned basel
 | Architecture-equivalent cases | 1 |
 | Pending applicable cases | 0 |
 | Upstream escape-sequence fixtures | 76/76 matching |
-| Main xUnit suite | 1,422/1,422 passing |
+| Main xUnit suite | 1,425/1,425 passing |
 | Reference infrastructure suite | 1/1 passing |
+| Rendering suites | 9/9 passing |
 
 `XTJS-0799` is the sole `ArchitectureEquivalent` case. xterm.js parses large writes in
 131,072-code-point array chunks; XtermSharp streams each `Rune` without an intermediate parse
 array and tests the equivalent bounded, ordered behavior.
 
-The 1,422 main tests consist of 1,307 upstream bindings, 76 escape fixtures, two manifest audit
-tests and 37 local production-parser/safety regressions. `tests/upstream-port-map.json` contains
+The 1,425 main tests consist of 1,307 upstream bindings, 76 escape fixtures, two manifest audit
+tests and 40 local production-parser/safety regressions. `tests/upstream-port-map.json` contains
 1,307 unique bindings and must remain free of duplicate or missing IDs.
 
 ## Repository map
@@ -46,6 +49,10 @@ tests and 37 local production-parser/safety regressions. `tests/upstream-port-ma
 - `src/XtermSharp/Internal/TerminalBuffer.cs` and `BufferLine.cs`: mutable internal buffer model.
 - `src/XtermSharp/Internal/TerminalDimensions.cs`: shared effective minimum of two columns and one
   row.
+- `src/XtermSharp.Rendering/`: backend-neutral frames, display lists, themes and selection.
+- `src/XtermSharp.Rendering.Skia/`: SkiaSharp/HarfBuzz backend and retained row pictures.
+- `src/XtermSharp.Avalonia/`: interactive Avalonia `TerminalView` platform adapter.
+- `samples/XtermSharp.Avalonia.Demo/`: no-PTY ANSI playback and local input-echo smoke test.
 - `tests/XtermSharp.Tests/`: xUnit v3 behavior, upstream-port and fixture tests.
 - `tests/XtermSharp.Tests/InputHandler/ProductionParserIntegrationTests.cs`: production parser
   wiring, error recovery, payload-limit and identifier regressions.
@@ -53,6 +60,8 @@ tests and 37 local production-parser/safety regressions. `tests/upstream-port-ma
   compatibility and wide-cell safety regressions.
 - `tests/XtermSharp.TestSupport/`: upstream attributes, binding discovery and manifest validation.
 - `tests/XtermSharp.ReferenceTests/`: reference-test infrastructure checks.
+- `tests/XtermSharp.Rendering.Tests/`, `XtermSharp.Rendering.Skia.Tests/` and
+  `XtermSharp.Avalonia.Tests/`: renderer and platform-adapter verification.
 - `tests/upstream-port-map.json`: maintained C# binding/status map.
 - `tests/upstream-tests.json`: generated expanded upstream inventory; do not hand-edit it.
 - `tools/XtermSharp.Conformance/`: JSON snapshot/event runner for differential tests.
@@ -86,6 +95,20 @@ tests and 37 local production-parser/safety regressions. `tests/upstream-port-ma
 - Events are dispatched after the command commits and use the resulting revision. Subscriber
   exceptions are logged and must not stop other subscribers.
 - Snapshots are immutable. Do not expose live mutable buffer objects through the public API.
+- Terminal event handlers in rendering adapters must only record invalidation state; snapshot
+  acquisition, scene compilation and drawing must never block the terminal processor task.
+- Rendering backends consume backend-neutral display lists. Do not expose `SKCanvas` or another
+  graphics-library type through `XtermSharp.Rendering` public data structures.
+- Skia font-family lists must skip unavailable candidates before selecting the primary grid font.
+  Use that resolved family for metrics and normal glyph lookup, then apply per-glyph fallback; a
+  missing first family must not silently force proportional metrics when a later monospace family
+  is installed.
+- `TerminalView` never owns or disposes the externally assigned `Terminal`. Detach and hot-swap
+  must cancel pending frame work and unsubscribe without changing the session lifetime.
+- `TerminalView` must route Backspace, Delete and other non-text keys through `SendKeyAsync` even
+  when the platform supplies a non-empty `KeySymbol`; only committed printable text uses the text
+  input/IME path. The no-PTY demo performs local line editing because echoed DEL bytes are terminal
+  input, not screen-erasure output.
 - Public terminals have an effective minimum width of two columns. `TerminalOptions.Columns == 1`
   remains visible as the raw requested option, while `Terminal.Columns`, buffers, snapshots and
   resize events report two. Keep zero and negative dimensions invalid. Low-level
@@ -142,13 +165,17 @@ node tools/generate-upstream-tests.mjs --check
 dotnet build XtermSharp.sln --no-restore -m:1
 dotnet test --project tests/XtermSharp.Tests/XtermSharp.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.ReferenceTests/XtermSharp.ReferenceTests.csproj --no-build
+dotnet test --project tests/XtermSharp.Rendering.Tests/XtermSharp.Rendering.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Rendering.Skia.Tests/XtermSharp.Rendering.Skia.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.csproj --no-build
 dotnet run --project tools/XtermSharp.TestMap/XtermSharp.TestMap.csproj --no-build -- --check
 node tools/compare-reference.mjs tools/sample-request.json
 node tools/compare-fixtures.mjs
 ```
 
-Expected final signals are zero build warnings/errors, 1,422 main tests passing, one reference test
-passing, 1,307 verified bindings, `MATCH`, and `MATCH 76/76 escape-sequence fixtures`.
+Expected final signals are zero build warnings/errors, 1,425 main tests passing, nine rendering
+tests passing, one reference test passing, 1,307 verified bindings, `MATCH`, and `MATCH 76/76
+escape-sequence fixtures`.
 
 The Node-based checks require the pinned upstream build. If it is absent, prepare it with:
 
@@ -160,7 +187,7 @@ npm run esbuild
 npm run esbuild-package-headless-only
 ```
 
-## Remaining non-renderer work
+## Remaining work
 
 - Keep manifests, differential tools and documentation synchronized during future upstream upgrades.
 - Expand differential scenarios beyond the current sample and fixture corpus.
