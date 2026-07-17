@@ -11,7 +11,8 @@
 - `XtermSharp` remains a common/headless package. Optional `XtermSharp.Rendering`,
   `XtermSharp.Rendering.Skia` and `XtermSharp.Avalonia` packages provide display-list, Skia and
   Avalonia integration without adding UI dependencies to the core package. Browser, DOM, WebGL,
-  accessibility rendering, PTY, SSH, WPF and WinUI integration remain outside the current scope.
+  accessibility rendering, built-in PTY/SSH transports, WPF and WinUI integration remain outside
+  the current scope; the SSH sample integrates SSH.NET without changing the library boundary.
 
 ## Current conformance status
 
@@ -28,7 +29,7 @@ Last fully verified on 2026-07-17. Update this section whenever the pinned basel
 | Upstream escape-sequence fixtures | 76/76 matching |
 | Main xUnit suite | 1,425/1,425 passing |
 | Reference infrastructure suite | 1/1 passing |
-| Rendering suites | 9/9 passing |
+| Rendering suites | 18/18 passing |
 
 `XTJS-0799` is the sole `ArchitectureEquivalent` case. xterm.js parses large writes in
 131,072-code-point array chunks; XtermSharp streams each `Rune` without an intermediate parse
@@ -53,6 +54,8 @@ tests and 40 local production-parser/safety regressions. `tests/upstream-port-ma
 - `src/XtermSharp.Rendering.Skia/`: SkiaSharp/HarfBuzz backend and retained row pictures.
 - `src/XtermSharp.Avalonia/`: interactive Avalonia `TerminalView` platform adapter.
 - `samples/XtermSharp.Avalonia.Demo/`: no-PTY ANSI playback and local input-echo smoke test.
+- `samples/XtermSharp.Avalonia.Demo.SSH/`: real SSH PTY integration sample with configurable
+  password/private-key authentication and host-key verification.
 - `tests/XtermSharp.Tests/`: xUnit v3 behavior, upstream-port and fixture tests.
 - `tests/XtermSharp.Tests/InputHandler/ProductionParserIntegrationTests.cs`: production parser
   wiring, error recovery, payload-limit and identifier regressions.
@@ -109,6 +112,11 @@ tests and 40 local production-parser/safety regressions. `tests/upstream-port-ma
   when the platform supplies a non-empty `KeySymbol`; only committed printable text uses the text
   input/IME path. The no-PTY demo performs local line editing because echoed DEL bytes are terminal
   input, not screen-erasure output.
+- `TerminalView` keyboard events must preserve browser `KeyboardEvent` semantics: normalize
+  Avalonia `A`/`NumPad1` physical names to `KeyA`/`Numpad1`, distinguish virtual `keyCode` from the
+  physical `code`, report repeat/release events for enhanced keyboard modes, and defer macOS Option
+  or Windows AltGr text to the committed text/IME path. Clipboard shortcuts use Meta on macOS and
+  Control elsewhere, and copy only consumes the shortcut when the selection is non-empty.
 - Public terminals have an effective minimum width of two columns. `TerminalOptions.Columns == 1`
   remains visible as the raw requested option, while `Terminal.Columns`, buffers, snapshots and
   resize events report two. Keep zero and negative dimensions invalid. Low-level
@@ -173,7 +181,7 @@ node tools/compare-reference.mjs tools/sample-request.json
 node tools/compare-fixtures.mjs
 ```
 
-Expected final signals are zero build warnings/errors, 1,425 main tests passing, nine rendering
+Expected final signals are zero build warnings/errors, 1,425 main tests passing, 18 rendering
 tests passing, one reference test passing, 1,307 verified bindings, `MATCH`, and `MATCH 76/76
 escape-sequence fixtures`.
 

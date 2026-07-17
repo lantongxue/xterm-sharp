@@ -1104,9 +1104,11 @@ internal sealed class TerminalEngine : IDisposable
     public void SendKey(TerminalKeyEvent value)
     {
         KeyboardResult result;
+        bool modifierOnly = false;
         if (_modes.Win32InputMode && _options.EnableWin32InputMode)
         {
             result = _win32InputMode.Evaluate(value);
+            modifierOnly = value.KeyCode is 16 or 17 or 18 or 91 or 92 or 93 or 224 || value.Key == "Meta";
         }
         else if (_modes.KittyKeyboardFlags != TerminalKittyKeyboardFlags.None && _options.EnableKittyKeyboard)
         {
@@ -1131,13 +1133,13 @@ internal sealed class TerminalEngine : IDisposable
         switch (result.Type)
         {
             case KeyboardResultType.PageUp:
-                ScrollLines(-Rows);
+                ScrollLines(-(Rows - 1));
                 break;
             case KeyboardResultType.PageDown:
-                ScrollLines(Rows);
+                ScrollLines(Rows - 1);
                 break;
             case KeyboardResultType.SendKey when result.Key is not null:
-                SendInput(result.Key, wasUserInput: true);
+                SendInput(result.Key, wasUserInput: !modifierOnly);
                 break;
         }
     }

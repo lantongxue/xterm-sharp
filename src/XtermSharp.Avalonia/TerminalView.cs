@@ -33,6 +33,7 @@ public sealed class TerminalView : TemplatedControl
 
     private readonly DispatcherTimer _blinkTimer;
     private readonly TerminalTextInputMethodClient _textInputClient;
+    private readonly AvaloniaKeyStateTracker _keyState = new();
     private SkiaTerminalRenderBackend? _backend;
     private TerminalRenderController? _controller;
     private TerminalRenderFrame? _frame;
@@ -80,6 +81,7 @@ public sealed class TerminalView : TemplatedControl
     }
 
     public TerminalSelection? Selection => _controller?.Selection;
+    public bool HasSelection => HasNonEmptySelection(Selection);
     public int ScrollValue => _frame?.ViewportY ?? 0;
     public int ScrollMaximum => _frame?.BaseY ?? 0;
     public int Columns => _frame?.Columns ?? Terminal?.Columns ?? 0;
@@ -188,6 +190,7 @@ public sealed class TerminalView : TemplatedControl
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         _attached = false;
+        _keyState.Clear();
         _blinkTimer.Stop();
         DetachTerminal();
         base.OnDetachedFromVisualTree(e);
@@ -230,6 +233,7 @@ public sealed class TerminalView : TemplatedControl
 
     protected override void OnLostFocus(FocusChangedEventArgs e)
     {
+        _keyState.Clear();
         if (_controller is not null)
         {
             _controller.IsFocused = false;
@@ -253,16 +257,25 @@ public sealed class TerminalView : TemplatedControl
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
-        bool command = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta);
-        if (command && e.Key == Key.C && Selection is not null)
+        bool isMac = OperatingSystem.IsMacOS();
+        if (AvaloniaKeyMapper.ShouldCopy(e.Key, e.KeyModifiers, isMac, HasSelection))
         {
+            _keyState.SuppressRelease(e.PhysicalKey, e.Key);
             SendWithoutThrow(CopySelectionAsync());
             e.Handled = true;
             return;
         }
-        if (command && e.Key == Key.V)
+        if (AvaloniaKeyMapper.ShouldPaste(e.Key, e.KeyModifiers, isMac))
         {
+            _keyState.SuppressRelease(e.PhysicalKey, e.Key);
             SendWithoutThrow(PasteAsync());
+            e.Handled = true;
+            return;
+        }
+        if (AvaloniaKeyMapper.ShouldSelectAll(e.Key, e.KeyModifiers, isMac))
+        {
+            _keyState.SuppressRelease(e.PhysicalKey, e.Key);
+            SendWithoutThrow(SelectAllAsync());
             e.Handled = true;
             return;
         }
@@ -271,26 +284,41 @@ public sealed class TerminalView : TemplatedControl
         {
             return;
         }
-        bool printable = AvaloniaKeyMapper.ShouldUseTextInput(e.Key, e.KeySymbol, e.KeyModifiers);
-        TerminalModes? modes = _frame?.Modes;
-        if (!printable || modes?.KittyKeyboardFlags != TerminalKittyKeyboardFlags.None || modes?.Win32InputMode == true)
+        TerminalModes? modes = GetCurrentModes(terminal);
+        bool enhancedKeyboardMode =
+            modes?.KittyKeyboardFlags != TerminalKittyKeyboardFlags.None || modes?.Win32InputMode == true;
+        TerminalKeyEventType eventType = _keyState.KeyDown(e.PhysicalKey, e.Key);
+        TerminalKeyEvent key = AvaloniaKeyMapper.Create(
+            e.Key,
+            e.PhysicalKey,
+            e.KeySymbol,
+            e.KeyModifiers,
+            eventType);
+        if (!AvaloniaKeyMapper.ShouldUseTextInput(
+                key,
+                enhancedKeyboardMode,
+                isMac,
+                OperatingSystem.IsWindows(),
+                terminal.Options.MacOptionIsMeta))
         {
-            TerminalKeyEvent key = AvaloniaKeyMapper.Create(
-                e.Key,
-                e.PhysicalKey,
-                e.KeySymbol,
-                e.KeyModifiers,
-                TerminalKeyEventType.Press);
             SendWithoutThrow(terminal.SendKeyAsync(key));
             e.Handled = true;
         }
     }
 
+    internal static bool HasNonEmptySelection(TerminalSelection? selection) =>
+        selection is { IsEmpty: false };
+
     protected override void OnKeyUp(KeyEventArgs e)
     {
         base.OnKeyUp(e);
+        if (_keyState.KeyUp(e.PhysicalKey, e.Key))
+        {
+            e.Handled = true;
+            return;
+        }
         Terminal? terminal = Terminal;
-        TerminalModes? modes = _frame?.Modes;
+        TerminalModes? modes = terminal is null ? null : GetCurrentModes(terminal);
         if (terminal is null || modes is null ||
             modes.KittyKeyboardFlags == TerminalKittyKeyboardFlags.None && !modes.Win32InputMode)
         {
@@ -573,6 +601,9 @@ public sealed class TerminalView : TemplatedControl
         Rune rune = text.EnumerateRunes().First();
         return Rune.IsLetterOrDigit(rune) || rune.Value == '_' ? 1 : 2;
     }
+
+    private TerminalModes? GetCurrentModes(Terminal terminal) =>
+        terminal.Options.AllowProposedApi ? terminal.Modes : _frame?.Modes;
 
     private void UpdateClickCount(TerminalPoint cell)
     {

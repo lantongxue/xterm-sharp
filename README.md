@@ -71,6 +71,22 @@ await terminal.WriteAsync("\x1b[32mhello from Skia\x1b[0m\r\n");
 The control subscribes to the terminal but never disposes it. Applications
 continue to own PTY/session wiring and the terminal lifetime.
 
+### SSH demo
+
+`XtermSharp.Avalonia.Demo.SSH` is a separate sample application that connects
+the Avalonia control to a real SSH pseudo-terminal through SSH.NET. It supports
+password and private-key authentication, SHA-256 host-key verification, remote
+window-size updates and a configurable terminal type.
+
+```bash
+dotnet run --project samples/XtermSharp.Avalonia.Demo.SSH/XtermSharp.Avalonia.Demo.SSH.csproj
+```
+
+Connection values can be entered in the window or prefilled with environment
+variables. See the [SSH demo README](samples/XtermSharp.Avalonia.Demo.SSH/README.md)
+for the complete list and host-key verification workflow. The SSH dependency is
+sample-only; the XtermSharp library packages remain transport-agnostic.
+
 ## Conformance
 
 The compatibility baseline is xterm.js 6.0.0 at commit
@@ -85,7 +101,7 @@ The current verification results are:
 - 1,425/1,425 main xUnit tests passing, including all 1,307 upstream bindings,
   all 76 escape-sequence fixtures, two manifest audits and 40 local parser and
   safety regressions.
-- Seven rendering tests passing across the backend-neutral, Skia and Avalonia suites.
+- Eighteen rendering tests passing across the backend-neutral, Skia and Avalonia suites.
 - 1/1 reference infrastructure test passing.
 - 1,307 unique manifest bindings with no pending applicable cases.
 - All 76 escape-sequence fixtures matching the pinned xterm.js headless oracle.
@@ -127,10 +143,11 @@ dotnet run --project benchmarks/XtermSharp.Benchmarks/XtermSharp.Benchmarks.cspr
 
 ## Scope and limitations
 
-The core package does not start processes and does not implement PTY, SSH,
-browser, DOM, canvas, WebGL or accessibility rendering. Avalonia and Skia live
-in separate optional packages; WPF, WinUI, GDI and Direct2D backends remain out
-of scope for the current release.
+The core package does not start processes and does not implement PTY or SSH
+transport, browser, DOM, canvas, WebGL or accessibility rendering. The SSH demo
+shows application-owned transport wiring through SSH.NET. Avalonia and Skia
+live in separate optional packages; WPF, WinUI, GDI and Direct2D backends remain
+out of scope for the current release.
 
 Before a stable 1.0 release, the project still needs broader differential and
 parser fuzz coverage, additional resize/reflow hardening for complex cells,

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>XtermSharp.Avalonia.Demo.SSH</RootNamespace>
+    <NoWarn>$(NoWarn);XTSR0001</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/XtermSharp.Avalonia/XtermSharp.Avalonia.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="SSH.NET" Version="2025.1.0" />
+  </ItemGroup>
+</Project>
