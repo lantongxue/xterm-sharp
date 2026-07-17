@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>XtermSharp.Addons.WebLinks.Tests</RootNamespace>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/XtermSharp.Addons.WebLinks/XtermSharp.Addons.WebLinks.csproj" />
+    <ProjectReference Include="../../src/XtermSharp.Rendering/XtermSharp.Rendering.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" Version="3.2.2" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Addons.WebLinks" />
+    <Using Include="XtermSharp.Input" />
+    <Using Include="XtermSharp.Links" />
+    <Using Include="XtermSharp.Options" />
+    <Using Include="XtermSharp.Rendering.Backends" />
+    <Using Include="XtermSharp.Rendering.Configuration" />
+    <Using Include="XtermSharp.Rendering.Controllers" />
+    <Using Include="XtermSharp.Rendering.Display" />
+    <Using Include="XtermSharp.Rendering.Geometry" />
+    <Using Include="XtermSharp.Snapshots" />
+  </ItemGroup>
+</Project>

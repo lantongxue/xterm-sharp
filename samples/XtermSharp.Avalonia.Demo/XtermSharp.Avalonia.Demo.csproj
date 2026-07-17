@@ -6,17 +6,23 @@
     <NoWarn>$(NoWarn);XTSR0001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../src/XtermSharp.Addons.Search/XtermSharp.Addons.Search.csproj" />
+    <ProjectReference Include="../../src/XtermSharp.Addons.WebLinks/XtermSharp.Addons.WebLinks.csproj" />
     <ProjectReference Include="../../src/XtermSharp.Avalonia/XtermSharp.Avalonia.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Addons.Search" />
+    <Using Include="XtermSharp.Addons.WebLinks" />
     <Using Include="XtermSharp.Events" />
     <Using Include="XtermSharp.Options" />
+    <Using Include="XtermSharp.Snapshots" />
     <Using Include="XtermSharp.Avalonia.Controls" />
     <Using Include="XtermSharp.Avalonia.Demo.Application" />
     <Using Include="XtermSharp.Avalonia.Demo.Views" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
   </ItemGroup>
 </Project>

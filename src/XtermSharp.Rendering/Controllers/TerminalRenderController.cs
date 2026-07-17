@@ -16,6 +16,7 @@ public sealed class TerminalRenderController : IDisposable
     private TerminalTheme _baseTheme;
     private TerminalTheme _theme;
     private TerminalSelection? _selection;
+    private TerminalLinkRange? _hoveredLink;
     private TerminalRenderFrame? _currentFrame;
     private CursorOverlayCache? _cursorOverlayCache;
     private int _pendingStart = int.MaxValue;
@@ -44,11 +45,14 @@ public sealed class TerminalRenderController : IDisposable
         _options = options ?? new TerminalRenderOptions();
         _baseTheme = theme ?? TerminalTheme.Default;
         _theme = _baseTheme;
+        _selection = ToRenderingSelection(_terminal.Selection);
         _terminal.RenderRequested += OnRenderRequested;
         _terminal.Resized += OnFullInvalidation;
         _terminal.Scrolled += OnFullInvalidation;
         _terminal.OptionsChanged += OnOptionsChanged;
         _terminal.ColorRequested += OnColorRequested;
+        _terminal.SelectionChanged += OnSelectionChanged;
+        _terminal.DecorationsChanged += OnDecorationsChanged;
     }
 
     public Terminal Terminal => _terminal;
@@ -60,6 +64,16 @@ public sealed class TerminalRenderController : IDisposable
             lock (_gate)
             {
                 return _selection;
+            }
+        }
+    }
+    public TerminalLinkRange? HoveredLink
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _hoveredLink;
             }
         }
     }
@@ -135,13 +149,26 @@ public sealed class TerminalRenderController : IDisposable
 
     public void SetSelection(TerminalSelection? selection)
     {
+        _terminal.SetSelection(ToCoreSelection(selection));
+    }
+
+    public void SetHoveredLink(TerminalLinkRange? range)
+    {
+        bool changed;
         lock (_gate)
         {
-            _selection = selection?.Normalize();
-            _fullInvalidation = true;
-            _invalidationVersion++;
+            changed = _hoveredLink != range;
+            if (changed)
+            {
+                _hoveredLink = range;
+                _fullInvalidation = true;
+                _invalidationVersion++;
+            }
         }
-        RaiseInvalidated();
+        if (changed)
+        {
+            RaiseInvalidated();
+        }
     }
 
     public void SetBlinkPhases(bool cursorVisible, bool textVisible)
@@ -195,7 +222,9 @@ public sealed class TerminalRenderController : IDisposable
                 linked.Token).ConfigureAwait(false);
             TerminalRenderOptions options;
             TerminalTheme theme;
+            IReadOnlyList<TerminalDecoration> terminalDecorations = _terminal.Decorations;
             TerminalSelection? selection;
+            TerminalLinkRange? hoveredLink;
             bool focused;
             bool cursorPhase;
             bool blinkPhase;
@@ -212,6 +241,7 @@ public sealed class TerminalRenderController : IDisposable
                 options = _options;
                 theme = _theme;
                 selection = _selection;
+                hoveredLink = _hoveredLink;
                 focused = _focused;
                 cursorPhase = _cursorPhase;
                 blinkPhase = _blinkPhase;
@@ -259,7 +289,9 @@ public sealed class TerminalRenderController : IDisposable
                         metrics,
                         configuration,
                         theme,
+                        terminalDecorations,
                         selection,
+                        hoveredLink,
                         blinkPhase,
                         out bool hasBlinkingText);
                     cached = new RowCache(line, version, blinkVersion, content, hasBlinkingText);
@@ -377,6 +409,8 @@ public sealed class TerminalRenderController : IDisposable
         _terminal.Scrolled -= OnFullInvalidation;
         _terminal.OptionsChanged -= OnOptionsChanged;
         _terminal.ColorRequested -= OnColorRequested;
+        _terminal.SelectionChanged -= OnSelectionChanged;
+        _terminal.DecorationsChanged -= OnDecorationsChanged;
         _disposeCancellation.Cancel();
     }
 
@@ -388,11 +422,16 @@ public sealed class TerminalRenderController : IDisposable
         TerminalFontMetrics metrics,
         TerminalRenderConfiguration configuration,
         TerminalTheme theme,
+        IReadOnlyList<TerminalDecoration> terminalDecorations,
         TerminalSelection? selection,
+        TerminalLinkRange? hoveredLink,
         bool blinkPhase,
         out bool hasBlinkingText)
     {
         var backgrounds = ImmutableArray.CreateBuilder<TerminalDrawCommand>();
+        var bottomDecorationBackgrounds = ImmutableArray.CreateBuilder<TerminalDrawCommand>();
+        var selectionBackgrounds = ImmutableArray.CreateBuilder<TerminalDrawCommand>();
+        var topDecorationBackgrounds = ImmutableArray.CreateBuilder<TerminalDrawCommand>();
         var text = ImmutableArray.CreateBuilder<TerminalDrawCommand>();
         var decorations = ImmutableArray.CreateBuilder<TerminalDrawCommand>();
         double y = viewport.Padding.Top + row * metrics.CellHeight;
@@ -400,6 +439,29 @@ public sealed class TerminalRenderController : IDisposable
             new TerminalRect(viewport.Padding.Left, y, snapshot.Columns * metrics.CellWidth, metrics.CellHeight),
             theme.Background));
         int absoluteLine = snapshot.ActiveBuffer.ViewportY + row;
+        foreach (TerminalDecoration decoration in terminalDecorations)
+        {
+            if (decoration.Range.Line != absoluteLine ||
+                !TryGetDecorationBounds(decoration.Range, snapshot.Columns, viewport, metrics, y, out TerminalRect bounds))
+            {
+                continue;
+            }
+            if (decoration.Background is TerminalColor background)
+            {
+                ImmutableArray<TerminalDrawCommand>.Builder target =
+                    decoration.Layer == TerminalDecorationLayer.Top
+                        ? topDecorationBackgrounds
+                        : bottomDecorationBackgrounds;
+                target.Add(new TerminalFillRectangleCommand(bounds, theme.Resolve(background, foreground: false)));
+            }
+            if (decoration.Border is TerminalColor border)
+            {
+                decorations.Add(new TerminalStrokeRectangleCommand(
+                    bounds,
+                    theme.Resolve(border, foreground: true),
+                    Math.Max(1, configuration.RenderScale)));
+            }
+        }
         hasBlinkingText = false;
 
         bool hasBackgroundRun = false;
@@ -470,18 +532,18 @@ public sealed class TerminalRenderController : IDisposable
             {
                 foreground = foreground.Blend(background, 0.5);
             }
-            bool selected = selection?.Contains(column, absoluteLine) == true;
-            if (selected)
-            {
-                background = theme.SelectionBackground;
-                foreground = theme.SelectionForeground;
-            }
             var bounds = new TerminalRect(
                 viewport.Padding.Left + column * metrics.CellWidth,
                 y,
                 metrics.CellWidth * cellWidth,
                 metrics.CellHeight);
-            if (background != theme.Background || selected)
+            bool selected = selection?.Contains(column, absoluteLine) == true;
+            if (selected)
+            {
+                foreground = theme.SelectionForeground;
+                selectionBackgrounds.Add(new TerminalFillRectangleCommand(bounds, theme.SelectionBackground));
+            }
+            if (background != theme.Background)
             {
                 if (hasBackgroundRun && backgroundRunColor == background && backgroundEnd == column)
                 {
@@ -535,7 +597,8 @@ public sealed class TerminalRenderController : IDisposable
                         italic,
                         configuration.RescaleOverlappingGlyphs));
                 }
-                AddDecorations(decorations, bounds, cell, foreground, theme, metrics);
+                bool linkUnderline = hoveredLink?.Contains(column + 1, absoluteLine + 1, snapshot.Columns) == true;
+                AddDecorations(decorations, bounds, cell, foreground, theme, metrics, linkUnderline);
             }
             else
             {
@@ -546,11 +609,39 @@ public sealed class TerminalRenderController : IDisposable
         FlushTextRun();
 
         var commands = ImmutableArray.CreateBuilder<TerminalDrawCommand>(
-            backgrounds.Count + text.Count + decorations.Count);
+            backgrounds.Count + bottomDecorationBackgrounds.Count + selectionBackgrounds.Count +
+            topDecorationBackgrounds.Count + text.Count + decorations.Count);
         commands.AddRange(backgrounds);
+        commands.AddRange(bottomDecorationBackgrounds);
+        commands.AddRange(selectionBackgrounds);
+        commands.AddRange(topDecorationBackgrounds);
         commands.AddRange(text);
         commands.AddRange(decorations);
         return new TerminalDisplayRow(row, commands.MoveToImmutable());
+    }
+
+    private static bool TryGetDecorationBounds(
+        TerminalDecorationRange range,
+        int columns,
+        TerminalViewport viewport,
+        TerminalFontMetrics metrics,
+        double y,
+        out TerminalRect bounds)
+    {
+        int start = Math.Clamp(range.Column, 0, columns);
+        long requestedEnd = (long)range.Column + range.Width;
+        int end = (int)Math.Clamp(requestedEnd, start, columns);
+        if (range.Width <= 0 || end <= start)
+        {
+            bounds = default;
+            return false;
+        }
+        bounds = new TerminalRect(
+            viewport.Padding.Left + start * metrics.CellWidth,
+            y,
+            (end - start) * metrics.CellWidth,
+            metrics.CellHeight);
+        return true;
     }
 
     private TerminalDisplayRow GetDisplayRow(
@@ -713,12 +804,14 @@ public sealed class TerminalRenderController : IDisposable
         TerminalCellSnapshot cell,
         TerminalRgbaColor foreground,
         TerminalTheme theme,
-        TerminalFontMetrics metrics)
+        TerminalFontMetrics metrics,
+        bool linkUnderline)
     {
         double thickness = Math.Max(1, metrics.UnderlineThickness);
-        if (cell.Attributes.HasFlag(CellAttributes.Underline))
+        bool cellUnderline = cell.Attributes.HasFlag(CellAttributes.Underline);
+        if (cellUnderline || linkUnderline)
         {
-            TerminalRgbaColor color = cell.UnderlineColor.Mode == TerminalColorMode.Default
+            TerminalRgbaColor color = !cellUnderline || cell.UnderlineColor.Mode == TerminalColorMode.Default
                 ? foreground
                 : theme.Resolve(cell.UnderlineColor, foreground: true);
             double y = bounds.Y + metrics.UnderlineOffset;
@@ -728,10 +821,10 @@ public sealed class TerminalRenderController : IDisposable
                 new TerminalPoint(bounds.Right, y),
                 color,
                 thickness,
-                cell.UnderlineStyle == TerminalUnderlineStyle.None
+                !cellUnderline || cell.UnderlineStyle == TerminalUnderlineStyle.None
                     ? TerminalUnderlineStyle.Single
                     : cell.UnderlineStyle));
-            if (cell.UnderlineStyle == TerminalUnderlineStyle.Double)
+            if (cellUnderline && cell.UnderlineStyle == TerminalUnderlineStyle.Double)
             {
                 commands.Add(new TerminalLineCommand(
                     bounds,
@@ -781,6 +874,27 @@ public sealed class TerminalRenderController : IDisposable
             _fullInvalidation = true;
             _invalidationVersion++;
             _pendingRevision = Math.Max(_pendingRevision, args.Revision);
+        }
+        RaiseInvalidated();
+    }
+
+    private void OnSelectionChanged(object? sender, EventArgs args)
+    {
+        lock (_gate)
+        {
+            _selection = ToRenderingSelection(_terminal.Selection);
+            _fullInvalidation = true;
+            _invalidationVersion++;
+        }
+        RaiseInvalidated();
+    }
+
+    private void OnDecorationsChanged(object? sender, EventArgs args)
+    {
+        lock (_gate)
+        {
+            _fullInvalidation = true;
+            _invalidationVersion++;
         }
         RaiseInvalidated();
     }
@@ -914,6 +1028,26 @@ public sealed class TerminalRenderController : IDisposable
     }
 
     private void RaiseInvalidated() => Invalidated?.Invoke(this, EventArgs.Empty);
+
+    private static TerminalSelection? ToRenderingSelection(TerminalSelectionRange? selection) =>
+        selection is TerminalSelectionRange value
+            ? new TerminalSelection(
+                value.StartColumn,
+                value.StartLine,
+                value.EndColumn,
+                value.EndLine,
+                value.ColumnMode)
+            : null;
+
+    private static TerminalSelectionRange? ToCoreSelection(TerminalSelection? selection) =>
+        selection is TerminalSelection value
+            ? new TerminalSelectionRange(
+                value.StartColumn,
+                value.StartLine,
+                value.EndColumn,
+                value.EndLine,
+                value.ColumnMode)
+            : null;
 
     private void ThrowIfDisposed()
     {

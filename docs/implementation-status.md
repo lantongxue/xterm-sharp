@@ -20,6 +20,15 @@
 - Effective two-column minimum sizing with a safe low-level fallback for unsupported
   one-column buffers containing wide cells.
 - Addon lifecycle and Unicode 6, Unicode 11 and .NET grapheme-oriented providers.
+- Stable link-provider contracts plus the optional `XtermSharp.Addons.WebLinks`
+  port, including strict URL validation, wrapped/wide/combined-cell range mapping,
+  custom activation/hover/leave callbacks and Avalonia hover/click interaction.
+- Platform-neutral core selection and decoration-provider contracts plus the optional
+  `XtermSharp.Addons.Search` port, including forward/reverse literal and regex search,
+  case/whole-word/incremental options, wrapped/wide/UTF-16 coordinate mapping, capped result
+  highlighting, active-result tracking and debounced updates after writes or resize. Overview-ruler
+  colors are exposed as decoration metadata; the current Avalonia adapter has no overview-ruler
+  surface.
 - The pinned xterm.js 6.0.0 inventory contains 1,361 concrete upstream cases:
   54 front-end renderer cases are explicitly excluded, while all 1,307
   headless-applicable cases are covered by C# tests (1,306 direct ports and one
@@ -33,14 +42,16 @@
 - Unchanged buffer lines reuse immutable line snapshots, avoiding repeated cell
   materialization for full-buffer publication.
 - `XtermSharp.Rendering` provides backend-neutral frame coordination, themes,
-  selection extraction, synchronized-output throttling, damage tracking and batched text/background
-  display-list runs.
+  selection extraction, layered addon decorations, synchronized-output throttling, damage tracking
+  and batched text/background display-list runs.
 - `XtermSharp.Rendering.Skia` provides SkiaSharp 3.119.4 and HarfBuzz shaping,
   font fallback, cached fonts/paints and worker-prepared retained row pictures.
 - `XtermSharp.Avalonia` provides an externally bound `TerminalView` with DPI-aware
   resizing, worker-side frame preparation, change-only binding notifications, keyboard/mouse
-  protocols, local selection, clipboard, focus, IME preedit and an optional rendering telemetry
-  overlay.
+  protocols, local selection, clipboard, focus, IME preedit, registered-link interaction and an
+  optional rendering telemetry overlay.
+- The no-PTY Avalonia demo loads both optional addons and exposes interactive link activation plus
+  case-sensitive, whole-word and regex search controls with previous/next result navigation.
 
 ## Still required before 1.0
 
@@ -53,7 +64,7 @@
 - Add marker tracking through scroll/reflow and richer hyperlink metadata APIs.
 - Add fuzzing for parser chunk boundaries and benchmark-driven packed-cell storage.
 - Add WPF/WinUI controls, native Windows rendering backends, accessibility,
-  OSC 8 interaction, decorations and renderer-specific differential fixtures.
+  OSC 8 interaction, mutable link-decoration notifications and renderer-specific differential fixtures.
 
 Any intentional behavioral difference from xterm.js must be recorded here before
 a stable release.

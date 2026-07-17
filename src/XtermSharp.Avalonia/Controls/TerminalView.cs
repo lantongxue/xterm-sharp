@@ -15,6 +15,9 @@ namespace XtermSharp.Avalonia.Controls;
 
 public sealed class TerminalView : TemplatedControl
 {
+    private static Cursor? _linkCursor;
+    private static Cursor LinkCursor => _linkCursor ??= new Cursor(StandardCursorType.Hand);
+
     public static readonly StyledProperty<Terminal?> TerminalProperty =
         AvaloniaProperty.Register<TerminalView, Terminal?>(nameof(Terminal));
 
@@ -51,6 +54,15 @@ public sealed class TerminalView : TemplatedControl
     private TerminalRenderController? _controller;
     private TerminalRenderFrame? _frame;
     private CancellationTokenSource? _prepareCancellation;
+    private CancellationTokenSource? _linkCancellation;
+    private TerminalLink? _hoveredLink;
+    private TerminalLink? _pressedLink;
+    private TerminalLinkEvent? _lastLinkEvent;
+    private Cursor? _cursorBeforeLink;
+    private Point _lastPointerPosition;
+    private KeyModifiers _lastPointerModifiers;
+    private int _pendingLinkColumn;
+    private int _pendingLinkLine;
     private int _prepareScheduled;
     private int _preparing;
     private int _prepareAgain;
@@ -64,6 +76,8 @@ public sealed class TerminalView : TemplatedControl
     private TerminalPoint _lastClickCell;
     private int _clickCount;
     private bool _attached;
+    private bool _pointerInside;
+    private bool _linkCursorApplied;
 
     public TerminalView()
     {
@@ -126,8 +140,7 @@ public sealed class TerminalView : TemplatedControl
 
     public void ClearSelection()
     {
-        _controller?.SetSelection(null);
-        SelectionChanged?.Invoke(this, EventArgs.Empty);
+        Terminal?.ClearSelection();
     }
 
     public async ValueTask SelectAllAsync(CancellationToken cancellationToken = default)
@@ -142,12 +155,11 @@ public sealed class TerminalView : TemplatedControl
         {
             return;
         }
-        _controller.SetSelection(new TerminalSelection(
+        terminal.SetSelection(new TerminalSelectionRange(
             0,
             0,
             snapshot.Columns,
             snapshot.ActiveBuffer.Lines.Length - 1));
-        SelectionChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public async ValueTask<string> CopySelectionAsync(CancellationToken cancellationToken = default)
@@ -376,6 +388,16 @@ public sealed class TerminalView : TemplatedControl
         }
         Point position = e.GetPosition(this);
         TerminalPoint cell = HitCell(position, frame);
+        TerminalLinkEvent linkEvent = CreateLinkEvent(
+            position,
+            frame,
+            TerminalMouseButton.Left,
+            TerminalMouseAction.Down,
+            e.KeyModifiers);
+        _lastLinkEvent = linkEvent;
+        _pressedLink = _hoveredLink?.Range.Contains(linkEvent.Column, linkEvent.BufferLine, frame.Columns) == true
+            ? _hoveredLink
+            : null;
         TerminalMouseTrackingMode mouseTracking = frame.Modes?.MouseTracking ?? TerminalMouseTrackingMode.None;
         bool localSelection = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ||
             mouseTracking == TerminalMouseTrackingMode.None;
@@ -404,16 +426,19 @@ public sealed class TerminalView : TemplatedControl
             return;
         }
         Point position = e.GetPosition(this);
+        _pointerInside = true;
+        _lastPointerPosition = position;
+        _lastPointerModifiers = e.KeyModifiers;
+        QueueLinkUpdate(position, e.KeyModifiers);
         TerminalMouseTrackingMode mouseTracking = frame.Modes?.MouseTracking ?? TerminalMouseTrackingMode.None;
         if (_selecting)
         {
             TerminalPoint cell = HitCell(position, frame);
-            _controller?.SetSelection(new TerminalSelection(
+            terminal.SetSelection(new TerminalSelectionRange(
                 (int)_selectionAnchor.X,
                 (int)_selectionAnchor.Y,
                 (int)cell.X + 1,
                 (int)cell.Y));
-            SelectionChanged?.Invoke(this, EventArgs.Empty);
             e.Handled = true;
         }
         else if (mouseTracking == TerminalMouseTrackingMode.Any ||
@@ -425,9 +450,33 @@ public sealed class TerminalView : TemplatedControl
         }
     }
 
+    protected override void OnPointerExited(PointerEventArgs e)
+    {
+        _pointerInside = false;
+        _pressedLink = null;
+        ClearHoveredLink(_lastLinkEvent);
+        base.OnPointerExited(e);
+    }
+
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+        Point position = e.GetPosition(this);
+        TerminalRenderFrame? frame = _frame;
+        TerminalLinkEvent? linkEvent = frame is null
+            ? null
+            : CreateLinkEvent(
+                position,
+                frame,
+                TerminalMouseButton.Left,
+                TerminalMouseAction.Up,
+                e.KeyModifiers);
+        if (linkEvent is TerminalLinkEvent value)
+        {
+            _lastLinkEvent = value;
+            TryActivateLink(value, frame!.Columns);
+        }
+        _pressedLink = null;
         if (_selecting)
         {
             _selecting = false;
@@ -476,6 +525,7 @@ public sealed class TerminalView : TemplatedControl
         _controller = new TerminalRenderController(terminal, _backend, RenderOptions, TerminalTheme);
         _controller.IsFocused = IsFocused;
         _controller.Invalidated += OnControllerInvalidated;
+        terminal.SelectionChanged += OnTerminalSelectionChanged;
         SchedulePrepareFrame();
     }
 
@@ -483,6 +533,15 @@ public sealed class TerminalView : TemplatedControl
     {
         _prepareCancellation?.Cancel();
         _prepareCancellation = null;
+        _linkCancellation?.Cancel();
+        _linkCancellation = null;
+        _pressedLink = null;
+        ClearHoveredLink(_lastLinkEvent);
+        Terminal? terminal = _controller?.Terminal;
+        if (terminal is not null)
+        {
+            terminal.SelectionChanged -= OnTerminalSelectionChanged;
+        }
         if (_controller is not null)
         {
             _controller.Invalidated -= OnControllerInvalidated;
@@ -499,6 +558,16 @@ public sealed class TerminalView : TemplatedControl
     }
 
     private void OnControllerInvalidated(object? sender, EventArgs args) => SchedulePrepareFrame();
+
+    private void OnTerminalSelectionChanged(object? sender, EventArgs args)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+        Dispatcher.UIThread.Post(() => SelectionChanged?.Invoke(this, EventArgs.Empty));
+    }
 
     private void SchedulePrepareFrame()
     {
@@ -600,14 +669,17 @@ public sealed class TerminalView : TemplatedControl
     private async ValueTask BeginSelectionAsync(TerminalPoint cell, int clickCount)
     {
         Terminal? terminal = Terminal;
-        TerminalRenderController? controller = _controller;
-        if (terminal is null || controller is null)
+        if (terminal is null || _controller is null)
         {
             return;
         }
         if (clickCount == 1)
         {
-            controller.SetSelection(new TerminalSelection((int)cell.X, (int)cell.Y, (int)cell.X, (int)cell.Y));
+            terminal.SetSelection(new TerminalSelectionRange(
+                (int)cell.X,
+                (int)cell.Y,
+                (int)cell.X,
+                (int)cell.Y));
         }
         else
         {
@@ -622,7 +694,7 @@ public sealed class TerminalView : TemplatedControl
                 int kind = CellKind(line.Cells[column].Text);
                 while (start > 0 && CellKind(line.Cells[start - 1].Text) == kind) start--;
                 while (end < line.Cells.Length && CellKind(line.Cells[end].Text) == kind) end++;
-                controller.SetSelection(new TerminalSelection(start, lineIndex, end, lineIndex));
+                terminal.SetSelection(new TerminalSelectionRange(start, lineIndex, end, lineIndex));
             }
             else
             {
@@ -631,14 +703,14 @@ public sealed class TerminalView : TemplatedControl
                 while (startLine > 0 && snapshot.ActiveBuffer.Lines[startLine].IsWrapped) startLine--;
                 while (endLine + 1 < snapshot.ActiveBuffer.Lines.Length &&
                        snapshot.ActiveBuffer.Lines[endLine + 1].IsWrapped) endLine++;
-                controller.SetSelection(new TerminalSelection(0, startLine, snapshot.Columns, endLine));
+                terminal.SetSelection(new TerminalSelectionRange(0, startLine, snapshot.Columns, endLine));
             }
         }
-        SelectionChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void PublishFrame(TerminalRenderFrame? frame)
     {
+        TerminalRenderFrame? previousFrame = _frame;
         int previousScrollValue = ScrollValue;
         int previousScrollMaximum = ScrollMaximum;
         int previousColumns = Columns;
@@ -660,6 +732,18 @@ public sealed class TerminalView : TemplatedControl
         {
             RaisePropertyChanged(RowsProperty, previousRows, Rows);
         }
+        bool linkCoordinatesChanged = frame is null || previousFrame is null ||
+            previousFrame.Revision != frame.Revision ||
+            previousFrame.Columns != frame.Columns ||
+            previousFrame.ViewportY != frame.ViewportY;
+        if (linkCoordinatesChanged)
+        {
+            ClearHoveredLink(_lastLinkEvent);
+            if (_pointerInside && frame is not null)
+            {
+                QueueLinkUpdate(_lastPointerPosition, _lastPointerModifiers);
+            }
+        }
     }
 
     private static int CellKind(string text)
@@ -667,6 +751,198 @@ public sealed class TerminalView : TemplatedControl
         if (string.IsNullOrWhiteSpace(text)) return 0;
         Rune rune = text.EnumerateRunes().First();
         return Rune.IsLetterOrDigit(rune) || rune.Value == '_' ? 1 : 2;
+    }
+
+    private void QueueLinkUpdate(Point position, KeyModifiers modifiers)
+    {
+        Terminal? terminal = Terminal;
+        TerminalRenderFrame? frame = _frame;
+        if (!_pointerInside || terminal is null || frame is null)
+        {
+            return;
+        }
+
+        TerminalLinkEvent terminalEvent = CreateLinkEvent(
+            position,
+            frame,
+            TerminalMouseButton.None,
+            TerminalMouseAction.Move,
+            modifiers);
+        _lastLinkEvent = terminalEvent;
+        if (_hoveredLink?.Range.Contains(terminalEvent.Column, terminalEvent.BufferLine, frame.Columns) == true)
+        {
+            return;
+        }
+        if (_linkCancellation is { IsCancellationRequested: false } &&
+            _pendingLinkColumn == terminalEvent.Column &&
+            _pendingLinkLine == terminalEvent.BufferLine)
+        {
+            return;
+        }
+
+        ClearHoveredLink(terminalEvent);
+        _linkCancellation?.Cancel();
+        var cancellation = new CancellationTokenSource();
+        _linkCancellation = cancellation;
+        _pendingLinkColumn = terminalEvent.Column;
+        _pendingLinkLine = terminalEvent.BufferLine;
+        _ = ResolveLinkAsync(terminal, frame.Columns, terminalEvent, cancellation);
+    }
+
+    private async Task ResolveLinkAsync(
+        Terminal terminal,
+        int columns,
+        TerminalLinkEvent terminalEvent,
+        CancellationTokenSource cancellation)
+    {
+        try
+        {
+            TerminalLink? link = await terminal.GetLinkAtAsync(
+                terminalEvent.Column,
+                terminalEvent.BufferLine,
+                cancellation.Token);
+            cancellation.Token.ThrowIfCancellationRequested();
+            if (ReferenceEquals(terminal, Terminal) && _pointerInside &&
+                _lastLinkEvent is TerminalLinkEvent current &&
+                current.Column == terminalEvent.Column &&
+                current.BufferLine == terminalEvent.BufferLine &&
+                link?.Range.Contains(current.Column, current.BufferLine, columns) != false)
+            {
+                SetHoveredLink(link, current);
+            }
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+        catch (Exception exception)
+        {
+            terminal.Options.Logger?.Log(TerminalLogLevel.Error, "Failed to resolve a terminal link.", exception);
+        }
+        finally
+        {
+            if (ReferenceEquals(_linkCancellation, cancellation))
+            {
+                _linkCancellation = null;
+                _pendingLinkColumn = 0;
+                _pendingLinkLine = 0;
+            }
+            cancellation.Dispose();
+        }
+    }
+
+    private void SetHoveredLink(TerminalLink? link, TerminalLinkEvent terminalEvent)
+    {
+        if (LinksEqual(_hoveredLink, link))
+        {
+            return;
+        }
+        if (_hoveredLink is TerminalLink previous)
+        {
+            InvokeLinkCallback(previous.Leave, terminalEvent, previous.Text);
+        }
+
+        _hoveredLink = link;
+        if (link is null)
+        {
+            _controller?.SetHoveredLink(null);
+            RestoreLinkCursor();
+            return;
+        }
+
+        InvokeLinkCallback(link.Hover, terminalEvent, link.Text);
+        _controller?.SetHoveredLink(link.Decorations.Underline ? link.Range : null);
+        if (link.Decorations.PointerCursor)
+        {
+            if (!_linkCursorApplied)
+            {
+                _cursorBeforeLink = Cursor;
+                _linkCursorApplied = true;
+            }
+            Cursor = LinkCursor;
+        }
+        else
+        {
+            RestoreLinkCursor();
+        }
+    }
+
+    private void ClearHoveredLink(TerminalLinkEvent? terminalEvent)
+    {
+        _linkCancellation?.Cancel();
+        if (_hoveredLink is TerminalLink link && terminalEvent is TerminalLinkEvent value)
+        {
+            InvokeLinkCallback(link.Leave, value, link.Text);
+        }
+        _hoveredLink = null;
+        _controller?.SetHoveredLink(null);
+        RestoreLinkCursor();
+    }
+
+    private void TryActivateLink(TerminalLinkEvent terminalEvent, int columns)
+    {
+        if (_pressedLink is not TerminalLink pressed ||
+            _hoveredLink is not TerminalLink hovered ||
+            !LinksEqual(pressed, hovered) ||
+            !hovered.Range.Contains(terminalEvent.Column, terminalEvent.BufferLine, columns))
+        {
+            return;
+        }
+        InvokeLinkCallback(hovered.Activate, terminalEvent, hovered.Text);
+    }
+
+    private void InvokeLinkCallback(
+        Action<TerminalLinkEvent, string>? callback,
+        TerminalLinkEvent terminalEvent,
+        string text)
+    {
+        if (callback is null)
+        {
+            return;
+        }
+        try
+        {
+            callback(terminalEvent, text);
+        }
+        catch (Exception exception)
+        {
+            Terminal?.Options.Logger?.Log(TerminalLogLevel.Error, "A terminal link callback threw an exception.", exception);
+        }
+    }
+
+    private void RestoreLinkCursor()
+    {
+        if (!_linkCursorApplied)
+        {
+            return;
+        }
+        Cursor = _cursorBeforeLink;
+        _cursorBeforeLink = null;
+        _linkCursorApplied = false;
+    }
+
+    private static bool LinksEqual(TerminalLink? first, TerminalLink? second) =>
+        ReferenceEquals(first, second) ||
+        first is not null && second is not null && first.Text == second.Text && first.Range == second.Range;
+
+    private static TerminalLinkEvent CreateLinkEvent(
+        Point position,
+        TerminalRenderFrame frame,
+        TerminalMouseButton button,
+        TerminalMouseAction action,
+        KeyModifiers modifiers)
+    {
+        TerminalPoint cell = HitCell(position, frame);
+        return new TerminalLinkEvent(
+            (int)cell.X + 1,
+            (int)cell.Y + 1,
+            Math.Max(0, (int)Math.Round(position.X * frame.Viewport.RenderScale)),
+            Math.Max(0, (int)Math.Round(position.Y * frame.Viewport.RenderScale)),
+            button,
+            action,
+            AvaloniaKeyMapper.MapModifiers(modifiers));
     }
 
     private TerminalModes? GetCurrentModes(Terminal terminal) =>

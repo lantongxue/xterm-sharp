@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Threading.Channels;
 using XtermSharp.Internal;
 using XtermSharp.Internal.Parser;
@@ -17,9 +18,15 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
     private readonly Task _processor;
     private readonly object _addonGate = new();
     private readonly List<ITerminalAddon> _addons = [];
+    private readonly object _linkProviderGate = new();
+    private readonly List<ITerminalLinkProvider> _linkProviders = [];
+    private readonly object _decorationProviderGate = new();
+    private readonly List<ITerminalDecorationProvider> _decorationProviders = [];
+    private readonly object _selectionGate = new();
     private readonly object _markerGate = new();
     private readonly List<TerminalMarker> _markers = [];
     private TerminalSnapshot _latestSnapshot;
+    private TerminalSelectionRange? _selection;
     private TerminalOptions _options;
     private int _columns;
     private int _rows;
@@ -69,6 +76,42 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
     }
     public TerminalOptions Options => Volatile.Read(ref _options);
     public bool IsDisposed => Volatile.Read(ref _disposeState) != 0;
+    public TerminalSelectionRange? Selection
+    {
+        get
+        {
+            lock (_selectionGate)
+            {
+                return _selection;
+            }
+        }
+    }
+    public IReadOnlyList<TerminalDecoration> Decorations
+    {
+        get
+        {
+            ITerminalDecorationProvider[] providers;
+            lock (_decorationProviderGate)
+            {
+                providers = _decorationProviders.ToArray();
+            }
+
+            var result = new List<TerminalDecoration>();
+            foreach (ITerminalDecorationProvider provider in providers)
+            {
+                try
+                {
+                    IReadOnlyList<TerminalDecoration> decorations = provider.Decorations;
+                    result.AddRange(decorations.Where(decoration => decoration is not null));
+                }
+                catch (Exception exception)
+                {
+                    _logger.Log(TerminalLogLevel.Error, "A terminal decoration provider threw an exception.", exception);
+                }
+            }
+            return result;
+        }
+    }
     public TerminalModes Modes
     {
         get
@@ -112,6 +155,8 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
     public event EventHandler<TerminalColorRequestEventArgs>? ColorRequested;
     public event EventHandler<TerminalOptionsChangedEventArgs>? OptionsChanged;
     public event EventHandler<TerminalEventArgs>? WriteParsed;
+    public event EventHandler<EventArgs>? SelectionChanged;
+    public event EventHandler<EventArgs>? DecorationsChanged;
 
     public ValueTask WriteAsync(string data, CancellationToken cancellationToken = default)
     {
@@ -329,6 +374,68 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
         return await command.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Gets the latest committed immutable snapshot without waiting for queued commands.</summary>
+    public TerminalSnapshot GetCurrentSnapshot(SnapshotScope scope = SnapshotScope.Viewport)
+    {
+        ThrowIfDisposed();
+        TerminalSnapshot snapshot = Volatile.Read(ref _latestSnapshot);
+        if (scope == SnapshotScope.AllBuffers)
+        {
+            return snapshot;
+        }
+
+        TerminalBufferSnapshot active = snapshot.ActiveBuffer;
+        if (scope == SnapshotScope.Viewport)
+        {
+            int start = Math.Clamp(active.ViewportY, 0, active.Lines.Length);
+            int count = Math.Min(snapshot.Rows, active.Lines.Length - start);
+            ImmutableArray<TerminalLineSnapshot> lines = active.Lines
+                .Skip(start)
+                .Take(count)
+                .ToImmutableArray();
+            active = active with { Lines = lines };
+        }
+        return snapshot with
+        {
+            ActiveBuffer = active,
+            NormalBuffer = null,
+            AlternateBuffer = null
+        };
+    }
+
+    public void Select(int column, int row, int length)
+    {
+        ThrowIfDisposed();
+        ArgumentOutOfRangeException.ThrowIfNegative(column);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(column, Columns);
+        ArgumentOutOfRangeException.ThrowIfNegative(row);
+        ArgumentOutOfRangeException.ThrowIfNegative(length);
+        int linearEnd = checked(column + length);
+        SetSelection(new TerminalSelectionRange(
+            column,
+            row,
+            linearEnd % Columns,
+            checked(row + linearEnd / Columns)));
+    }
+
+    public void SetSelection(TerminalSelectionRange? selection)
+    {
+        ThrowIfDisposed();
+        TerminalSelectionRange? normalized = selection?.Normalize();
+        bool changed;
+        lock (_selectionGate)
+        {
+            changed = _selection != normalized;
+            _selection = normalized;
+        }
+        if (changed)
+        {
+            Raise(SelectionChanged, EventArgs.Empty);
+        }
+    }
+
+    public void ClearSelection() => SetSelection(null);
+
     public async ValueTask<TerminalMarker> RegisterMarkerAsync(
         int cursorYOffset = 0,
         CancellationToken cancellationToken = default)
@@ -345,6 +452,140 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
             }
         }
         return marker;
+    }
+
+    public IDisposable RegisterLinkProvider(ITerminalLinkProvider linkProvider)
+    {
+        ArgumentNullException.ThrowIfNull(linkProvider);
+        ThrowIfDisposed();
+        lock (_linkProviderGate)
+        {
+            ThrowIfDisposed();
+            _linkProviders.Add(linkProvider);
+        }
+        return new DelegateDisposable(() =>
+        {
+            lock (_linkProviderGate)
+            {
+                _linkProviders.Remove(linkProvider);
+            }
+        });
+    }
+
+    public IDisposable RegisterDecorationProvider(ITerminalDecorationProvider decorationProvider)
+    {
+        ArgumentNullException.ThrowIfNull(decorationProvider);
+        ThrowIfDisposed();
+        lock (_decorationProviderGate)
+        {
+            ThrowIfDisposed();
+            _decorationProviders.Add(decorationProvider);
+            decorationProvider.DecorationsChanged += OnDecorationProviderChanged;
+        }
+        Raise(DecorationsChanged, EventArgs.Empty);
+        return new DelegateDisposable(() =>
+        {
+            bool removed;
+            lock (_decorationProviderGate)
+            {
+                removed = _decorationProviders.Remove(decorationProvider);
+                if (removed)
+                {
+                    decorationProvider.DecorationsChanged -= OnDecorationProviderChanged;
+                }
+            }
+            if (removed && !IsDisposed)
+            {
+                Raise(DecorationsChanged, EventArgs.Empty);
+            }
+        });
+    }
+
+    public async ValueTask<IReadOnlyList<TerminalLink>> GetLinksAsync(
+        int bufferLineNumber,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        ArgumentOutOfRangeException.ThrowIfLessThan(bufferLineNumber, 1);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        ITerminalLinkProvider[] providers;
+        lock (_linkProviderGate)
+        {
+            providers = _linkProviders.ToArray();
+        }
+        if (providers.Length == 0)
+        {
+            return Array.Empty<TerminalLink>();
+        }
+
+        var result = new List<TerminalLink>();
+        foreach (ITerminalLinkProvider provider in providers)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            IReadOnlyList<TerminalLink>? links;
+            try
+            {
+                links = await provider.ProvideLinksAsync(bufferLineNumber, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                _logger.Log(TerminalLogLevel.Error, "A terminal link provider threw an exception.", exception);
+                continue;
+            }
+            if (links is not null)
+            {
+                result.AddRange(links.Where(link => link is not null));
+            }
+        }
+        return result;
+    }
+
+    public async ValueTask<TerminalLink?> GetLinkAtAsync(
+        int column,
+        int bufferLineNumber,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        ArgumentOutOfRangeException.ThrowIfLessThan(column, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(bufferLineNumber, 1);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        ITerminalLinkProvider[] providers;
+        lock (_linkProviderGate)
+        {
+            providers = _linkProviders.ToArray();
+        }
+        foreach (ITerminalLinkProvider provider in providers)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            IReadOnlyList<TerminalLink>? links;
+            try
+            {
+                links = await provider.ProvideLinksAsync(bufferLineNumber, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                _logger.Log(TerminalLogLevel.Error, "A terminal link provider threw an exception.", exception);
+                continue;
+            }
+
+            TerminalLink? link = links?.FirstOrDefault(candidate =>
+                candidate is not null && candidate.Range.Contains(column, bufferLineNumber, Columns));
+            if (link is not null)
+            {
+                return link;
+            }
+        }
+        return null;
     }
 
     public void LoadAddon(ITerminalAddon addon)
@@ -567,6 +808,18 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
             return;
         }
         _inputLimiter.Dispose();
+        lock (_linkProviderGate)
+        {
+            _linkProviders.Clear();
+        }
+        lock (_decorationProviderGate)
+        {
+            foreach (ITerminalDecorationProvider provider in _decorationProviders)
+            {
+                provider.DecorationsChanged -= OnDecorationProviderChanged;
+            }
+            _decorationProviders.Clear();
+        }
         _commands.Writer.TryComplete();
         _shutdown.Cancel();
     }
@@ -603,6 +856,14 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
         lock (_markerGate)
         {
             _markers.Remove(marker);
+        }
+    }
+
+    private void OnDecorationProviderChanged(object? sender, EventArgs args)
+    {
+        if (!IsDisposed)
+        {
+            Raise(DecorationsChanged, EventArgs.Empty);
         }
     }
 

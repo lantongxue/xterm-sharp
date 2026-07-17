@@ -20,14 +20,17 @@
     <None Include="../../docs/*.md" Pack="true" PackagePath="docs/" />
   </ItemGroup>
   <ItemGroup>
+    <Using Include="XtermSharp.Decorations" />
     <Using Include="XtermSharp.Addons" />
     <Using Include="XtermSharp.Events" />
     <Using Include="XtermSharp.Input" />
+    <Using Include="XtermSharp.Links" />
     <Using Include="XtermSharp.Logging" />
     <Using Include="XtermSharp.Markers" />
     <Using Include="XtermSharp.Options" />
     <Using Include="XtermSharp.Parsing" />
     <Using Include="XtermSharp.Snapshots" />
+    <Using Include="XtermSharp.Selection" />
     <Using Include="XtermSharp.Unicode" />
     <Using Include="XtermSharp.Internal.Buffers" />
     <Using Include="XtermSharp.Internal.Colors" />

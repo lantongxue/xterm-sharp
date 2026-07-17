@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>XtermSharp.Addons.WebLinks</RootNamespace>
+    <AssemblyName>XtermSharp.Addons.WebLinks</AssemblyName>
+    <PackageId>XtermSharp.Addons.WebLinks</PackageId>
+    <Version>0.1.0-alpha.1</Version>
+    <Description>Web link detection addon for XtermSharp.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/xterm-sharp/xterm-sharp</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../XtermSharp/XtermSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Addons" />
+    <Using Include="XtermSharp.Input" />
+    <Using Include="XtermSharp.Links" />
+    <Using Include="XtermSharp.Snapshots" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>XtermSharp.Addons.WebLinks.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../NOTICE.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
+    <None Include="../../docs/web-links-addon.md" Pack="true" PackagePath="docs/" />
+  </ItemGroup>
+</Project>

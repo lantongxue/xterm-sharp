@@ -3,13 +3,16 @@
 ## Project snapshot
 
 - XtermSharp is an experimental headless terminal emulator written in pure C# for .NET 10.
+- `XtermSharp.Addons.WebLinks` and `XtermSharp.Addons.Search` are the optional upstream-compatible
+  web-link detection and buffer-search addons.
 - Package version: `0.1.0-alpha.1`.
 - Compatibility baseline: xterm.js `6.0.0`, commit
   `b1aee19ac6d6f4e4d11e4a10a3731b852956bdb7`.
 - `xterm.js/` is the pinned development reference. Do not modify it or change its commit unless the
   task is explicitly an upstream-baseline upgrade.
-- `XtermSharp` remains a common/headless package. Optional `XtermSharp.Rendering`,
-  `XtermSharp.Rendering.Skia` and `XtermSharp.Avalonia` packages provide display-list, Skia and
+- `XtermSharp` remains a common/headless package. Optional `XtermSharp.Addons.WebLinks`,
+  `XtermSharp.Addons.Search`, `XtermSharp.Rendering`, `XtermSharp.Rendering.Skia` and
+  `XtermSharp.Avalonia` packages provide link detection, buffer search, display-list, Skia and
   Avalonia integration without adding UI dependencies to the core package. Browser, DOM, WebGL,
   accessibility rendering, built-in PTY/SSH transports, WPF and WinUI integration remain outside
   the current scope; the SSH sample integrates SSH.NET without changing the library boundary.
@@ -30,6 +33,8 @@ Last fully verified on 2026-07-17. Update this section whenever the pinned basel
 | Main xUnit suite | 1,425/1,425 passing |
 | Reference infrastructure suite | 1/1 passing |
 | Rendering suites | 22/22 passing |
+| Web links addon suite | 12/12 passing |
+| Search addon suite | 12/12 passing |
 
 `XTJS-0799` is the sole `ArchitectureEquivalent` case. xterm.js parses large writes in
 131,072-code-point array chunks; XtermSharp streams each `Rune` without an intermediate parse
@@ -41,8 +46,13 @@ tests and 40 local production-parser/safety regressions. `tests/upstream-port-ma
 
 ## Repository map
 
-- `src/XtermSharp/`: public API and headless terminal implementation, grouped into `Events`,
-  `Input`, `Options`, `Parsing`, `Snapshots` and `Unicode` contracts.
+- `src/XtermSharp/`: public API and headless terminal implementation, grouped into `Decorations`,
+  `Events`, `Input`, `Links`, `Options`, `Parsing`, `Selection`, `Snapshots` and `Unicode`
+  contracts.
+- `src/XtermSharp.Addons.WebLinks/`: optional `addon-web-links` port with strict URL matching,
+  wrapped-line range mapping and configurable activation/hover/leave callbacks.
+- `src/XtermSharp.Addons.Search/`: optional `addon-search` port with forward/reverse search,
+  wrapped/wide/UTF-16 mapping, result tracking and backend-neutral decorations.
 - `src/XtermSharp/Internal/Engine/TerminalEngine.cs`: VT execution, modes, cursor and buffer
   mutations.
 - `src/XtermSharp/Internal/Parser/EscapeSequenceParser.cs`: the single VT500 state machine used by
@@ -58,7 +68,8 @@ tests and 40 local production-parser/safety regressions. `tests/upstream-port-ma
 - `src/XtermSharp.Rendering.Skia/Backends/`: SkiaSharp/HarfBuzz backend and retained row pictures.
 - `src/XtermSharp.Avalonia/`: interactive Avalonia adapter grouped into `Controls`, `Input` and
   `Diagnostics`.
-- `samples/XtermSharp.Avalonia.Demo/`: no-PTY ANSI playback and local input-echo smoke test.
+- `samples/XtermSharp.Avalonia.Demo/`: no-PTY ANSI playback and local input-echo smoke test with
+  interactive web-links and search-addon demonstrations.
 - `samples/XtermSharp.Avalonia.Demo.SSH/`: real SSH PTY integration sample with configurable
   password/private-key authentication and host-key verification.
 - `tests/XtermSharp.Tests/`: xUnit v3 behavior, upstream-port and fixture tests.
@@ -70,6 +81,10 @@ tests and 40 local production-parser/safety regressions. `tests/upstream-port-ma
 - `tests/XtermSharp.ReferenceTests/`: reference-test infrastructure checks.
 - `tests/XtermSharp.Rendering.Tests/`, `XtermSharp.Rendering.Skia.Tests/` and
   `XtermSharp.Avalonia.Tests/`: renderer and platform-adapter verification.
+- `tests/XtermSharp.Addons.WebLinks.Tests/`: upstream addon behavior, provider lifecycle and hover
+  decoration verification.
+- `tests/XtermSharp.Addons.Search.Tests/`: upstream search behavior, regression fixture, result
+  tracking, decoration and renderer integration verification.
 - `tests/upstream-port-map.json`: maintained C# binding/status map.
 - `tests/upstream-tests.json`: generated expanded upstream inventory; do not hand-edit it.
 - `tools/XtermSharp.Conformance/`: JSON snapshot/event runner for differential tests.
@@ -103,8 +118,14 @@ tests and 40 local production-parser/safety regressions. `tests/upstream-port-ma
 - Events are dispatched after the command commits and use the resulting revision. Subscriber
   exceptions are logged and must not stop other subscribers.
 - Snapshots are immutable. Do not expose live mutable buffer objects through the public API.
+- Core selection and decoration state is platform-neutral. Addons update `Terminal.Selection` and
+  registered decoration providers; renderers consume immutable copies and must preserve bottom
+  background, selection and top background ordering.
 - Terminal event handlers in rendering adapters must only record invalidation state; snapshot
   acquisition, scene compilation and drawing must never block the terminal processor task.
+- Link providers use one-based inclusive active-buffer ranges. Provider resolution and callbacks
+  run outside the terminal processor task; platform adapters must cancel stale pointer queries on
+  movement, resize, detach or terminal hot-swap.
 - Rendering backends consume backend-neutral display lists. Do not expose `SKCanvas` or another
   graphics-library type through `XtermSharp.Rendering` public data structures.
 - Skia font-family lists must skip unavailable candidates before selecting the primary grid font.
@@ -181,14 +202,16 @@ dotnet test --project tests/XtermSharp.ReferenceTests/XtermSharp.ReferenceTests.
 dotnet test --project tests/XtermSharp.Rendering.Tests/XtermSharp.Rendering.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Rendering.Skia.Tests/XtermSharp.Rendering.Skia.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet run --project tools/XtermSharp.TestMap/XtermSharp.TestMap.csproj --no-build -- --check
 node tools/compare-reference.mjs tools/sample-request.json
 node tools/compare-fixtures.mjs
 ```
 
 Expected final signals are zero build warnings/errors, 1,425 main tests passing, 22 rendering
-tests passing, one reference test passing, 1,307 verified bindings, `MATCH`, and `MATCH 76/76
-escape-sequence fixtures`.
+tests passing, 12 web-links addon tests passing, 12 search addon tests passing, one reference test
+passing, 1,307 verified bindings, `MATCH`, and `MATCH 76/76 escape-sequence fixtures`.
 
 The Node-based checks require the pinned upstream build. If it is absent, prepare it with:
 

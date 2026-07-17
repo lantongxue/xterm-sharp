@@ -14,13 +14,16 @@ changes the pre-0.1 public namespaces introduced before the responsibility-based
 ```text
 src/XtermSharp/
 ├── Addons/                 Public addon contracts
+├── Decorations/            Platform-neutral decoration providers and ranges
 ├── Events/                 Terminal event arguments and color requests
 ├── Input/                  Platform-neutral keyboard and mouse contracts
+├── Links/                  Public link providers, ranges, events and decorations
 ├── Logging/                Logging contracts and the null logger
 ├── Markers/                Terminal markers
 ├── Options/                Construction and runtime option models
 ├── Parsing/                Public parser contracts and CSI parameters
 ├── Snapshots/              Immutable terminal, buffer, line and cell snapshots
+├── Selection/              Platform-neutral selection ranges
 ├── Unicode/                Unicode providers and registry
 └── Internal/
     ├── Buffers/            Mutable cells, lines, buffers, ranges and reflow
@@ -51,6 +54,14 @@ src/XtermSharp.Rendering/
 src/XtermSharp.Rendering.Skia/
 └── Backends/               SkiaSharp/HarfBuzz implementation
 
+src/XtermSharp.Addons.WebLinks/
+└── WebLinksAddon           Upstream-compatible URL detection and link provider
+
+src/XtermSharp.Addons.Search/
+├── SearchAddon             Upstream-compatible search lifecycle and public API
+├── SearchEngine            Wrapped-line and UTF-16-aware forward/reverse matching
+└── SearchDecorationProvider Backend-neutral result and active-match decorations
+
 src/XtermSharp.Avalonia/
 ├── Controls/               TerminalView
 ├── Diagnostics/            Rendering metrics and overlay
@@ -59,7 +70,11 @@ src/XtermSharp.Avalonia/
 
 Samples separate application startup, views, models, services, events and exceptions. Test support
 separates manifest models from binding discovery, while parser test helpers and string-sequence
-suites use dedicated subdirectories.
+suites use dedicated subdirectories. `tests/XtermSharp.Addons.WebLinks.Tests/` covers the upstream
+addon cases plus the core provider and backend-neutral hover-decoration integration.
+`tests/XtermSharp.Addons.Search.Tests/` covers search cycling, regex and incremental options,
+wide/wrapped mapping, the upstream issue-2444 fixture, result tracking, debounce and display-list
+decoration ordering.
 
 The pinned `xterm.js/` reference tree is intentionally excluded from this convention and must not
 be reorganized locally.

@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>XtermSharp.Rendering</RootNamespace>
-    <AssemblyName>XtermSharp.Rendering</AssemblyName>
-    <PackageId>XtermSharp.Rendering</PackageId>
+    <RootNamespace>XtermSharp.Addons.Search</RootNamespace>
+    <AssemblyName>XtermSharp.Addons.Search</AssemblyName>
+    <PackageId>XtermSharp.Addons.Search</PackageId>
     <Version>0.1.0-alpha.1</Version>
-    <Description>Backend-neutral rendering engine for XtermSharp.</Description>
+    <Description>Search addon for XtermSharp.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/xterm-sharp/xterm-sharp</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -17,26 +17,22 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Addons" />
     <Using Include="XtermSharp.Decorations" />
     <Using Include="XtermSharp.Events" />
     <Using Include="XtermSharp.Logging" />
-    <Using Include="XtermSharp.Links" />
-    <Using Include="XtermSharp.Options" />
-    <Using Include="XtermSharp.Snapshots" />
     <Using Include="XtermSharp.Selection" />
-    <Using Include="XtermSharp.Rendering.Backends" />
-    <Using Include="XtermSharp.Rendering.Colors" />
-    <Using Include="XtermSharp.Rendering.Configuration" />
-    <Using Include="XtermSharp.Rendering.Controllers" />
-    <Using Include="XtermSharp.Rendering.Display" />
-    <Using Include="XtermSharp.Rendering.Geometry" />
-    <Using Include="XtermSharp.Rendering.Selection" />
-    <Using Include="XtermSharp.Rendering.Themes" />
+    <Using Include="XtermSharp.Snapshots" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>XtermSharp.Addons.Search.Tests</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="/" />
     <None Include="../../NOTICE.md" Pack="true" PackagePath="/" />
     <None Include="../../LICENSE" Pack="true" PackagePath="/" />
-    <None Include="../../docs/rendering-architecture.md" Pack="true" PackagePath="docs/" />
+    <None Include="../../docs/search-addon.md" Pack="true" PackagePath="docs/" />
   </ItemGroup>
 </Project>

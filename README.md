@@ -4,7 +4,7 @@ XtermSharp is an experimental pure C# terminal emulator for .NET 10, aligned
 with the common/headless behavior of xterm.js 6.0.0. The core package parses
 terminal output and exposes immutable snapshots; optional rendering packages
 provide a backend-neutral display list, a SkiaSharp/HarfBuzz backend and an
-interactive Avalonia control.
+interactive Avalonia control, while optional addons provide web-link detection and buffer search.
 
 > Current version: `0.1.0-alpha.1`. All 1,307 headless-applicable cases in the
 > pinned upstream inventory are covered by C# tests. XtermSharp remains a
@@ -24,7 +24,11 @@ interactive Avalonia control.
 - DEC modes, mouse/key input encoding, focus and bracketed-paste modes,
   synchronized output, OSC titles, OSC 8 hyperlinks and DSR responses.
 - Immutable viewport or full-buffer snapshots, terminal events, markers,
-  addons and pluggable Unicode providers.
+  addons, ordered link providers and pluggable Unicode providers.
+- An optional `XtermSharp.Addons.WebLinks` package matching the pinned
+  `addon-web-links` URL detection and wrapped-cell mapping behavior.
+- An optional `XtermSharp.Addons.Search` package matching the pinned `addon-search` forward/reverse,
+  regex, incremental, wrapped-cell and highlighted-result behavior.
 - Backend-neutral terminal display lists with damage tracking and immutable
   frame publication.
 - SkiaSharp/HarfBuzz rendering and an Avalonia `TerminalView` with selection,
@@ -79,6 +83,50 @@ await terminal.WriteAsync("\x1b[32mhello from Skia\x1b[0m\r\n");
 The control subscribes to the terminal but never disposes it. Applications
 continue to own PTY/session wiring and the terminal lifetime.
 
+### Web links addon
+
+Reference `XtermSharp.Addons.WebLinks` and load the addon before displaying the
+terminal. `TerminalView` automatically handles link hover decoration and click
+activation; the default handler opens links through the operating-system shell.
+
+```csharp
+using XtermSharp.Addons.WebLinks;
+
+terminal.LoadAddon(new WebLinksAddon());
+```
+
+Provide a custom activation handler or `WebLinkProviderOptions` to integrate
+navigation, hover tooltips, leave notifications or a custom URL regex. Headless
+consumers can query registered providers through `GetLinksAsync` and
+`GetLinkAtAsync`. See [the addon guide](docs/web-links-addon.md).
+
+### Search addon
+
+Reference `XtermSharp.Addons.Search`, load the addon and call `FindNext` or `FindPrevious` against
+the latest committed active buffer. Optional match decorations are consumed automatically by
+`XtermSharp.Rendering` and `TerminalView`.
+
+```csharp
+using XtermSharp.Addons.Search;
+using XtermSharp.Snapshots;
+
+var search = new SearchAddon();
+terminal.LoadAddon(search);
+search.FindNext("error", new SearchOptions
+{
+    Regex = false,
+    Decorations = new SearchDecorationOptions
+    {
+        MatchBackground = TerminalColor.Rgb(80, 50, 0),
+        ActiveMatchBackground = TerminalColor.Rgb(0, 80, 140)
+    }
+});
+```
+
+The addon supports case-sensitive, whole-word, regex and incremental searches, tracks capped result
+counts, and debounces decorated-result recomputation after writes and resizes. See
+[the addon guide](docs/search-addon.md).
+
 Set `ShowRenderingDebugOverlay` to display rolling FPS and average/maximum/minimum frame intervals.
 See the [rendering debug overlay change log](docs/rendering-debug-overlay-2026-07-17.md) for sampling
 semantics, SSH demo integration and verification details.
@@ -99,6 +147,10 @@ variables. See the [SSH demo README](samples/XtermSharp.Avalonia.Demo.SSH/README
 for the complete list and host-key verification workflow. The SSH dependency is
 sample-only; the XtermSharp library packages remain transport-agnostic.
 
+The non-PTY `XtermSharp.Avalonia.Demo` loads both `WebLinksAddon` and `SearchAddon`. Its toolbar
+demonstrates regex, case-sensitive and whole-word buffer searches with highlighted results, while
+the terminal content includes clickable web links.
+
 ## Conformance
 
 The compatibility baseline is xterm.js 6.0.0 at commit
@@ -114,6 +166,8 @@ The current verification results are:
   all 76 escape-sequence fixtures, two manifest audits and 40 local parser and
   safety regressions.
 - Twenty-two rendering tests passing across the backend-neutral, Skia and Avalonia suites.
+- Twelve `addon-web-links` compatibility and integration tests passing.
+- Twelve `addon-search` compatibility, regression and rendering-integration tests passing.
 - 1/1 reference infrastructure test passing.
 - 1,307 unique manifest bindings with no pending applicable cases.
 - All 76 escape-sequence fixtures matching the pinned xterm.js headless oracle.
@@ -131,6 +185,8 @@ dotnet test --project tests/XtermSharp.ReferenceTests/XtermSharp.ReferenceTests.
 dotnet test --project tests/XtermSharp.Rendering.Tests/XtermSharp.Rendering.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Rendering.Skia.Tests/XtermSharp.Rendering.Skia.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet run --project tools/XtermSharp.TestMap/XtermSharp.TestMap.csproj --no-build -- --check
 node tools/compare-reference.mjs tools/sample-request.json
 node tools/compare-fixtures.mjs
