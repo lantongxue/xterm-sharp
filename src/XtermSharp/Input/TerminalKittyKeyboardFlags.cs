@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Input;
 
 [Flags]
 public enum TerminalKittyKeyboardFlags : byte

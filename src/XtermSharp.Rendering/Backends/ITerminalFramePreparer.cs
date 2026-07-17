@@ -1,4 +1,4 @@
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Backends;
 
 /// <summary>
 /// Optionally prepares backend-specific retained resources before a frame reaches the UI render thread.

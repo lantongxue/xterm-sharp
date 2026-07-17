@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Services.Links;
 
 /// <summary>Tracks OSC 8 hyperlink metadata for every buffer line on which it appears.</summary>
 internal sealed class OscLinkService

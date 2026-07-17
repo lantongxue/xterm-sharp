@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace XtermSharp;
+namespace XtermSharp.Unicode;
 
 public interface IUnicodeProvider
 {

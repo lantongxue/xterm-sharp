@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Unicode;
 
 public interface ITerminalUnicode
 {

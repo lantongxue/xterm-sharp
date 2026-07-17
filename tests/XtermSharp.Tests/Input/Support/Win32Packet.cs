@@ -1,4 +1,4 @@
-namespace XtermSharp.Tests.Input;
+namespace XtermSharp.Tests.Input.Support;
 
 internal readonly record struct Win32Packet(
     int VirtualKey,

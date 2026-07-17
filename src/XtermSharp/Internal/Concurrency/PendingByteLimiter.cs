@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Concurrency;
 
 internal sealed class PendingByteLimiter : IDisposable
 {

@@ -1,7 +1,7 @@
 using System.Buffers;
 using System.Text;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Decoding;
 
 /// <summary>
 /// Streaming UTF-8 decoder matching xterm.js: malformed sequences are discarded and

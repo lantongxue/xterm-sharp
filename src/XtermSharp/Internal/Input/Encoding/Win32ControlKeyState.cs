@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal.Input;
+namespace XtermSharp.Internal.Input.Encoding;
 
 [Flags]
 internal enum Win32ControlKeyState : ushort

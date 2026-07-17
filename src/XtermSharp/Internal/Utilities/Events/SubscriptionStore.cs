@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal.Utilities;
+namespace XtermSharp.Internal.Utilities.Events;
 
 internal sealed class SubscriptionStore : IDisposable
 {

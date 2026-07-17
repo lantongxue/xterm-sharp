@@ -2,7 +2,12 @@
 
 XtermSharp uses one C# type per file, including internal command, cache, state and test-helper
 types. File names match their contained type, while directories group related responsibilities.
-Existing namespaces remain stable so this physical layout does not introduce public API churn.
+Namespaces follow the project root namespace plus the physical folder path; for example,
+`src/XtermSharp/Options/TerminalOptions.cs` declares `XtermSharp.Options.TerminalOptions`.
+
+The repository enables Roslyn `IDE0130` and Rider/ReSharper `CheckNamespace` in `.editorconfig` so
+future file moves must keep namespaces and references synchronized. This convention intentionally
+changes the pre-0.1 public namespaces introduced before the responsibility-based directory layout.
 
 ## Core package
 

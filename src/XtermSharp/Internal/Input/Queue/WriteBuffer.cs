@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Input.Queue;
 
 /// <summary>Ordered, sliceable write queue matching xterm.js write/writeSync semantics.</summary>
 internal sealed class WriteBuffer : IDisposable

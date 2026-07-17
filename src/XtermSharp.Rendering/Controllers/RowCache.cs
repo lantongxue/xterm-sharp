@@ -1,4 +1,4 @@
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Controllers;
 
 internal sealed record RowCache(
     TerminalLineSnapshot Line,

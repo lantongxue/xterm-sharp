@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Options;
 
 /// <summary>
 /// Security gates for host-window control and reporting sequences. Every operation is disabled by

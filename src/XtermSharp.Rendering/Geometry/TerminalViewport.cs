@@ -1,4 +1,4 @@
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Geometry;
 
 public readonly record struct TerminalViewport(
     double Width,

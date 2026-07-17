@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Parsing;
 
 public interface ITerminalParser
 {

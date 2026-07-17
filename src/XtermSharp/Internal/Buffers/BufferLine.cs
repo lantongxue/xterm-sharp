@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using System.Text;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Buffers;
 
 internal sealed class BufferLine
 {

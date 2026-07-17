@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Addons;
 
 public interface ITerminalAddon : IDisposable
 {

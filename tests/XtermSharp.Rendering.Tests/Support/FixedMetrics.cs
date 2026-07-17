@@ -1,4 +1,4 @@
-namespace XtermSharp.Rendering.Tests;
+namespace XtermSharp.Rendering.Tests.Support;
 
 internal sealed class FixedMetrics : ITerminalFontMetricsProvider
 {

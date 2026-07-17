@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Events;
 
 public sealed class TerminalRenderEventArgs(long revision, int startRow, int endRow)
     : TerminalEventArgs(revision)

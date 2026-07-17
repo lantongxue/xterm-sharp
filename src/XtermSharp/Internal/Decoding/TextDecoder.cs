@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Decoding;
 
 /// <summary>
 /// UTF-32 conversion helpers matching the streaming decoders used by xterm.js.

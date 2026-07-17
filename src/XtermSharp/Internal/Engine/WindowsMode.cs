@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Engine;
 
 /// <summary>
 /// Implements xterm.js' winpty wrapped-line heuristic after a line feed.

@@ -1,4 +1,4 @@
-namespace XtermSharp.Tests.Addon;
+namespace XtermSharp.Tests.Addon.Support;
 
 internal sealed class RecordingAddon : ITerminalAddon
 {

@@ -1,4 +1,4 @@
-namespace XtermSharp.Avalonia.Demo.SSH;
+namespace XtermSharp.Avalonia.Demo.SSH.Exceptions;
 
 internal sealed class HostKeyVerificationException(
     string fingerprint,

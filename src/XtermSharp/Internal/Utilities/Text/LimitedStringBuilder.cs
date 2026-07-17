@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal.Utilities;
+namespace XtermSharp.Internal.Utilities.Text;
 
 /// <summary>
 /// A string builder that clears its payload when a fixed limit is exceeded.

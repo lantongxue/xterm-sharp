@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Input;
 
 /// <summary>A platform-neutral keyboard event suitable for terminal protocol encoding.</summary>
 public readonly record struct TerminalKeyEvent(

@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Buffers;
 
 internal sealed class BufferLineStringCache : IDisposable
 {

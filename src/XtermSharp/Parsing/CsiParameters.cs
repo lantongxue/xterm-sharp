@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using XtermSharp.Internal;
 
-namespace XtermSharp;
+namespace XtermSharp.Parsing;
 
 public sealed class CsiParameters
 {

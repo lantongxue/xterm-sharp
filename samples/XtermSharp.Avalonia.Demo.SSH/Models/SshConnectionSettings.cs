@@ -1,4 +1,4 @@
-namespace XtermSharp.Avalonia.Demo.SSH;
+namespace XtermSharp.Avalonia.Demo.SSH.Models;
 
 internal sealed record SshConnectionSettings(
     string Host,

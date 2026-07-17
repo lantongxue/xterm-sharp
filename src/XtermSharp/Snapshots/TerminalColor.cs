@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Snapshots;
 
 public readonly record struct TerminalColor(TerminalColorMode Mode, int Value)
 {

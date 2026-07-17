@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Input.Queue;
 
 internal readonly record struct WriteBufferChunk
 {

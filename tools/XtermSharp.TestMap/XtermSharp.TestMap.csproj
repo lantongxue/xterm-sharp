@@ -13,4 +13,9 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3.extensibility.core" Version="3.2.2" PrivateAssets="all" />
   </ItemGroup>
+  <ItemGroup>
+    <Using Include="XtermSharp.TestSupport.Bindings" />
+    <Using Include="XtermSharp.TestSupport.Manifest" />
+    <Using Include="XtermSharp.TestMap.Models" />
+  </ItemGroup>
 </Project>

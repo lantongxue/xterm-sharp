@@ -1,6 +1,6 @@
-using XtermSharp.Internal.Utilities;
+using XtermSharp.Internal.Utilities.Text;
 using XtermSharp.TestSupport;
-using XtermStringBuilder = XtermSharp.Internal.Utilities.StringBuilder;
+using XtermStringBuilder = XtermSharp.Internal.Utilities.Text.StringBuilder;
 
 namespace XtermSharp.Tests.Utilities;
 

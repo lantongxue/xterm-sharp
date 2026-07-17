@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace XtermSharp.Tests.Services;
+namespace XtermSharp.Tests.Services.Support;
 
 internal sealed class DoubleWidthProvider : IUnicodeProvider
 {

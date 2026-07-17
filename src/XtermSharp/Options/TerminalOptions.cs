@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Options;
 
 /// <summary>Configures a headless terminal instance.</summary>
 public sealed class TerminalOptions

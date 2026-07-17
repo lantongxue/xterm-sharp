@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Snapshots;
 
 public sealed record TerminalModes(
     bool ApplicationCursorKeys,

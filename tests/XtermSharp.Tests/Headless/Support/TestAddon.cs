@@ -1,4 +1,4 @@
-namespace XtermSharp.Tests.Headless;
+namespace XtermSharp.Tests.Headless.Support;
 
 internal sealed class TestAddon(Func<Terminal, int> activation) : ITerminalAddon
 {

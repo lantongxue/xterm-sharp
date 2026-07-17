@@ -6,7 +6,7 @@ using SkiaSharp;
 using XtermSharp.Rendering;
 using XtermSharp.Rendering.Skia;
 
-namespace XtermSharp.Avalonia;
+namespace XtermSharp.Avalonia.Controls;
 
 internal sealed class SkiaDrawOperation(
     Rect bounds,

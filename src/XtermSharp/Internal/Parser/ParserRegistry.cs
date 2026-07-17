@@ -1,6 +1,6 @@
 using XtermSharp.Internal.Parser;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Parser;
 
 internal sealed class ParserRegistry(EscapeSequenceParser parser) : ITerminalParser
 {

@@ -1,6 +1,6 @@
-using XtermSharp.Internal.Utilities;
+using XtermSharp.Internal.Utilities.Events;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Services.Options;
 
 /// <summary>
 /// Owns the mutable subset of terminal options and provides the same synchronous notification

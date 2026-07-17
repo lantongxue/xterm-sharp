@@ -1,7 +1,7 @@
 using System.Text;
-using XtermSharp.Internal;
+using XtermSharp.Internal.Utilities.Disposables;
 
-namespace XtermSharp;
+namespace XtermSharp.Unicode;
 
 internal sealed class UnicodeRegistry : ITerminalUnicode
 {

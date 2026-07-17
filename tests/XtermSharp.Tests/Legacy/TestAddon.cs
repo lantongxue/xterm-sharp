@@ -1,5 +1,7 @@
 using XtermSharp;
 
+namespace XtermSharp.Tests.Legacy;
+
 sealed class TestAddon : ITerminalAddon
 {
     public bool Activated { get; private set; }

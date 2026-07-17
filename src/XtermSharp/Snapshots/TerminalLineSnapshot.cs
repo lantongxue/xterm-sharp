@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace XtermSharp;
+namespace XtermSharp.Snapshots;
 
 public sealed record TerminalLineSnapshot(
     bool IsWrapped,

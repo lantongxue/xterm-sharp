@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace XtermSharp;
+namespace XtermSharp.Unicode;
 
 /// <summary>Provider using .NET Unicode categories and joining format/combining code points.</summary>
 public sealed class DotNetGraphemeProvider : IUnicodeProvider

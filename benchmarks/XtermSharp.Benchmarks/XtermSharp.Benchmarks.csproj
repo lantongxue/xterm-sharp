@@ -10,4 +10,13 @@
     <ProjectReference Include="../../src/XtermSharp.Rendering/XtermSharp.Rendering.csproj" />
     <ProjectReference Include="../../src/XtermSharp.Rendering.Skia/XtermSharp.Rendering.Skia.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Options" />
+    <Using Include="XtermSharp.Rendering.Configuration" />
+    <Using Include="XtermSharp.Rendering.Controllers" />
+    <Using Include="XtermSharp.Rendering.Display" />
+    <Using Include="XtermSharp.Rendering.Geometry" />
+    <Using Include="XtermSharp.Rendering.Skia.Backends" />
+  </ItemGroup>
 </Project>

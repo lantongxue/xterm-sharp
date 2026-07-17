@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Utilities.Disposables;
 
 internal sealed class DelegateDisposable(Action dispose) : IDisposable
 {

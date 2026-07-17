@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal.Parser;
+namespace XtermSharp.Internal.Parser.State;
 
 internal enum OscParserState
 {

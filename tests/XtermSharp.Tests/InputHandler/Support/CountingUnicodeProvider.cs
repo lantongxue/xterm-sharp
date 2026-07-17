@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace XtermSharp.Tests.InputHandler;
+namespace XtermSharp.Tests.InputHandler.Support;
 
 internal sealed class CountingUnicodeProvider : IUnicodeProvider
 {

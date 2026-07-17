@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal.Input;
+namespace XtermSharp.Internal.Input.Results;
 
 internal enum KeyboardResultType : byte
 {

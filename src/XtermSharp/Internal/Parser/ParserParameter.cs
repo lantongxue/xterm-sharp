@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Parser;
 
 internal readonly struct ParserParameter : IEquatable<ParserParameter>
 {

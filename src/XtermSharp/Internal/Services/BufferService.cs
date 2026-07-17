@@ -1,6 +1,6 @@
-using XtermSharp.Internal.Utilities;
+using XtermSharp.Internal.Utilities.Events;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Services;
 
 /// <summary>Coordinates the active buffer's viewport scrolling state.</summary>
 internal sealed class BufferService : IDisposable

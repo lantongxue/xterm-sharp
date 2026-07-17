@@ -1,4 +1,4 @@
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Colors;
 
 public readonly record struct TerminalRgbaColor(byte Red, byte Green, byte Blue, byte Alpha = 255)
 {

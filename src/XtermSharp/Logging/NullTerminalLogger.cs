@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Logging;
 
 internal sealed class NullTerminalLogger : ITerminalLogger
 {

@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Services.Links;
 
 internal sealed class OscLinkEntry
 {

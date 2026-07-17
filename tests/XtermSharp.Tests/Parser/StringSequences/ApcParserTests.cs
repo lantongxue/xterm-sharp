@@ -3,7 +3,7 @@ using XtermSharp.Internal;
 using XtermSharp.Internal.Parser;
 using XtermSharp.TestSupport;
 
-namespace XtermSharp.Tests.Parser;
+namespace XtermSharp.Tests.Parser.StringSequences;
 
 public sealed class ApcParserTests
 {

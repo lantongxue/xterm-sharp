@@ -16,6 +16,15 @@
     <ProjectReference Include="../XtermSharp.Rendering/XtermSharp.Rendering.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Using Include="XtermSharp.Snapshots" />
+    <Using Include="XtermSharp.Rendering.Backends" />
+    <Using Include="XtermSharp.Rendering.Colors" />
+    <Using Include="XtermSharp.Rendering.Configuration" />
+    <Using Include="XtermSharp.Rendering.Display" />
+    <Using Include="XtermSharp.Rendering.Geometry" />
+    <Using Include="XtermSharp.Rendering.Skia.Backends" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="$(SkiaSharpVersion)" />
     <PackageReference Include="SkiaSharp.HarfBuzz" Version="$(SkiaSharpVersion)" />
   </ItemGroup>

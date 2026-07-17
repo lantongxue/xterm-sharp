@@ -1,4 +1,4 @@
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Backends;
 
 public interface ITerminalFontMetricsProvider
 {

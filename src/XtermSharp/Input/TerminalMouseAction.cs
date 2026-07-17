@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Input;
 
 public enum TerminalMouseAction : byte
 {

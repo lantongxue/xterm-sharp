@@ -1,7 +1,7 @@
 using XtermSharp.Internal;
 using XtermSharp.Internal.Parser;
 
-namespace XtermSharp.Tests.Parser;
+namespace XtermSharp.Tests.Parser.StringSequences.Handlers;
 
 internal sealed class RecordingApcHandler(string name, List<string> reports, bool returnFalse) : IApcParserHandler
 {

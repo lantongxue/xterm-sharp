@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal.Utilities;
+namespace XtermSharp.Internal.Utilities.Collections;
 
 /// <summary>
 /// A list with a fixed maximum size that drops values from the front when it wraps.

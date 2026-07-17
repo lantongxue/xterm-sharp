@@ -1,4 +1,4 @@
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Display;
 
 public sealed record TerminalLineCommand(
     TerminalRect Rectangle,

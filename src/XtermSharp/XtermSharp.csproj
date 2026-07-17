@@ -20,6 +20,38 @@
     <None Include="../../docs/*.md" Pack="true" PackagePath="docs/" />
   </ItemGroup>
   <ItemGroup>
+    <Using Include="XtermSharp.Addons" />
+    <Using Include="XtermSharp.Events" />
+    <Using Include="XtermSharp.Input" />
+    <Using Include="XtermSharp.Logging" />
+    <Using Include="XtermSharp.Markers" />
+    <Using Include="XtermSharp.Options" />
+    <Using Include="XtermSharp.Parsing" />
+    <Using Include="XtermSharp.Snapshots" />
+    <Using Include="XtermSharp.Unicode" />
+    <Using Include="XtermSharp.Internal.Buffers" />
+    <Using Include="XtermSharp.Internal.Colors" />
+    <Using Include="XtermSharp.Internal.Commands" />
+    <Using Include="XtermSharp.Internal.Concurrency" />
+    <Using Include="XtermSharp.Internal.Decoding" />
+    <Using Include="XtermSharp.Internal.Engine" />
+    <Using Include="XtermSharp.Internal.Engine.Events" />
+    <Using Include="XtermSharp.Internal.Input.Encoding" />
+    <Using Include="XtermSharp.Internal.Input.Queue" />
+    <Using Include="XtermSharp.Internal.Input.Results" />
+    <Using Include="XtermSharp.Internal.Parser" />
+    <Using Include="XtermSharp.Internal.Parser.Handlers" />
+    <Using Include="XtermSharp.Internal.Parser.State" />
+    <Using Include="XtermSharp.Internal.Services" />
+    <Using Include="XtermSharp.Internal.Services.Charsets" />
+    <Using Include="XtermSharp.Internal.Services.Links" />
+    <Using Include="XtermSharp.Internal.Services.Mouse" />
+    <Using Include="XtermSharp.Internal.Services.Options" />
+    <Using Include="XtermSharp.Internal.Utilities.Collections" />
+    <Using Include="XtermSharp.Internal.Utilities.Disposables" />
+    <Using Include="XtermSharp.Internal.Utilities.Events" />
+  </ItemGroup>
+  <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>XtermSharp.Tests</_Parameter1>
     </AssemblyAttribute>

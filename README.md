@@ -33,6 +33,10 @@ interactive Avalonia control.
 ## Usage
 
 ```csharp
+using XtermSharp;
+using XtermSharp.Options;
+using XtermSharp.Snapshots;
+
 await using var terminal = new Terminal(new TerminalOptions
 {
     Columns = 80,
@@ -61,8 +65,12 @@ order so the terminal byte stream cannot be corrupted.
 Reference `XtermSharp.Avalonia` and bind an externally owned terminal instance:
 
 ```csharp
+using XtermSharp;
+using XtermSharp.Avalonia.Controls;
+using XtermSharp.Options;
+
 var terminal = new Terminal(new TerminalOptions { Columns = 80, Rows = 24 });
-var view = new XtermSharp.Avalonia.TerminalView { Terminal = terminal };
+var view = new TerminalView { Terminal = terminal };
 
 terminal.Data += (_, e) => pty.Write(e.Data);
 await terminal.WriteAsync("\x1b[32mhello from Skia\x1b[0m\r\n");

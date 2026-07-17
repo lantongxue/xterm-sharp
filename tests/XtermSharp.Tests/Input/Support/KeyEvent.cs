@@ -1,6 +1,6 @@
 using XtermSharp.TestSupport;
 
-namespace XtermSharp.Tests.Input;
+namespace XtermSharp.Tests.Input.Support;
 
 internal static class KeyEvent
 {

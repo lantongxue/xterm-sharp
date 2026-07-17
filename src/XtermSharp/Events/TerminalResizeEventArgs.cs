@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Events;
 
 public sealed class TerminalResizeEventArgs(long revision, int columns, int rows)
     : TerminalEventArgs(revision)

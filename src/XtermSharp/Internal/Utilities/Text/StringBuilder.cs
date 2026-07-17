@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal.Utilities;
+namespace XtermSharp.Internal.Utilities.Text;
 
 /// <summary>
 /// Accumulates string chunks without repeated whole-string concatenation.

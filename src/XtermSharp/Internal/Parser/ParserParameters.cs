@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Parser;
 
 /// <summary>
 /// Mutable parameter storage used while parsing CSI and DCS sequences. It mirrors xterm.js'

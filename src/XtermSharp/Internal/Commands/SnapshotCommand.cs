@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Commands;
 
 internal sealed class SnapshotCommand(SnapshotScope scope) : TerminalCommand(false, false, null)
 {

@@ -1,4 +1,4 @@
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Backends;
 
 [System.Diagnostics.CodeAnalysis.Experimental("XTSR0001")]
 public interface ITerminalRenderBackend<in TSurface> : ITerminalFontMetricsProvider, IDisposable

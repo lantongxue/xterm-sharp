@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Logging;
 
 public interface ITerminalLogger
 {

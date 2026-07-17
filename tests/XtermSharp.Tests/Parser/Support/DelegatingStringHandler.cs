@@ -1,6 +1,6 @@
 using XtermSharp.Internal.Parser;
 
-namespace XtermSharp.Tests.Parser;
+namespace XtermSharp.Tests.Parser.Support;
 
 internal sealed class DelegatingStringHandler(Func<bool, ValueTask<bool>> complete) :
     IOscParserHandler,

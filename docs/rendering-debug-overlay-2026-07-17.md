@@ -27,7 +27,9 @@ public bool ShowRenderingDebugOverlay { get; set; }
 It can be enabled from XAML:
 
 ```xml
-<xterm:TerminalView ShowRenderingDebugOverlay="True" />
+<Window xmlns:xterm="clr-namespace:XtermSharp.Avalonia.Controls;assembly=XtermSharp.Avalonia">
+  <xterm:TerminalView ShowRenderingDebugOverlay="True" />
+</Window>
 ```
 
 or changed at runtime:

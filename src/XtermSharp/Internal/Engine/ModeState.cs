@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Engine;
 
 internal sealed class ModeState
 {

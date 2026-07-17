@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Decoding;
 
 /// <summary>
 /// Streaming UTF-16 to UTF-32 decoder. Lone surrogates retain xterm.js' UCS-2 behavior.

@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Snapshots;
 
 [Flags]
 public enum CellAttributes : ushort

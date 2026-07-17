@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Snapshots;
 
 public readonly record struct TerminalCellSnapshot(
     string Text,

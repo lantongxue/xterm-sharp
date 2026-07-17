@@ -1,4 +1,4 @@
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Display;
 
 public readonly record struct TerminalDamage(int StartRow, int EndRow)
 {

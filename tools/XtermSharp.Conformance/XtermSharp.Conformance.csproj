@@ -7,5 +7,9 @@
   <ItemGroup>
     <ProjectReference Include="../../src/XtermSharp/XtermSharp.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Options" />
+    <Using Include="XtermSharp.Snapshots" />
+  </ItemGroup>
 </Project>
-

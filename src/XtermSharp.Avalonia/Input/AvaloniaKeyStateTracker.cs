@@ -1,6 +1,6 @@
 using Avalonia.Input;
 
-namespace XtermSharp.Avalonia;
+namespace XtermSharp.Avalonia.Input;
 
 internal sealed class AvaloniaKeyStateTracker
 {

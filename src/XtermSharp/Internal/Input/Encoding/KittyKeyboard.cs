@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal.Input;
+namespace XtermSharp.Internal.Input.Encoding;
 
 internal sealed class KittyKeyboard
 {

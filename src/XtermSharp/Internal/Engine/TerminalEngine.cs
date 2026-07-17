@@ -3,7 +3,7 @@ using System.Text;
 using XtermSharp.Internal.Input;
 using XtermSharp.Internal.Parser;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Engine;
 
 internal sealed class TerminalEngine : IDisposable
 {

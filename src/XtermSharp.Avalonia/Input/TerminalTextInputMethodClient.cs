@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Input.TextInput;
 using Avalonia.VisualTree;
 
-namespace XtermSharp.Avalonia;
+namespace XtermSharp.Avalonia.Input;
 
 internal sealed class TerminalTextInputMethodClient(TerminalView view) : TextInputMethodClient
 {

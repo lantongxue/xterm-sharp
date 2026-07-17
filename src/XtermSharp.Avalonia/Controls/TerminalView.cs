@@ -11,7 +11,7 @@ using System.Text;
 using XtermSharp.Rendering;
 using XtermSharp.Rendering.Skia;
 
-namespace XtermSharp.Avalonia;
+namespace XtermSharp.Avalonia.Controls;
 
 public sealed class TerminalView : TemplatedControl
 {
@@ -21,7 +21,7 @@ public sealed class TerminalView : TemplatedControl
     public static readonly StyledProperty<TerminalTheme> TerminalThemeProperty =
         AvaloniaProperty.Register<TerminalView, TerminalTheme>(
             nameof(TerminalTheme),
-            global::XtermSharp.Rendering.TerminalTheme.Default);
+            global::XtermSharp.Rendering.Themes.TerminalTheme.Default);
 
     public static readonly StyledProperty<TerminalRenderOptions> RenderOptionsProperty =
         AvaloniaProperty.Register<TerminalView, TerminalRenderOptions>(

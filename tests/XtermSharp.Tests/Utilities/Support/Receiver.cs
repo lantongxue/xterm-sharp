@@ -1,4 +1,4 @@
-namespace XtermSharp.Tests.Utilities;
+namespace XtermSharp.Tests.Utilities.Support;
 
 internal sealed class Receiver
 {

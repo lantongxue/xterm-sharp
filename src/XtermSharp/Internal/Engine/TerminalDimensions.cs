@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Engine;
 
 internal static class TerminalDimensions
 {

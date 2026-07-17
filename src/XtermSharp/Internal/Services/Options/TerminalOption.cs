@@ -1,6 +1,4 @@
-using XtermSharp.Internal.Utilities;
-
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Services.Options;
 
 internal enum TerminalOption
 {

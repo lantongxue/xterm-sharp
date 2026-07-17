@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Buffers;
 
 internal struct CellData
 {

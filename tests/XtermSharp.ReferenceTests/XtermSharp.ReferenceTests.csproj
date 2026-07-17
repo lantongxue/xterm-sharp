@@ -16,5 +16,10 @@
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="XtermSharp.TestSupport" />
+    <Using Include="XtermSharp.TestSupport.Bindings" />
+    <Using Include="XtermSharp.TestSupport.Manifest" />
+    <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Options" />
+    <Using Include="XtermSharp.Snapshots" />
   </ItemGroup>
 </Project>

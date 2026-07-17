@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Buffers;
 
 internal readonly record struct CellStyle(
     TerminalColor Foreground,

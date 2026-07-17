@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Events;
 
 public sealed class TerminalTitleChangedEventArgs(long revision, string title)
     : TerminalEventArgs(revision)

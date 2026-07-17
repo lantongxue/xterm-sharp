@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Buffers;
 
 internal static class BufferReflow
 {

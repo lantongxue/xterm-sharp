@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace XtermSharp.Rendering.Skia;
+namespace XtermSharp.Rendering.Skia.Backends;
 
 internal sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T> where T : class
 {

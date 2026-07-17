@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Events;
 
 public sealed class TerminalDataEventArgs(long revision, string data, bool isBinary = false)
     : TerminalEventArgs(revision)

@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Input;
 
 /// <summary>
 /// A terminal mouse event. Cell and pixel positions use the one-based coordinates emitted by

@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace XtermSharp.Avalonia;
+namespace XtermSharp.Avalonia.Diagnostics;
 
 internal readonly record struct RenderingDebugSnapshot(
     int SampleCount,
@@ -11,4 +11,3 @@ internal readonly record struct RenderingDebugSnapshot(
 {
     public static RenderingDebugSnapshot Empty { get; } = new(0, 0, 0, 0, 0);
 }
-

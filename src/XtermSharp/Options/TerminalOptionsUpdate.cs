@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Options;
 
 /// <summary>Runtime-changeable headless terminal options.</summary>
 public sealed class TerminalOptionsUpdate

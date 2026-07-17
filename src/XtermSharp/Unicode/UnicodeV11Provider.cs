@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace XtermSharp;
+namespace XtermSharp.Unicode;
 
 /// <summary>A practical Unicode 11 width provider with modern emoji ranges.</summary>
 public sealed class UnicodeV11Provider : IUnicodeProvider

@@ -1,4 +1,4 @@
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Themes;
 
 public sealed class TerminalTheme
 {

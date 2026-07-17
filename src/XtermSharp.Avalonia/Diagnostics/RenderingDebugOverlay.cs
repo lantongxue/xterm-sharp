@@ -1,7 +1,7 @@
 using SkiaSharp;
 using System.Globalization;
 
-namespace XtermSharp.Avalonia;
+namespace XtermSharp.Avalonia.Diagnostics;
 
 internal static class RenderingDebugOverlay
 {

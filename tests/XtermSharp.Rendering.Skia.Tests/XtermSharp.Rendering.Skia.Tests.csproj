@@ -15,5 +15,13 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Options" />
+    <Using Include="XtermSharp.Rendering.Backends" />
+    <Using Include="XtermSharp.Rendering.Colors" />
+    <Using Include="XtermSharp.Rendering.Configuration" />
+    <Using Include="XtermSharp.Rendering.Display" />
+    <Using Include="XtermSharp.Rendering.Geometry" />
+    <Using Include="XtermSharp.Rendering.Skia.Backends" />
   </ItemGroup>
 </Project>

@@ -2,9 +2,9 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Themes.Fluent;
 
-namespace XtermSharp.Avalonia.Demo.SSH;
+namespace XtermSharp.Avalonia.Demo.SSH.Application;
 
-internal sealed class DemoApplication : Application
+internal sealed class DemoApplication : global::Avalonia.Application
 {
     public override void Initialize()
     {

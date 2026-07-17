@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Events;
 
 public sealed class TerminalScrollEventArgs(long revision, int viewportY)
     : TerminalEventArgs(revision)

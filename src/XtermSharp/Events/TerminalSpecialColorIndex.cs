@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Events;
 
 /// <summary>Indexes used by OSC 10, 11 and 12 for non-palette colors.</summary>
 public enum TerminalSpecialColorIndex

@@ -6,19 +6,20 @@ The renderer is optional and keeps the headless core independent from UI and gra
 Terminal snapshots and revisioned events
                 |
                 v
-XtermSharp.Rendering
+XtermSharp.Rendering.Controllers
   TerminalRenderController
+XtermSharp.Rendering.Themes / Selection / Display
   theme and selection resolution
   immutable per-row display lists
                 |
                 v
-XtermSharp.Rendering.Skia
+XtermSharp.Rendering.Skia.Backends
   font metrics and fallback
   HarfBuzz shaping
   retained SKPicture rows
                 |
                 v
-XtermSharp.Avalonia.TerminalView
+XtermSharp.Avalonia.Controls.TerminalView
   dispatcher and frame scheduling
   DPI-aware resize
   keyboard, mouse, clipboard and IME
@@ -41,7 +42,9 @@ idle gap so terminal inactivity is not reported as a single slow frame. The over
 default and can be enabled from XAML:
 
 ```xml
-<xterm:TerminalView ShowRenderingDebugOverlay="True" />
+<Window xmlns:xterm="clr-namespace:XtermSharp.Avalonia.Controls;assembly=XtermSharp.Avalonia">
+  <xterm:TerminalView ShowRenderingDebugOverlay="True" />
+</Window>
 ```
 
 Synchronized output mode holds an already published frame for at most one second. Leaving the mode

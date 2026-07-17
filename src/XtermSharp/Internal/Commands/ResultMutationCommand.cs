@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Commands;
 
 internal sealed class ResultMutationCommand<TResult>(
     Func<TerminalEngine, TResult> action) : TerminalCommand(true, false, null)

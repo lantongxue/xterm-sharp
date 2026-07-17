@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Events;
 
 public class TerminalEventArgs(long revision) : EventArgs
 {

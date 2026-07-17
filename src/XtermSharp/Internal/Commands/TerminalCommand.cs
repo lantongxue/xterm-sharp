@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Commands;
 
 internal abstract class TerminalCommand
 {

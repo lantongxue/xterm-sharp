@@ -1,4 +1,4 @@
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Selection;
 
 public readonly record struct TerminalSelection(
     int StartColumn,

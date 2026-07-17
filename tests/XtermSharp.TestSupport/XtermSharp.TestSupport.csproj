@@ -9,6 +9,8 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="XtermSharp.TestSupport.Bindings" />
+    <Using Include="XtermSharp.TestSupport.Manifest" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="../upstream-tests.json" LogicalName="XtermSharp.TestSupport.upstream-tests.json" />

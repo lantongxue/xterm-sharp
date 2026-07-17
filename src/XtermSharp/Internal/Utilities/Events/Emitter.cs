@@ -1,4 +1,4 @@
-namespace XtermSharp.Internal.Utilities;
+namespace XtermSharp.Internal.Utilities.Events;
 
 /// <summary>
 /// Minimal synchronous event emitter with snapshot iteration semantics.

@@ -5770,241 +5770,241 @@
     {
       "id": "XTJS-0994",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-0994]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-0994]",
       "difference": null
     },
     {
       "id": "XTJS-0995",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-0995]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-0995]",
       "difference": null
     },
     {
       "id": "XTJS-0996",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-0996]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-0996]",
       "difference": null
     },
     {
       "id": "XTJS-0997",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-0997]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-0997]",
       "difference": null
     },
     {
       "id": "XTJS-0998",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-0998]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-0998]",
       "difference": null
     },
     {
       "id": "XTJS-0999",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-0999]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-0999]",
       "difference": null
     },
     {
       "id": "XTJS-1000",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1000]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1000]",
       "difference": null
     },
     {
       "id": "XTJS-1001",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1001]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1001]",
       "difference": null
     },
     {
       "id": "XTJS-1002",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1002]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1002]",
       "difference": null
     },
     {
       "id": "XTJS-1003",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1003]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1003]",
       "difference": null
     },
     {
       "id": "XTJS-1004",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1004]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1004]",
       "difference": null
     },
     {
       "id": "XTJS-1005",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1005]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1005]",
       "difference": null
     },
     {
       "id": "XTJS-1006",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1006]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1006]",
       "difference": null
     },
     {
       "id": "XTJS-1007",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1007]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1007]",
       "difference": null
     },
     {
       "id": "XTJS-1008",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1008]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1008]",
       "difference": null
     },
     {
       "id": "XTJS-1009",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1009]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1009]",
       "difference": null
     },
     {
       "id": "XTJS-1010",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1010]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1010]",
       "difference": null
     },
     {
       "id": "XTJS-1011",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1011]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1011]",
       "difference": null
     },
     {
       "id": "XTJS-1012",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1012]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1012]",
       "difference": null
     },
     {
       "id": "XTJS-1013",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1013]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.ApcParserTests.Matches_upstream_apc_scenarios[XTJS-1013]",
       "difference": null
     },
     {
       "id": "XTJS-1014",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1014]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1014]",
       "difference": null
     },
     {
       "id": "XTJS-1015",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1015]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1015]",
       "difference": null
     },
     {
       "id": "XTJS-1016",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1016]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1016]",
       "difference": null
     },
     {
       "id": "XTJS-1017",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1017]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1017]",
       "difference": null
     },
     {
       "id": "XTJS-1018",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1018]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1018]",
       "difference": null
     },
     {
       "id": "XTJS-1019",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1019]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1019]",
       "difference": null
     },
     {
       "id": "XTJS-1020",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1020]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1020]",
       "difference": null
     },
     {
       "id": "XTJS-1021",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1021]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1021]",
       "difference": null
     },
     {
       "id": "XTJS-1022",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1022]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1022]",
       "difference": null
     },
     {
       "id": "XTJS-1023",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1023]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1023]",
       "difference": null
     },
     {
       "id": "XTJS-1024",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1024]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1024]",
       "difference": null
     },
     {
       "id": "XTJS-1025",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1025]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1025]",
       "difference": null
     },
     {
       "id": "XTJS-1026",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1026]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1026]",
       "difference": null
     },
     {
       "id": "XTJS-1027",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1027]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1027]",
       "difference": null
     },
     {
       "id": "XTJS-1028",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1028]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1028]",
       "difference": null
     },
     {
       "id": "XTJS-1029",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1029]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1029]",
       "difference": null
     },
     {
       "id": "XTJS-1030",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1030]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1030]",
       "difference": null
     },
     {
       "id": "XTJS-1031",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1031]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1031]",
       "difference": null
     },
     {
       "id": "XTJS-1032",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1032]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1032]",
       "difference": null
     },
     {
       "id": "XTJS-1033",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1033]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.DcsParserTests.Matches_upstream_dcs_scenarios[XTJS-1033]",
       "difference": null
     },
     {
@@ -6976,139 +6976,139 @@
     {
       "id": "XTJS-1195",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1195]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1195]",
       "difference": null
     },
     {
       "id": "XTJS-1196",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1196]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1196]",
       "difference": null
     },
     {
       "id": "XTJS-1197",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1197]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1197]",
       "difference": null
     },
     {
       "id": "XTJS-1198",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1198]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1198]",
       "difference": null
     },
     {
       "id": "XTJS-1199",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1199]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1199]",
       "difference": null
     },
     {
       "id": "XTJS-1200",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1200]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1200]",
       "difference": null
     },
     {
       "id": "XTJS-1201",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1201]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1201]",
       "difference": null
     },
     {
       "id": "XTJS-1202",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1202]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1202]",
       "difference": null
     },
     {
       "id": "XTJS-1203",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1203]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1203]",
       "difference": null
     },
     {
       "id": "XTJS-1204",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1204]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1204]",
       "difference": null
     },
     {
       "id": "XTJS-1205",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1205]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1205]",
       "difference": null
     },
     {
       "id": "XTJS-1206",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1206]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1206]",
       "difference": null
     },
     {
       "id": "XTJS-1207",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1207]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1207]",
       "difference": null
     },
     {
       "id": "XTJS-1208",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1208]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1208]",
       "difference": null
     },
     {
       "id": "XTJS-1209",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1209]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1209]",
       "difference": null
     },
     {
       "id": "XTJS-1210",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1210]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1210]",
       "difference": null
     },
     {
       "id": "XTJS-1211",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1211]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1211]",
       "difference": null
     },
     {
       "id": "XTJS-1212",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1212]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1212]",
       "difference": null
     },
     {
       "id": "XTJS-1213",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1213]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1213]",
       "difference": null
     },
     {
       "id": "XTJS-1214",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1214]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1214]",
       "difference": null
     },
     {
       "id": "XTJS-1215",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1215]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1215]",
       "difference": null
     },
     {
       "id": "XTJS-1216",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1216]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1216]",
       "difference": null
     },
     {
       "id": "XTJS-1217",
       "status": "Ported",
-      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1217]",
+      "csharpTest": "XtermSharp.Tests:XtermSharp.Tests.Parser.StringSequences.OscParserTests.Matches_upstream_osc_scenarios[XTJS-1217]",
       "difference": null
     },
     {

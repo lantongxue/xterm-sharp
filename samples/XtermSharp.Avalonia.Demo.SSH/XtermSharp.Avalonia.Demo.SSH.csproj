@@ -9,6 +9,18 @@
     <ProjectReference Include="../../src/XtermSharp.Avalonia/XtermSharp.Avalonia.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Events" />
+    <Using Include="XtermSharp.Options" />
+    <Using Include="XtermSharp.Avalonia.Controls" />
+    <Using Include="XtermSharp.Avalonia.Demo.SSH.Application" />
+    <Using Include="XtermSharp.Avalonia.Demo.SSH.Events" />
+    <Using Include="XtermSharp.Avalonia.Demo.SSH.Exceptions" />
+    <Using Include="XtermSharp.Avalonia.Demo.SSH.Models" />
+    <Using Include="XtermSharp.Avalonia.Demo.SSH.Services" />
+    <Using Include="XtermSharp.Avalonia.Demo.SSH.Services.Operations" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageReference Include="SSH.NET" Version="2025.1.0" />

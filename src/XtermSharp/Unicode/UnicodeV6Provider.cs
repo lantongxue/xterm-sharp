@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace XtermSharp;
+namespace XtermSharp.Unicode;
 
 /// <summary>Width provider matching the default Unicode 6 behavior of xterm.js.</summary>
 public sealed class UnicodeV6Provider : IUnicodeProvider

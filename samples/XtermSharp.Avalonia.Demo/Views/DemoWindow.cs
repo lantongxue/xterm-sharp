@@ -4,7 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
 using System.Text;
 
-namespace XtermSharp.Avalonia.Demo;
+namespace XtermSharp.Avalonia.Demo.Views;
 
 internal sealed class DemoWindow : Window
 {

@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace XtermSharp.TestSupport;
+namespace XtermSharp.TestSupport.Manifest;
 
 [JsonConverter(typeof(JsonStringEnumConverter<UpstreamTestStatus>))]
 public enum UpstreamTestStatus

@@ -1,4 +1,4 @@
-namespace XtermSharp;
+namespace XtermSharp.Markers;
 
 /// <summary>A line anchor that follows buffer insertion, trimming and reflow.</summary>
 public sealed class TerminalMarker : IDisposable

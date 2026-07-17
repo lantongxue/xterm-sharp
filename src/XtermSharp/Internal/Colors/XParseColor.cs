@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Colors;
 
 internal static class XParseColor
 {

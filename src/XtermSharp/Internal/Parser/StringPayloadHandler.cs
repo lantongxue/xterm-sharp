@@ -1,4 +1,4 @@
-using XtermSharp.Internal.Utilities;
+using XtermSharp.Internal.Utilities.Text;
 
 namespace XtermSharp.Internal.Parser;
 

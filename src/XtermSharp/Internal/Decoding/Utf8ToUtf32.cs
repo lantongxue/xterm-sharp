@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace XtermSharp.Internal;
+namespace XtermSharp.Internal.Decoding;
 
 /// <summary>
 /// Streaming UTF-8 to UTF-32 decoder with xterm.js-compatible malformed-input handling.

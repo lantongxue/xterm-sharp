@@ -2,7 +2,7 @@ using System.Text;
 using SkiaSharp;
 using SkiaSharp.HarfBuzz;
 
-namespace XtermSharp.Rendering.Skia;
+namespace XtermSharp.Rendering.Skia.Backends;
 
 [System.Diagnostics.CodeAnalysis.Experimental("XTSR0001")]
 public sealed class SkiaTerminalRenderBackend : ITerminalRenderBackend<SKCanvas>, ITerminalFramePreparer

@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Display;
 
 public sealed record TerminalDisplayList(ImmutableArray<TerminalDisplayRow> Rows)
 {

@@ -3,7 +3,7 @@ using System.Threading.Channels;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-namespace XtermSharp.Avalonia.Demo.SSH;
+namespace XtermSharp.Avalonia.Demo.SSH.Services;
 
 internal sealed class SshTerminalSession : IAsyncDisposable
 {

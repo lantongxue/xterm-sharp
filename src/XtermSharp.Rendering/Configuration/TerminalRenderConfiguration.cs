@@ -1,4 +1,4 @@
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Configuration;
 
 public sealed record TerminalRenderConfiguration(
     string FontFamily,

@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Text;
 
-namespace XtermSharp.Rendering;
+namespace XtermSharp.Rendering.Controllers;
 
 public sealed class TerminalRenderController : IDisposable
 {

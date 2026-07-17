@@ -1,0 +1,7 @@
+root = true
+
+[*.cs]
+# Namespaces follow the project root namespace plus the physical folder path.
+dotnet_style_namespace_match_folder = true
+dotnet_diagnostic.IDE0130.severity = warning
+resharper_check_namespace_highlighting = warning

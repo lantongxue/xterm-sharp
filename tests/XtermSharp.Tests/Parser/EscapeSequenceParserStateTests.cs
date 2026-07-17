@@ -1,5 +1,5 @@
 using XtermSharp.Internal.Parser;
-using static XtermSharp.Tests.Parser.EscapeParserTestSupport;
+using static XtermSharp.Tests.Parser.Support.EscapeParserTestSupport;
 
 namespace XtermSharp.Tests.Parser;
 
