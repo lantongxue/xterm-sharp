@@ -31,6 +31,9 @@ public sealed class TerminalView : TemplatedControl
             nameof(RenderOptions),
             new TerminalRenderOptions());
 
+    public static readonly StyledProperty<bool> ShowRenderingDebugOverlayProperty =
+        AvaloniaProperty.Register<TerminalView, bool>(nameof(ShowRenderingDebugOverlay));
+
     public static readonly DirectProperty<TerminalView, int> ScrollValueProperty =
         AvaloniaProperty.RegisterDirect<TerminalView, int>(nameof(ScrollValue), view => view.ScrollValue);
 
@@ -46,6 +49,7 @@ public sealed class TerminalView : TemplatedControl
     private readonly DispatcherTimer _blinkTimer;
     private readonly TerminalTextInputMethodClient _textInputClient;
     private readonly AvaloniaKeyStateTracker _keyState = new();
+    private readonly RenderingDebugMetrics _renderingDebugMetrics = new();
     private SkiaTerminalRenderBackend? _backend;
     private TerminalRenderController? _controller;
     private TerminalRenderFrame? _frame;
@@ -92,6 +96,15 @@ public sealed class TerminalView : TemplatedControl
         set => SetValue(RenderOptionsProperty, value);
     }
 
+    /// <summary>
+    /// Gets or sets whether the top-right rendering FPS and frame-time overlay is visible.
+    /// </summary>
+    public bool ShowRenderingDebugOverlay
+    {
+        get => GetValue(ShowRenderingDebugOverlayProperty);
+        set => SetValue(ShowRenderingDebugOverlayProperty, value);
+    }
+
     public TerminalSelection? Selection => _controller?.Selection;
     public bool HasSelection => HasNonEmptySelection(Selection);
     public int ScrollValue => _frame?.ViewportY ?? 0;
@@ -106,7 +119,11 @@ public sealed class TerminalView : TemplatedControl
         base.Render(context);
         if (_backend is not null && _frame is not null)
         {
-            context.Custom(new SkiaDrawOperation(new Rect(Bounds.Size), _backend, _frame));
+            context.Custom(new SkiaDrawOperation(
+                new Rect(Bounds.Size),
+                _backend,
+                _frame,
+                ShowRenderingDebugOverlay ? _renderingDebugMetrics : null));
         }
     }
 
@@ -222,6 +239,11 @@ public sealed class TerminalView : TemplatedControl
         else if (change.Property == RenderOptionsProperty && _controller is not null)
         {
             _controller.Options = change.GetNewValue<TerminalRenderOptions>();
+        }
+        else if (change.Property == ShowRenderingDebugOverlayProperty)
+        {
+            _renderingDebugMetrics.Reset();
+            InvalidateVisual();
         }
     }
 
@@ -472,6 +494,7 @@ public sealed class TerminalView : TemplatedControl
         }
         _backend?.Dispose();
         _backend = null;
+        _renderingDebugMetrics.Reset();
         PublishFrame(null);
         _lastColumns = 0;
         _lastRows = 0;
@@ -763,10 +786,12 @@ public sealed class TerminalView : TemplatedControl
     private sealed class SkiaDrawOperation(
         Rect bounds,
         SkiaTerminalRenderBackend backend,
-        TerminalRenderFrame frame) : ICustomDrawOperation
+        TerminalRenderFrame frame,
+        RenderingDebugMetrics? debugMetrics) : ICustomDrawOperation
     {
         private SkiaTerminalRenderBackend Backend { get; } = backend;
         private TerminalRenderFrame Frame { get; } = frame;
+        private RenderingDebugMetrics? DebugMetrics { get; } = debugMetrics;
 
         public Rect Bounds { get; } = bounds;
 
@@ -781,11 +806,23 @@ public sealed class TerminalView : TemplatedControl
             }
             using ISkiaSharpApiLease lease = feature.Lease();
             Backend.Render(lease.SkCanvas, Frame);
+            if (DebugMetrics is not null)
+            {
+                RenderingDebugOverlay.Draw(
+                    lease.SkCanvas,
+                    new SKRect(
+                        (float)Bounds.Left,
+                        (float)Bounds.Top,
+                        (float)Bounds.Right,
+                        (float)Bounds.Bottom),
+                    DebugMetrics.RecordFrame());
+            }
         }
 
         public bool Equals(ICustomDrawOperation? other) =>
             other is SkiaDrawOperation operation && Bounds == operation.Bounds &&
-            ReferenceEquals(Backend, operation.Backend) && ReferenceEquals(Frame, operation.Frame);
+            ReferenceEquals(Backend, operation.Backend) && ReferenceEquals(Frame, operation.Frame) &&
+            ReferenceEquals(DebugMetrics, operation.DebugMetrics);
 
         public void Dispose()
         {

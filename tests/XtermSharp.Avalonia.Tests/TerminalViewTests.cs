@@ -1,4 +1,5 @@
 using Avalonia.Input;
+using SkiaSharp;
 using XtermSharp.Rendering;
 
 namespace XtermSharp.Avalonia.Tests;
@@ -14,6 +15,35 @@ public sealed class TerminalViewTests
         view.Terminal = null;
 
         Assert.False(terminal.IsDisposed);
+    }
+
+    [Fact]
+    public void RenderingDebugOverlayUsesRollingFrameIntervals()
+    {
+        var view = new TerminalView();
+        var metrics = new RenderingDebugMetrics();
+
+        Assert.False(view.ShowRenderingDebugOverlay);
+        view.ShowRenderingDebugOverlay = true;
+        RenderingDebugSnapshot snapshot = metrics.RecordFrameTime(10);
+        snapshot = metrics.RecordFrameTime(20);
+        snapshot = metrics.RecordFrameTime(30);
+
+        Assert.True(view.ShowRenderingDebugOverlay);
+        Assert.Equal(3, snapshot.SampleCount);
+        Assert.Equal(50, snapshot.FramesPerSecond, 3);
+        Assert.Equal(20, snapshot.AverageFrameTimeMilliseconds, 3);
+        Assert.Equal(30, snapshot.MaximumFrameTimeMilliseconds, 3);
+        Assert.Equal(10, snapshot.MinimumFrameTimeMilliseconds, 3);
+
+        using var bitmap = new SKBitmap(300, 150);
+        using var canvas = new SKCanvas(bitmap);
+        canvas.Clear(SKColors.Transparent);
+        RenderingDebugOverlay.Draw(canvas, new SKRect(0, 0, 300, 150), snapshot);
+        canvas.Flush();
+
+        Assert.True(bitmap.GetPixel(290, 10).Alpha > 0);
+        Assert.Equal(0, bitmap.GetPixel(10, 140).Alpha);
     }
 
     [Fact]

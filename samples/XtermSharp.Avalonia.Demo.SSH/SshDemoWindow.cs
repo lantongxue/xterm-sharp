@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -25,6 +26,7 @@ internal sealed class SshDemoWindow : Window
     private readonly TextBox _terminalTypeText;
     private readonly TextBox _hostKeyFingerprintText;
     private readonly CheckBox _acceptAnyHostKeyCheck;
+    private readonly CheckBox _showRenderingDebugCheck;
     private readonly Button _connectButton;
     private readonly TextBlock _statusText;
     private readonly List<Control> _configurationControls;
@@ -39,6 +41,7 @@ internal sealed class SshDemoWindow : Window
         Height = 760;
         MinWidth = 900;
         MinHeight = 600;
+        bool showRenderingDebug = IsTrue(Environment.GetEnvironmentVariable("XTERMSHARP_RENDERING_DEBUG"));
 
         _terminal = new Terminal(new TerminalOptions
         {
@@ -53,7 +56,8 @@ internal sealed class SshDemoWindow : Window
             Terminal = _terminal,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch,
-            Padding = new Thickness(8)
+            Padding = new Thickness(8),
+            ShowRenderingDebugOverlay = showRenderingDebug
         };
 
         _hostText = new TextBox { Text = GetEnvironmentValue("SSH_HOST", "localhost") };
@@ -93,6 +97,12 @@ internal sealed class SshDemoWindow : Window
         {
             Content = "Skip host key verification (test only)",
             IsChecked = IsTrue(Environment.GetEnvironmentVariable("SSH_ACCEPT_ANY_HOST_KEY")),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        _showRenderingDebugCheck = new CheckBox
+        {
+            Content = "Show rendering debug overlay",
+            IsChecked = showRenderingDebug,
             VerticalAlignment = VerticalAlignment.Center
         };
         _connectButton = new Button
@@ -136,6 +146,13 @@ internal sealed class SshDemoWindow : Window
         _authenticationCombo.SelectionChanged += (_, _) => UpdateAuthenticationControls();
         _browsePrivateKeyButton.Click += async (_, _) => await BrowsePrivateKeyAsync();
         _connectButton.Click += async (_, _) => await ToggleConnectionAsync();
+        _showRenderingDebugCheck.PropertyChanged += (_, args) =>
+        {
+            if (args.Property == ToggleButton.IsCheckedProperty)
+            {
+                _terminalView.ShowRenderingDebugOverlay = _showRenderingDebugCheck.IsChecked == true;
+            }
+        };
         _terminal.TitleChanged += OnTerminalTitleChanged;
         Opened += (_, _) => _terminalView.Focus();
         Closed += async (_, _) => await CloseAsync();
@@ -171,7 +188,8 @@ internal sealed class SshDemoWindow : Window
         var checkContainer = new StackPanel
         {
             Margin = new Thickness(0, 22, 12, 8),
-            Children = { _acceptAnyHostKeyCheck }
+            Spacing = 6,
+            Children = { _acceptAnyHostKeyCheck, _showRenderingDebugCheck }
         };
         verificationFields.Children.Add(checkContainer);
 

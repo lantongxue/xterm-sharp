@@ -124,7 +124,7 @@ The final tree was verified with:
 - zero build warnings and errors;
 - 1,425/1,425 main tests passing;
 - 1/1 reference infrastructure test passing;
-- 21/21 rendering, Skia and Avalonia tests passing;
+- 22/22 rendering, Skia and Avalonia tests passing;
 - 1,307 unique upstream bindings verified;
 - the sample differential scenario reporting `MATCH`;
 - all 76 escape-sequence fixtures matching the pinned xterm.js headless oracle.

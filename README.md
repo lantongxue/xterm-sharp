@@ -71,6 +71,10 @@ await terminal.WriteAsync("\x1b[32mhello from Skia\x1b[0m\r\n");
 The control subscribes to the terminal but never disposes it. Applications
 continue to own PTY/session wiring and the terminal lifetime.
 
+Set `ShowRenderingDebugOverlay` to display rolling FPS and average/maximum/minimum frame intervals.
+See the [rendering debug overlay change log](docs/rendering-debug-overlay-2026-07-17.md) for sampling
+semantics, SSH demo integration and verification details.
+
 ### SSH demo
 
 `XtermSharp.Avalonia.Demo.SSH` is a separate sample application that connects
@@ -101,7 +105,7 @@ The current verification results are:
 - 1,425/1,425 main xUnit tests passing, including all 1,307 upstream bindings,
   all 76 escape-sequence fixtures, two manifest audits and 40 local parser and
   safety regressions.
-- Twenty-one rendering tests passing across the backend-neutral, Skia and Avalonia suites.
+- Twenty-two rendering tests passing across the backend-neutral, Skia and Avalonia suites.
 - 1/1 reference infrastructure test passing.
 - 1,307 unique manifest bindings with no pending applicable cases.
 - All 76 escape-sequence fixtures matching the pinned xterm.js headless oracle.

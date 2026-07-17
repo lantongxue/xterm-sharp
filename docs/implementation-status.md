@@ -39,7 +39,8 @@
   font fallback, cached fonts/paints and worker-prepared retained row pictures.
 - `XtermSharp.Avalonia` provides an externally bound `TerminalView` with DPI-aware
   resizing, worker-side frame preparation, change-only binding notifications, keyboard/mouse
-  protocols, local selection, clipboard, focus and IME preedit.
+  protocols, local selection, clipboard, focus, IME preedit and an optional rendering telemetry
+  overlay.
 
 ## Still required before 1.0
 

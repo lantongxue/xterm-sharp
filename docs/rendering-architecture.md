@@ -35,6 +35,15 @@ reuse cached display rows, and frames with empty pixel damage do not invalidate 
 visual. Scroll, column, row and extent properties are direct Avalonia properties whose bindings
 are notified only when their values actually change.
 
+`TerminalView.ShowRenderingDebugOverlay` enables a top-right retained Skia overlay with rolling
+presentation FPS plus average, maximum and minimum frame intervals. Sampling resets after a long
+idle gap so terminal inactivity is not reported as a single slow frame. The overlay is disabled by
+default and can be enabled from XAML:
+
+```xml
+<xterm:TerminalView ShowRenderingDebugOverlay="True" />
+```
+
 Synchronized output mode holds an already published frame for at most one second. Leaving the mode
 flushes immediately; the timeout prevents a malformed stream from freezing the visible terminal.
 

@@ -38,6 +38,10 @@ The form can be prefilled with these environment variables:
 | `SSH_TERM` | Remote `TERM` value, default `xterm-256color` |
 | `SSH_HOST_KEY_SHA256` | Trusted `SHA256:...` server fingerprint |
 | `SSH_ACCEPT_ANY_HOST_KEY` | Set to `1` or `true` to skip verification |
+| `XTERMSHARP_RENDERING_DEBUG` | Set to `1` or `true` to show the rendering FPS/frame-time overlay |
+
+The **Show rendering debug overlay** checkbox remains available while connected, so telemetry can be
+toggled while running an interactive shell or a full-screen application.
 
 The demo does not persist connection values or credentials. Terminal input,
 remote output and resize notifications are bridged only while the SSH session
