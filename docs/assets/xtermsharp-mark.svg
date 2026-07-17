@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">XtermSharp mark</title>
+  <desc id="desc">Two opposing terminal chevrons form a sharp X, with a cursor underscore.</desc>
+  <rect width="512" height="512" rx="104" fill="#071624"/>
+
+  <!-- Opposing prompt chevrons form the X. -->
+  <path
+    d="M132 139 249 256 132 373"
+    fill="none"
+    stroke="#21D4C2"
+    stroke-width="58"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
+  />
+  <path
+    d="m380 139-117 117 117 117"
+    fill="none"
+    stroke="#826BFF"
+    stroke-width="58"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
+  />
+
+  <!-- The small negative-space diamond keeps the crossing crisp at icon sizes. -->
+  <path d="m256 236 20 20-20 20-20-20Z" fill="#071624"/>
+
+  <!-- Terminal cursor. -->
+  <rect x="326" y="401" width="86" height="18" rx="2" fill="#21D4C2"/>
+</svg>
