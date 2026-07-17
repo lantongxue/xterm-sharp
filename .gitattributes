@@ -1,0 +1,2 @@
+# Preserve vendored Unicode data exactly; upstream files contain intentional whitespace.
+tools/unicode/15.0.0/* -whitespace

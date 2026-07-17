@@ -260,17 +260,30 @@ internal sealed class TerminalEngine : IDisposable
             _lastPrintedGrapheme = null;
         }
         IUnicodeProvider provider = _unicode.ActiveProvider;
-        UnicodeCharacterProperties properties = provider.GetProperties(rune, _lastPrintedRune);
-        if (properties.JoinPrevious || properties.Width == 0)
+        UnicodeCharacterProperties preceding = UnicodeCharacterProperties.Decode(_parser.PrecedingJoinState);
+        UnicodeCharacterProperties properties = provider.GetProperties(rune, preceding, _lastPrintedRune);
+        if (properties.JoinPrevious)
         {
-            if (!AppendToPreviousCell(rune))
+            bool appended = AppendToPreviousCell(rune, preceding.Width, properties.Width);
+            _parser.PrecedingJoinState = properties.Encode();
+            if (!appended)
             {
                 return;
             }
             _lastPrintedRune = rune;
             _lastPrintedGrapheme = string.Concat(_lastPrintedGrapheme, rune.ToString());
-            _parser.PrecedingJoinState = 1;
             MarkDirty(_active.CursorY);
+            return;
+        }
+        if (properties.Width == 0)
+        {
+            _parser.PrecedingJoinState = properties.Encode();
+            if (AppendToPreviousCell(rune, 0, 0))
+            {
+                _lastPrintedRune = rune;
+                _lastPrintedGrapheme = string.Concat(_lastPrintedGrapheme, rune.ToString());
+                MarkDirty(_active.CursorY);
+            }
             return;
         }
 
@@ -325,7 +338,7 @@ internal sealed class TerminalEngine : IDisposable
         MarkDirty(_active.CursorY);
         _lastPrintedRune = rune;
         _lastPrintedGrapheme = rune.ToString();
-        _parser.PrecedingJoinState = width;
+        _parser.PrecedingJoinState = properties.Encode();
         int next = _active.CursorX + width;
         if (next < Columns && line.GetWidth(next) == 0 && !line.HasContent(next))
         {
@@ -2143,14 +2156,28 @@ internal sealed class TerminalEngine : IDisposable
         }
     }
 
-    private bool AppendToPreviousCell(Rune rune)
+    private bool AppendToPreviousCell(Rune rune, int oldWidth, int newWidth)
     {
+        int logicalCursor = _active.LogicalCursorX;
+        int widthIncrease = Math.Max(0, newWidth - oldWidth);
+        if (oldWidth > 0 && logicalCursor + widthIncrease > Columns)
+        {
+            if (!_modes.Wraparound)
+            {
+                _active.CursorX = Columns - 1;
+                _active.WrapPending = false;
+                return false;
+            }
+            MovePreviousClusterToWrappedLine(oldWidth, logicalCursor);
+            logicalCursor = oldWidth;
+        }
+
         int row = _active.CursorY;
-        int column = _active.WrapPending ? _active.CursorX : _active.CursorX - 1;
+        int column = oldWidth > 0 ? logicalCursor - oldWidth : logicalCursor - 1;
         if (column < 0 && row > 0)
         {
             row--;
-            column = Columns - 1;
+            column = Columns - Math.Max(1, oldWidth);
         }
         if (column < 0)
         {
@@ -2162,8 +2189,61 @@ internal sealed class TerminalEngine : IDisposable
         {
             column--;
         }
-        line.AppendCombining(column, rune);
+
+        line.AddCodePointToCell(column, rune.Value, checked((byte)Math.Clamp(newWidth, 0, 2)));
+        if (widthIncrease == 0 || row != _active.CursorY)
+        {
+            return true;
+        }
+
+        for (int index = 0; index < widthIncrease; index++)
+        {
+            int placeholder = logicalCursor + index;
+            if (placeholder < Columns)
+            {
+                line.SetCell(placeholder, CreateCurrentBlankCell(0));
+            }
+        }
+
+        int next = logicalCursor + widthIncrease;
+        if (next >= Columns)
+        {
+            _active.CursorX = Columns - 1;
+            _active.WrapPending = true;
+        }
+        else
+        {
+            _active.CursorX = next;
+            _active.WrapPending = false;
+        }
+        CursorMoved();
         return true;
+    }
+
+    private void MovePreviousClusterToWrappedLine(int oldWidth, int logicalCursor)
+    {
+        BufferLine oldLine = _active.CursorLine;
+        int oldColumn = logicalCursor - oldWidth;
+        var cells = new CellData[oldWidth];
+        for (int index = 0; index < oldWidth; index++)
+        {
+            cells[index] = oldLine.GetCell(oldColumn + index);
+        }
+        for (int column = oldColumn; column < Columns; column++)
+        {
+            oldLine.SetCell(column, CreateCurrentBlankCell(1));
+        }
+
+        LineFeed(false);
+        _active.CursorX = 0;
+        _active.WrapPending = false;
+        BufferLine newLine = _active.CursorLine;
+        newLine.IsWrapped = true;
+        for (int index = 0; index < cells.Length; index++)
+        {
+            newLine.SetCell(index, cells[index]);
+        }
+        _active.CursorX = oldWidth;
     }
 
     private void SetHyperlink(string data)

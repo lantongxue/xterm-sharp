@@ -83,6 +83,25 @@ public sealed class SearchAddonTests
     }
 
     [Fact]
+    public async Task MapsUnicode15GraphemeClustersToTheirRenderedColumns()
+    {
+        const string family = "👩‍👩‍👦";
+        await using var terminal = new Terminal(new TerminalOptions
+        {
+            Columns = 20,
+            Rows = 2,
+            UnicodeVersion = UnicodeV15Provider.GraphemeVersionName
+        });
+        using SearchAddon addon = LoadAddon(terminal);
+        await terminal.WriteAsync(family + " error", TestContext.Current.CancellationToken);
+
+        Assert.True(addon.FindNext(family));
+        AssertSelection(terminal, 0, 0, 2, 0);
+        Assert.True(addon.FindNext("error"));
+        AssertSelection(terminal, 3, 0, 8, 0);
+    }
+
+    [Fact]
     public async Task HandlesWideCharactersThatWrapBeforeTheRightMargin()
     {
         await using var terminal = CreateTerminal(3, 2);

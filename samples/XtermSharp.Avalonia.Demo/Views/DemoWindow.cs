@@ -12,16 +12,20 @@ namespace XtermSharp.Avalonia.Demo.Views;
 
 internal sealed class DemoWindow : Window
 {
+    private static readonly UnicodeV15Provider LocalEchoUnicode = new();
+
     private readonly Terminal _terminal = new(new TerminalOptions
     {
         Columns = 80,
         Rows = 24,
         Scrollback = 2000,
         FontFamily = "Cascadia Mono, Menlo, DejaVu Sans Mono, monospace",
-        FontSize = 15
+        FontSize = 15,
+        UnicodeVersion = UnicodeV15Provider.GraphemeVersionName
     });
     private readonly SearchAddon _searchAddon = new();
     private readonly StringBuilder _inputLine = new();
+    private readonly SemaphoreSlim _echoGate = new(1, 1);
     private readonly TerminalView _terminalView;
     private readonly TextBox _searchBox;
     private readonly CheckBox _caseSensitive;
@@ -232,6 +236,7 @@ internal sealed class DemoWindow : Window
 
     private async Task EchoAsync(string data)
     {
+        await _echoGate.WaitAsync();
         try
         {
             if (data == "\r")
@@ -244,10 +249,12 @@ internal sealed class DemoWindow : Window
             {
                 if (_inputLine.Length != 0)
                 {
-                    int remove = char.IsLowSurrogate(_inputLine[^1]) && _inputLine.Length > 1 &&
-                        char.IsHighSurrogate(_inputLine[^2]) ? 2 : 1;
-                    _inputLine.Remove(_inputLine.Length - remove, remove);
-                    await _terminal.WriteAsync("\b \b");
+                    string input = _inputLine.ToString();
+                    int start = GetLastGraphemeStart(input, out int width);
+                    _inputLine.Remove(start, _inputLine.Length - start);
+                    string backspaces = new('\b', width);
+                    await _terminal.WriteAsync(
+                        string.Concat(backspaces, new string(' ', width), backspaces));
                 }
                 return;
             }
@@ -261,5 +268,33 @@ internal sealed class DemoWindow : Window
         catch (ObjectDisposedException)
         {
         }
+        finally
+        {
+            _echoGate.Release();
+        }
+    }
+
+    private static int GetLastGraphemeStart(string value, out int width)
+    {
+        int offset = 0;
+        int clusterStart = 0;
+        int clusterWidth = 1;
+        Rune? precedingRune = null;
+        UnicodeCharacterProperties preceding = default;
+        foreach (Rune rune in value.EnumerateRunes())
+        {
+            UnicodeCharacterProperties properties =
+                LocalEchoUnicode.GetProperties(rune, preceding, precedingRune);
+            if (!properties.JoinPrevious)
+            {
+                clusterStart = offset;
+            }
+            clusterWidth = Math.Max(1, properties.Width);
+            offset += rune.Utf16SequenceLength;
+            preceding = properties;
+            precedingRune = rune;
+        }
+        width = clusterWidth;
+        return clusterStart;
     }
 }

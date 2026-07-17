@@ -65,5 +65,8 @@
     <Compile Remove="Legacy/*.cs" />
     <None Include="Legacy/*.cs" />
     <None Include="Program.cs" />
+    <None Include="../../tools/unicode/15.0.0/GraphemeBreakTest.txt"
+          Link="Fixtures/Unicode15/GraphemeBreakTest.txt"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

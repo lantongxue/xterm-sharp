@@ -1,44 +1,79 @@
-using System.Globalization;
 using System.Text;
 
 namespace XtermSharp.Unicode;
 
-/// <summary>A practical Unicode 11 width provider with modern emoji ranges.</summary>
+/// <summary>Width provider matching the pinned xterm.js Unicode 11 addon.</summary>
 public sealed class UnicodeV11Provider : IUnicodeProvider
 {
     public const string VersionName = "11";
 
+    private static readonly byte[] BmpWidths = CreateBmpWidths();
+
     public string Version => VersionName;
 
-    public int GetWidth(Rune rune)
+    public int GetWidth(Rune rune) => GetWidth(rune.Value);
+
+    internal int GetWidth(int value)
     {
-        int value = rune.Value;
         if (value < 32 || value is >= 0x7F and < 0xA0)
         {
             return 0;
         }
-
-        UnicodeCategory category = Rune.GetUnicodeCategory(rune);
-        if (category is UnicodeCategory.NonSpacingMark or UnicodeCategory.EnclosingMark or UnicodeCategory.Format)
+        if (value < 0x10000)
+        {
+            return BmpWidths[value];
+        }
+        if (IsInRanges(value, UnicodeV11Data.HighCombiningRanges))
         {
             return 0;
         }
+        return IsInRanges(value, UnicodeV11Data.HighWideRanges) ? 2 : 1;
+    }
 
-        if (value is >= 0x1100 and <= 0x115F ||
-            value is >= 0x231A and <= 0x231B ||
-            value is >= 0x2329 and <= 0x232A ||
-            value is >= 0x2E80 and <= 0xA4CF && value != 0x303F ||
-            value is >= 0xAC00 and <= 0xD7A3 ||
-            value is >= 0xF900 and <= 0xFAFF ||
-            value is >= 0xFE10 and <= 0xFE19 ||
-            value is >= 0xFE30 and <= 0xFE6B ||
-            value is >= 0xFF01 and <= 0xFF60 ||
-            value is >= 0xFFE0 and <= 0xFFE6 ||
-            value is >= 0x1F300 and <= 0x1FAFF ||
-            value is >= 0x20000 and <= 0x3FFFD)
+    private static byte[] CreateBmpWidths()
+    {
+        var widths = new byte[0x10000];
+        Array.Fill(widths, (byte)1);
+        widths[0] = 0;
+        Array.Fill(widths, (byte)0, 1, 31);
+        Array.Fill(widths, (byte)0, 0x7F, 0x21);
+        ApplyRanges(widths, UnicodeV11Data.BmpCombiningRanges, 0);
+        ApplyRanges(widths, UnicodeV11Data.BmpWideRanges, 2);
+        return widths;
+    }
+
+    private static void ApplyRanges(byte[] widths, ReadOnlySpan<int> ranges, byte width)
+    {
+        for (int index = 0; index < ranges.Length; index += 2)
         {
-            return 2;
+            int start = ranges[index];
+            int count = ranges[index + 1] - start + 1;
+            Array.Fill(widths, width, start, count);
         }
-        return 1;
+    }
+
+    private static bool IsInRanges(int value, ReadOnlySpan<int> ranges)
+    {
+        int low = 0;
+        int high = ranges.Length / 2 - 1;
+        while (low <= high)
+        {
+            int middle = (low + high) >>> 1;
+            int start = ranges[middle * 2];
+            int end = ranges[middle * 2 + 1];
+            if (value < start)
+            {
+                high = middle - 1;
+            }
+            else if (value > end)
+            {
+                low = middle + 1;
+            }
+            else
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

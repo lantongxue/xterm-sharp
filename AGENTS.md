@@ -30,18 +30,18 @@ Last fully verified on 2026-07-17. Update this section whenever the pinned basel
 | Architecture-equivalent cases | 1 |
 | Pending applicable cases | 0 |
 | Upstream escape-sequence fixtures | 76/76 matching |
-| Main xUnit suite | 1,425/1,425 passing |
+| Main xUnit suite | 1,434/1,434 passing |
 | Reference infrastructure suite | 1/1 passing |
 | Rendering suites | 22/22 passing |
 | Web links addon suite | 12/12 passing |
-| Search addon suite | 12/12 passing |
+| Search addon suite | 13/13 passing |
 
 `XTJS-0799` is the sole `ArchitectureEquivalent` case. xterm.js parses large writes in
 131,072-code-point array chunks; XtermSharp streams each `Rune` without an intermediate parse
 array and tests the equivalent bounded, ordered behavior.
 
-The 1,425 main tests consist of 1,307 upstream bindings, 76 escape fixtures, two manifest audit
-tests and 40 local production-parser/safety regressions. `tests/upstream-port-map.json` contains
+The 1,434 main tests consist of 1,307 upstream bindings, 76 escape fixtures, two manifest audit
+tests and 49 local production-parser, Unicode and safety regressions. `tests/upstream-port-map.json` contains
 1,307 unique bindings and must remain free of duplicate or missing IDs.
 
 ## Repository map
@@ -90,6 +90,11 @@ tests and 40 local production-parser/safety regressions. `tests/upstream-port-ma
 - `tools/XtermSharp.Conformance/`: JSON snapshot/event runner for differential tests.
 - `tools/XtermSharp.TestMap/`: verifies manifest-to-C# binding uniqueness and completeness.
 - `tools/generate-upstream-tests.mjs`: regenerates/checks the pinned upstream inventory.
+- `tools/generate-unicode-v11.mjs`: regenerates/checks the exact Unicode 11 width data from the
+  pinned `addon-unicode11` provider.
+- `tools/generate-unicode-v15.mjs`: regenerates/checks the exact Unicode 15 width/grapheme data
+  from the pinned addon and official Unicode 15.0 acceptance files.
+- `tools/unicode/15.0.0/`: pinned Unicode grapheme-property, emoji-property and break-test data.
 - `tools/compare-reference.mjs`: compares one JSON scenario with xterm.js headless.
 - `tools/compare-fixtures.mjs`: compares all 76 escape fixtures with xterm.js headless.
 - `xterm.js/`: pinned upstream source and oracle build, with its own nested `AGENTS.md`.
@@ -196,6 +201,8 @@ Run the complete verification matrix from the repository root:
 
 ```bash
 node tools/generate-upstream-tests.mjs --check
+node tools/generate-unicode-v11.mjs --check
+node tools/generate-unicode-v15.mjs --check
 dotnet build XtermSharp.sln --no-restore -m:1
 dotnet test --project tests/XtermSharp.Tests/XtermSharp.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.ReferenceTests/XtermSharp.ReferenceTests.csproj --no-build
@@ -209,8 +216,8 @@ node tools/compare-reference.mjs tools/sample-request.json
 node tools/compare-fixtures.mjs
 ```
 
-Expected final signals are zero build warnings/errors, 1,425 main tests passing, 22 rendering
-tests passing, 12 web-links addon tests passing, 12 search addon tests passing, one reference test
+Expected final signals are zero build warnings/errors, 1,434 main tests passing, 22 rendering
+tests passing, 12 web-links addon tests passing, 13 search addon tests passing, one reference test
 passing, 1,307 verified bindings, `MATCH`, and `MATCH 76/76 escape-sequence fixtures`.
 
 The Node-based checks require the pinned upstream build. If it is absent, prepare it with:
@@ -228,6 +235,5 @@ npm run esbuild-package-headless-only
 - Keep manifests, differential tools and documentation synchronized during future upstream upgrades.
 - Expand differential scenarios beyond the current sample and fixture corpus.
 - Continue hardening resize/reflow behavior for wide, combined and styled-cell edge cases.
-- Complete Unicode 11 tables and full extended grapheme clustering.
 - Improve marker behavior through scroll/reflow and richer hyperlink metadata APIs.
 - Add parser chunk-boundary fuzzing and benchmark-driven packed-cell storage work.

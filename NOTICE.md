@@ -13,3 +13,5 @@ The original xterm.js copyright and MIT license are preserved in [LICENSE](LICEN
 The `xterm.js/` directory is a development reference and is not included in the
 XtermSharp NuGet package.
 
+The Unicode 15.0 data files under `tools/unicode/15.0.0/` are provided by Unicode, Inc. and are
+distributed under the Unicode Data Files and Software License included in that directory.

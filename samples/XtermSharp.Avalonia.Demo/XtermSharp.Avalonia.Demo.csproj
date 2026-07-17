@@ -17,6 +17,7 @@
     <Using Include="XtermSharp.Events" />
     <Using Include="XtermSharp.Options" />
     <Using Include="XtermSharp.Snapshots" />
+    <Using Include="XtermSharp.Unicode" />
     <Using Include="XtermSharp.Avalonia.Controls" />
     <Using Include="XtermSharp.Avalonia.Demo.Application" />
     <Using Include="XtermSharp.Avalonia.Demo.Views" />

@@ -162,12 +162,12 @@ architecture-equivalent streaming test.
 
 The current verification results are:
 
-- 1,425/1,425 main xUnit tests passing, including all 1,307 upstream bindings,
-  all 76 escape-sequence fixtures, two manifest audits and 40 local parser and
+- 1,434/1,434 main xUnit tests passing, including all 1,307 upstream bindings,
+  all 76 escape-sequence fixtures, two manifest audits and 49 local parser, Unicode and
   safety regressions.
 - Twenty-two rendering tests passing across the backend-neutral, Skia and Avalonia suites.
 - Twelve `addon-web-links` compatibility and integration tests passing.
-- Twelve `addon-search` compatibility, regression and rendering-integration tests passing.
+- Thirteen `addon-search` compatibility, regression and rendering-integration tests passing.
 - 1/1 reference infrastructure test passing.
 - 1,307 unique manifest bindings with no pending applicable cases.
 - All 76 escape-sequence fixtures matching the pinned xterm.js headless oracle.
@@ -179,6 +179,8 @@ repository root, run the complete verification matrix:
 
 ```bash
 node tools/generate-upstream-tests.mjs --check
+node tools/generate-unicode-v11.mjs --check
+node tools/generate-unicode-v15.mjs --check
 dotnet build XtermSharp.sln --no-restore -m:1
 dotnet test --project tests/XtermSharp.Tests/XtermSharp.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.ReferenceTests/XtermSharp.ReferenceTests.csproj --no-build
@@ -228,9 +230,8 @@ out of scope for the current release.
 
 Before a stable 1.0 release, the project still needs broader differential and
 parser fuzz coverage, additional resize/reflow hardening for complex cells,
-complete Unicode 11 and extended grapheme-cluster data, stronger marker
-tracking through scroll/reflow, richer hyperlink metadata and further
-storage/performance work.
+stronger marker tracking through scroll/reflow, richer hyperlink metadata and
+further storage/performance work.
 
 XtermSharp is licensed under MIT. See [NOTICE.md](NOTICE.md) for the upstream
 baseline and attribution.

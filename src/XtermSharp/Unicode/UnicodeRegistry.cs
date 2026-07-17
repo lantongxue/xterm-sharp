@@ -13,6 +13,8 @@ internal sealed class UnicodeRegistry : ITerminalUnicode
     {
         RegisterCore(new UnicodeV6Provider());
         RegisterCore(new UnicodeV11Provider());
+        RegisterCore(new UnicodeV15Provider(handleGraphemes: false));
+        RegisterCore(new UnicodeV15Provider());
         RegisterCore(new DotNetGraphemeProvider());
         if (!_providers.TryGetValue(activeVersion, out _active!))
         {
@@ -60,12 +62,14 @@ internal sealed class UnicodeRegistry : ITerminalUnicode
         ArgumentNullException.ThrowIfNull(value);
         IUnicodeProvider provider = ActiveProvider;
         int result = 0;
-        Rune? preceding = null;
+        Rune? precedingRune = null;
+        UnicodeCharacterProperties preceding = default;
         foreach (Rune rune in value.EnumerateRunes())
         {
-            UnicodeCharacterProperties properties = provider.GetProperties(rune, preceding);
-            result += properties.Width;
-            preceding = rune;
+            UnicodeCharacterProperties properties = provider.GetProperties(rune, preceding, precedingRune);
+            result += properties.Width - (properties.JoinPrevious ? preceding.Width : 0);
+            preceding = properties;
+            precedingRune = rune;
         }
         return result;
     }

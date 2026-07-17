@@ -19,7 +19,8 @@
   OSC/DCS/APC payloads and strict handler failure recovery.
 - Effective two-column minimum sizing with a safe low-level fallback for unsupported
   one-column buffers containing wide cells.
-- Addon lifecycle and Unicode 6, Unicode 11 and .NET grapheme-oriented providers.
+- Addon lifecycle, Unicode 6, exact generated Unicode 11, exact generated Unicode 15 width and
+  UAX #29 extended-grapheme providers, plus the compatibility .NET grapheme-oriented provider.
 - Stable link-provider contracts plus the optional `XtermSharp.Addons.WebLinks`
   port, including strict URL validation, wrapped/wide/combined-cell range mapping,
   custom activation/hover/leave callbacks and Avalonia hover/click interaction.
@@ -55,12 +56,14 @@
 
 ## Still required before 1.0
 
+The prioritized implementation and test acceptance criteria are maintained in the
+[upstream parity acceptance checklist](upstream-parity-acceptance-checklist.md).
+
 - Keep the manifest and differential oracle synchronized when the pinned
   xterm.js baseline is upgraded.
 - Extend differential coverage beyond the current reference scenarios and
   escape-sequence fixture corpus.
 - Match xterm.js reflow behavior for every wide/combined/styled-cell edge case.
-- Implement complete Unicode 11 tables and full extended grapheme clustering.
 - Add marker tracking through scroll/reflow and richer hyperlink metadata APIs.
 - Add fuzzing for parser chunk boundaries and benchmark-driven packed-cell storage.
 - Add WPF/WinUI controls, native Windows rendering backends, accessibility,
