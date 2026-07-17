@@ -29,7 +29,7 @@ Last fully verified on 2026-07-17. Update this section whenever the pinned basel
 | Upstream escape-sequence fixtures | 76/76 matching |
 | Main xUnit suite | 1,425/1,425 passing |
 | Reference infrastructure suite | 1/1 passing |
-| Rendering suites | 18/18 passing |
+| Rendering suites | 21/21 passing |
 
 `XTJS-0799` is the sole `ArchitectureEquivalent` case. xterm.js parses large writes in
 131,072-code-point array chunks; XtermSharp streams each `Rune` without an intermediate parse
@@ -181,7 +181,7 @@ node tools/compare-reference.mjs tools/sample-request.json
 node tools/compare-fixtures.mjs
 ```
 
-Expected final signals are zero build warnings/errors, 1,425 main tests passing, 18 rendering
+Expected final signals are zero build warnings/errors, 1,425 main tests passing, 21 rendering
 tests passing, one reference test passing, 1,307 verified bindings, `MATCH`, and `MATCH 76/76
 escape-sequence fixtures`.
 

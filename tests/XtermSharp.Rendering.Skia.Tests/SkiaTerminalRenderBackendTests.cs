@@ -58,4 +58,40 @@ public sealed class SkiaTerminalRenderBackendTests
         Assert.Contains(Enumerable.Range(0, bitmap.Width), x => bitmap.GetPixel(x, 10) != new SKColor(1, 2, 3));
     }
 
+    [Fact]
+    public void PreparesAndReusesRetainedRowPictures()
+    {
+        using var backend = new SkiaTerminalRenderBackend();
+        TerminalRenderConfiguration configuration = new TerminalRenderOptions().Resolve(new TerminalOptions());
+        TerminalFontMetrics metrics = backend.MeasureFont(configuration);
+        var row = new TerminalDisplayRow(0,
+        [
+            new TerminalTextCommand(
+                new TerminalRect(0, 0, metrics.CellWidth * 10, metrics.CellHeight),
+                "0123456789",
+                new TerminalRgbaColor(255, 255, 255),
+                false,
+                false,
+                true)
+            {
+                CellCount = 10
+            }
+        ]);
+        var frame = new TerminalRenderFrame(
+            1,
+            new TerminalViewport(metrics.CellWidth * 10, metrics.CellHeight),
+            metrics,
+            10,
+            1,
+            0,
+            0,
+            new TerminalDisplayList(ImmutableArray.Create(row)),
+            new TerminalDamage(0, 0));
+
+        backend.PrepareFrame(frame);
+        backend.PrepareFrame(frame);
+
+        Assert.Equal(1, backend.CachedRowPictureCount);
+    }
+
 }

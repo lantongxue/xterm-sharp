@@ -101,7 +101,7 @@ The current verification results are:
 - 1,425/1,425 main xUnit tests passing, including all 1,307 upstream bindings,
   all 76 escape-sequence fixtures, two manifest audits and 40 local parser and
   safety regressions.
-- Eighteen rendering tests passing across the backend-neutral, Skia and Avalonia suites.
+- Twenty-one rendering tests passing across the backend-neutral, Skia and Avalonia suites.
 - 1/1 reference infrastructure test passing.
 - 1,307 unique manifest bindings with no pending applicable cases.
 - All 76 escape-sequence fixtures matching the pinned xterm.js headless oracle.
@@ -140,6 +140,9 @@ Benchmarks can be run separately with:
 ```bash
 dotnet run --project benchmarks/XtermSharp.Benchmarks/XtermSharp.Benchmarks.csproj -c Release
 ```
+
+See [the 2026-07-17 rendering performance log](docs/rendering-performance-2026-07-17.md) for the
+Avalonia/Skia optimization design, benchmark workload and measured results.
 
 ## Scope and limitations
 

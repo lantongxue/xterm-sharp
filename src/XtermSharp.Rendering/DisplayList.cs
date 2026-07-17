@@ -28,7 +28,14 @@ public sealed record TerminalTextCommand(
     bool Bold,
     bool Italic,
     bool RescaleToFit)
-    : TerminalDrawCommand(TerminalDrawCommandKind.Text, Rectangle);
+    : TerminalDrawCommand(TerminalDrawCommandKind.Text, Rectangle)
+{
+    /// <summary>
+    /// Gets the number of fixed-width terminal cells represented by <see cref="Text"/>.
+    /// Values greater than one allow backends to render compatible text runs in one operation.
+    /// </summary>
+    public int CellCount { get; init; } = 1;
+}
 
 public sealed record TerminalLineCommand(
     TerminalRect Rectangle,
@@ -48,7 +55,9 @@ public sealed record TerminalDisplayList(ImmutableArray<TerminalDisplayRow> Rows
 
 public readonly record struct TerminalDamage(int StartRow, int EndRow)
 {
+    public static TerminalDamage Empty { get; } = new(0, -1);
     public static TerminalDamage Full(int rows) => new(0, Math.Max(0, rows - 1));
+    public bool IsEmpty => EndRow < StartRow;
 }
 
 public sealed record TerminalRenderFrame(

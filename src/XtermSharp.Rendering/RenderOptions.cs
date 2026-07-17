@@ -47,6 +47,14 @@ public interface ITerminalFontMetricsProvider
     TerminalFontMetrics MeasureFont(TerminalRenderConfiguration configuration);
 }
 
+/// <summary>
+/// Optionally prepares backend-specific retained resources before a frame reaches the UI render thread.
+/// </summary>
+public interface ITerminalFramePreparer
+{
+    void PrepareFrame(TerminalRenderFrame frame);
+}
+
 [System.Diagnostics.CodeAnalysis.Experimental("XTSR0001")]
 public interface ITerminalRenderBackend<in TSurface> : ITerminalFontMetricsProvider, IDisposable
 {

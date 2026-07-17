@@ -6,7 +6,24 @@ namespace XtermSharp.Rendering;
 
 public sealed class TerminalRenderController : IDisposable
 {
-    private sealed record RowCache(TerminalLineSnapshot Line, int ConfigurationVersion, TerminalDisplayRow Row);
+    private sealed record RowCache(
+        TerminalLineSnapshot Line,
+        int ConfigurationVersion,
+        int BlinkVersion,
+        TerminalDisplayRow Row,
+        bool HasBlinkingText);
+
+    private sealed record CursorOverlayCache(
+        TerminalDisplayRow ContentRow,
+        int Row,
+        int Column,
+        bool Focused,
+        bool CursorPhase,
+        bool ShowCursor,
+        bool? CursorBlink,
+        TerminalCursorStyle? CursorStyle,
+        string PreeditText,
+        TerminalDisplayRow DisplayRow);
 
     private readonly Terminal _terminal;
     private readonly ITerminalFontMetricsProvider _metricsProvider;
@@ -19,10 +36,13 @@ public sealed class TerminalRenderController : IDisposable
     private TerminalTheme _theme;
     private TerminalSelection? _selection;
     private TerminalRenderFrame? _currentFrame;
+    private CursorOverlayCache? _cursorOverlayCache;
     private int _pendingStart = int.MaxValue;
     private int _pendingEnd = -1;
     private long _pendingRevision;
     private int _configurationVersion;
+    private int _blinkVersion;
+    private int _invalidationVersion;
     private bool _fullInvalidation = true;
     private bool _focused;
     private bool _cursorPhase = true;
@@ -122,10 +142,6 @@ public sealed class TerminalRenderController : IDisposable
             {
                 changed = _focused != value;
                 _focused = value;
-                if (changed)
-                {
-                    _fullInvalidation = true;
-                }
             }
             if (changed)
             {
@@ -142,6 +158,7 @@ public sealed class TerminalRenderController : IDisposable
         {
             _selection = selection?.Normalize();
             _fullInvalidation = true;
+            _invalidationVersion++;
         }
         RaiseInvalidated();
     }
@@ -152,11 +169,12 @@ public sealed class TerminalRenderController : IDisposable
         lock (_gate)
         {
             changed = _cursorPhase != cursorVisible || _blinkPhase != textVisible;
+            bool textChanged = _blinkPhase != textVisible;
             _cursorPhase = cursorVisible;
             _blinkPhase = textVisible;
-            if (changed)
+            if (textChanged)
             {
-                _fullInvalidation = true;
+                _blinkVersion++;
             }
         }
         if (changed)
@@ -173,10 +191,6 @@ public sealed class TerminalRenderController : IDisposable
         {
             changed = !string.Equals(_preeditText, text, StringComparison.Ordinal);
             _preeditText = text;
-            if (changed)
-            {
-                _fullInvalidation = true;
-            }
         }
         if (changed)
         {
@@ -195,6 +209,9 @@ public sealed class TerminalRenderController : IDisposable
         await _prepareGate.WaitAsync(linked.Token).ConfigureAwait(false);
         try
         {
+            TerminalSnapshot snapshot = await _terminal.GetSnapshotAsync(
+                SnapshotScope.Viewport,
+                linked.Token).ConfigureAwait(false);
             TerminalRenderOptions options;
             TerminalTheme theme;
             TerminalSelection? selection;
@@ -204,6 +221,11 @@ public sealed class TerminalRenderController : IDisposable
             string preeditText;
             bool full;
             int version;
+            int blinkVersion;
+            int pendingStart;
+            int pendingEnd;
+            int invalidationVersion;
+            TerminalRenderFrame? previousFrame;
             lock (_gate)
             {
                 options = _options;
@@ -213,13 +235,15 @@ public sealed class TerminalRenderController : IDisposable
                 cursorPhase = _cursorPhase;
                 blinkPhase = _blinkPhase;
                 preeditText = _preeditText;
-                full = _fullInvalidation || CurrentFrame?.Viewport != viewport;
+                previousFrame = CurrentFrame;
+                full = _fullInvalidation || previousFrame?.Viewport != viewport;
                 version = _configurationVersion;
+                blinkVersion = _blinkVersion;
+                pendingStart = _pendingStart;
+                pendingEnd = _pendingEnd;
+                invalidationVersion = _invalidationVersion;
             }
 
-            TerminalSnapshot snapshot = await _terminal.GetSnapshotAsync(
-                SnapshotScope.Viewport,
-                linked.Token).ConfigureAwait(false);
             TerminalRenderConfiguration configuration = options.Resolve(_terminal.Options, viewport.RenderScale);
             TerminalFontMetrics metrics = _metricsProvider.MeasureFont(configuration);
 
@@ -234,13 +258,17 @@ public sealed class TerminalRenderController : IDisposable
             }
 
             var rows = ImmutableArray.CreateBuilder<TerminalDisplayRow>(snapshot.Rows);
-            int changedStart = full ? 0 : int.MaxValue;
-            int changedEnd = full ? snapshot.Rows - 1 : -1;
+            int changedStart = int.MaxValue;
+            int changedEnd = -1;
             for (int row = 0; row < snapshot.Rows; row++)
             {
                 TerminalLineSnapshot line = snapshot.ActiveBuffer.Lines[row];
-                if (full || !_rowCache.TryGetValue(row, out RowCache? cached) ||
-                    !ReferenceEquals(cached.Line, line) || cached.ConfigurationVersion != version)
+                _rowCache.TryGetValue(row, out RowCache? cached);
+                bool pendingDamage = row >= pendingStart && row <= pendingEnd;
+                if (full || cached is null ||
+                    cached.ConfigurationVersion != version ||
+                    cached.HasBlinkingText && cached.BlinkVersion != blinkVersion ||
+                    pendingDamage && !ReferenceEquals(cached.Line, line))
                 {
                     TerminalDisplayRow content = BuildContentRow(
                         row,
@@ -251,13 +279,12 @@ public sealed class TerminalRenderController : IDisposable
                         configuration,
                         theme,
                         selection,
-                        blinkPhase);
-                    cached = new RowCache(line, version, content);
+                        blinkPhase,
+                        out bool hasBlinkingText);
+                    cached = new RowCache(line, version, blinkVersion, content, hasBlinkingText);
                     _rowCache[row] = cached;
-                    changedStart = Math.Min(changedStart, row);
-                    changedEnd = Math.Max(changedEnd, row);
                 }
-                rows.Add(AddCursorOverlay(
+                TerminalDisplayRow displayRow = GetDisplayRow(
                     cached.Row,
                     row,
                     snapshot,
@@ -267,13 +294,22 @@ public sealed class TerminalRenderController : IDisposable
                     theme,
                     focused,
                     cursorPhase,
-                    preeditText));
+                    preeditText);
+                rows.Add(displayRow);
+                if (full || previousFrame is null || row >= previousFrame.DisplayList.Rows.Length ||
+                    !ReferenceEquals(previousFrame.DisplayList.Rows[row], displayRow))
+                {
+                    changedStart = Math.Min(changedStart, row);
+                    changedEnd = Math.Max(changedEnd, row);
+                }
             }
 
-            if (changedEnd < changedStart)
+            if (previousFrame is not null && previousFrame.Rows > snapshot.Rows)
             {
-                changedStart = 0;
-                changedEnd = Math.Max(0, snapshot.Rows - 1);
+                for (int row = snapshot.Rows; row < previousFrame.Rows; row++)
+                {
+                    _rowCache.Remove(row);
+                }
             }
             var frame = new TerminalRenderFrame(
                 snapshot.Revision,
@@ -284,16 +320,25 @@ public sealed class TerminalRenderController : IDisposable
                 snapshot.ActiveBuffer.ViewportY,
                 snapshot.ActiveBuffer.BaseY,
                 new TerminalDisplayList(rows.MoveToImmutable()),
-                new TerminalDamage(changedStart, changedEnd))
+                changedEnd < changedStart
+                    ? TerminalDamage.Empty
+                    : new TerminalDamage(changedStart, changedEnd))
             {
                 Modes = snapshot.Modes,
                 CursorColumn = snapshot.ActiveBuffer.CursorX,
                 CursorRow = snapshot.ActiveBuffer.BaseY + snapshot.ActiveBuffer.CursorY - snapshot.ActiveBuffer.ViewportY
             };
+            if (_metricsProvider is ITerminalFramePreparer framePreparer)
+            {
+                framePreparer.PrepareFrame(frame);
+            }
             Volatile.Write(ref _currentFrame, frame);
             lock (_gate)
             {
-                _fullInvalidation = false;
+                if (_invalidationVersion == invalidationVersion && _pendingRevision <= snapshot.Revision)
+                {
+                    _fullInvalidation = false;
+                }
                 if (_pendingRevision <= snapshot.Revision)
                 {
                     _pendingStart = int.MaxValue;
@@ -352,9 +397,6 @@ public sealed class TerminalRenderController : IDisposable
         _terminal.OptionsChanged -= OnOptionsChanged;
         _terminal.ColorRequested -= OnColorRequested;
         _disposeCancellation.Cancel();
-        _disposeCancellation.Dispose();
-        _prepareGate.Dispose();
-        _rowCache.Clear();
     }
 
     private TerminalDisplayRow BuildContentRow(
@@ -366,14 +408,69 @@ public sealed class TerminalRenderController : IDisposable
         TerminalRenderConfiguration configuration,
         TerminalTheme theme,
         TerminalSelection? selection,
-        bool blinkPhase)
+        bool blinkPhase,
+        out bool hasBlinkingText)
     {
-        var commands = ImmutableArray.CreateBuilder<TerminalDrawCommand>();
+        var backgrounds = ImmutableArray.CreateBuilder<TerminalDrawCommand>();
+        var text = ImmutableArray.CreateBuilder<TerminalDrawCommand>();
+        var decorations = ImmutableArray.CreateBuilder<TerminalDrawCommand>();
         double y = viewport.Padding.Top + row * metrics.CellHeight;
-        commands.Add(new TerminalFillRectangleCommand(
+        backgrounds.Add(new TerminalFillRectangleCommand(
             new TerminalRect(viewport.Padding.Left, y, snapshot.Columns * metrics.CellWidth, metrics.CellHeight),
             theme.Background));
         int absoluteLine = snapshot.ActiveBuffer.ViewportY + row;
+        hasBlinkingText = false;
+
+        bool hasBackgroundRun = false;
+        int backgroundStart = 0;
+        int backgroundEnd = 0;
+        TerminalRgbaColor backgroundRunColor = default;
+        StringBuilder? textRun = null;
+        int textStart = 0;
+        int textEnd = 0;
+        TerminalRgbaColor textRunColor = default;
+        bool textRunBold = false;
+        bool textRunItalic = false;
+
+        void FlushBackgroundRun()
+        {
+            if (!hasBackgroundRun)
+            {
+                return;
+            }
+            backgrounds.Add(new TerminalFillRectangleCommand(
+                new TerminalRect(
+                    viewport.Padding.Left + backgroundStart * metrics.CellWidth,
+                    y,
+                    (backgroundEnd - backgroundStart) * metrics.CellWidth,
+                    metrics.CellHeight),
+                backgroundRunColor));
+            hasBackgroundRun = false;
+        }
+
+        void FlushTextRun()
+        {
+            if (textRun is null)
+            {
+                return;
+            }
+            text.Add(new TerminalTextCommand(
+                new TerminalRect(
+                    viewport.Padding.Left + textStart * metrics.CellWidth,
+                    y,
+                    (textEnd - textStart) * metrics.CellWidth,
+                    metrics.CellHeight),
+                textRun.ToString(),
+                textRunColor,
+                textRunBold,
+                textRunItalic,
+                configuration.RescaleOverlappingGlyphs)
+            {
+                CellCount = textEnd - textStart
+            });
+            textRun = null;
+        }
+
         for (int column = 0; column < line.Cells.Length; column++)
         {
             TerminalCellSnapshot cell = line.Cells[column];
@@ -405,23 +502,126 @@ public sealed class TerminalRenderController : IDisposable
                 metrics.CellHeight);
             if (background != theme.Background || selected)
             {
-                commands.Add(new TerminalFillRectangleCommand(bounds, background));
+                if (hasBackgroundRun && backgroundRunColor == background && backgroundEnd == column)
+                {
+                    backgroundEnd = column + cellWidth;
+                }
+                else
+                {
+                    FlushBackgroundRun();
+                    hasBackgroundRun = true;
+                    backgroundStart = column;
+                    backgroundEnd = column + cellWidth;
+                    backgroundRunColor = background;
+                }
+            }
+            else
+            {
+                FlushBackgroundRun();
             }
             bool invisible = cell.Attributes.HasFlag(CellAttributes.Invisible);
             bool blinking = cell.Attributes.HasFlag(CellAttributes.Blink);
+            hasBlinkingText |= !invisible && blinking && cell.Text.Length != 0;
             if (!invisible && (!blinking || blinkPhase) && cell.Text.Length != 0)
             {
-                commands.Add(new TerminalTextCommand(
-                    bounds,
-                    cell.Text,
-                    foreground,
-                    cell.Attributes.HasFlag(CellAttributes.Bold),
-                    cell.Attributes.HasFlag(CellAttributes.Italic),
-                    configuration.RescaleOverlappingGlyphs));
-                AddDecorations(commands, bounds, cell, foreground, theme, metrics);
+                bool bold = cell.Attributes.HasFlag(CellAttributes.Bold);
+                bool italic = cell.Attributes.HasFlag(CellAttributes.Italic);
+                bool mergeableAscii = configuration.LetterSpacing == 0 &&
+                    cellWidth == 1 && cell.Text.Length == 1 && cell.Text[0] is >= ' ' and <= '~';
+                if (mergeableAscii)
+                {
+                    if (textRun is null || textEnd != column || textRunColor != foreground ||
+                        textRunBold != bold || textRunItalic != italic)
+                    {
+                        FlushTextRun();
+                        textRun = new StringBuilder();
+                        textStart = column;
+                        textRunColor = foreground;
+                        textRunBold = bold;
+                        textRunItalic = italic;
+                    }
+                    textRun.Append(cell.Text);
+                    textEnd = column + 1;
+                }
+                else
+                {
+                    FlushTextRun();
+                    text.Add(new TerminalTextCommand(
+                        bounds,
+                        cell.Text,
+                        foreground,
+                        bold,
+                        italic,
+                        configuration.RescaleOverlappingGlyphs));
+                }
+                AddDecorations(decorations, bounds, cell, foreground, theme, metrics);
+            }
+            else
+            {
+                FlushTextRun();
             }
         }
-        return new TerminalDisplayRow(row, commands.ToImmutable());
+        FlushBackgroundRun();
+        FlushTextRun();
+
+        var commands = ImmutableArray.CreateBuilder<TerminalDrawCommand>(
+            backgrounds.Count + text.Count + decorations.Count);
+        commands.AddRange(backgrounds);
+        commands.AddRange(text);
+        commands.AddRange(decorations);
+        return new TerminalDisplayRow(row, commands.MoveToImmutable());
+    }
+
+    private TerminalDisplayRow GetDisplayRow(
+        TerminalDisplayRow contentRow,
+        int rowIndex,
+        TerminalSnapshot snapshot,
+        TerminalViewport viewport,
+        TerminalFontMetrics metrics,
+        TerminalRenderConfiguration configuration,
+        TerminalTheme theme,
+        bool focused,
+        bool cursorPhase,
+        string preeditText)
+    {
+        int cursorRow = snapshot.ActiveBuffer.BaseY + snapshot.ActiveBuffer.CursorY - snapshot.ActiveBuffer.ViewportY;
+        if (cursorRow != rowIndex)
+        {
+            return contentRow;
+        }
+        int column = Math.Clamp(snapshot.ActiveBuffer.CursorX, 0, Math.Max(0, snapshot.Columns - 1));
+        CursorOverlayCache? cached = _cursorOverlayCache;
+        if (cached is not null && ReferenceEquals(cached.ContentRow, contentRow) &&
+            cached.Row == rowIndex && cached.Column == column && cached.Focused == focused &&
+            cached.CursorPhase == cursorPhase && cached.ShowCursor == snapshot.Modes.ShowCursor &&
+            cached.CursorBlink == snapshot.Modes.CursorBlink && cached.CursorStyle == snapshot.Modes.CursorStyle &&
+            string.Equals(cached.PreeditText, preeditText, StringComparison.Ordinal))
+        {
+            return cached.DisplayRow;
+        }
+        TerminalDisplayRow displayRow = AddCursorOverlay(
+            contentRow,
+            rowIndex,
+            snapshot,
+            viewport,
+            metrics,
+            configuration,
+            theme,
+            focused,
+            cursorPhase,
+            preeditText);
+        _cursorOverlayCache = new CursorOverlayCache(
+            contentRow,
+            rowIndex,
+            column,
+            focused,
+            cursorPhase,
+            snapshot.Modes.ShowCursor,
+            snapshot.Modes.CursorBlink,
+            snapshot.Modes.CursorStyle,
+            preeditText,
+            displayRow);
+        return displayRow;
     }
 
     private static TerminalDisplayRow AddCursorOverlay(
@@ -598,6 +798,7 @@ public sealed class TerminalRenderController : IDisposable
         lock (_gate)
         {
             _fullInvalidation = true;
+            _invalidationVersion++;
             _pendingRevision = Math.Max(_pendingRevision, args.Revision);
         }
         RaiseInvalidated();
@@ -728,7 +929,7 @@ public sealed class TerminalRenderController : IDisposable
     {
         _configurationVersion++;
         _fullInvalidation = true;
-        _rowCache.Clear();
+        _invalidationVersion++;
     }
 
     private void RaiseInvalidated() => Invalidated?.Invoke(this, EventArgs.Empty);

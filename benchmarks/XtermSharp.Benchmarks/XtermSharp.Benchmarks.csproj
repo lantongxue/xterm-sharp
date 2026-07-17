@@ -3,8 +3,11 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);XTSR0001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/XtermSharp/XtermSharp.csproj" />
+    <ProjectReference Include="../../src/XtermSharp.Rendering/XtermSharp.Rendering.csproj" />
+    <ProjectReference Include="../../src/XtermSharp.Rendering.Skia/XtermSharp.Rendering.Skia.csproj" />
   </ItemGroup>
 </Project>

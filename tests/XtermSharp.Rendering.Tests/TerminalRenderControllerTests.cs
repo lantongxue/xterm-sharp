@@ -21,6 +21,48 @@ public sealed class TerminalRenderControllerTests
             new TerminalViewport(40, 20),
             cancellationToken);
         Assert.Same(firstRow, second.DisplayList.Rows[0]);
+        Assert.True(second.Damage.IsEmpty);
+    }
+
+    [Fact]
+    public async Task MergesCompatibleAsciiTextAndBackgroundRuns()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        await using var terminal = new Terminal(new TerminalOptions { Columns = 8, Rows = 1 });
+        using var controller = new TerminalRenderController(terminal, new FixedMetrics());
+        await terminal.WriteAsync("\x1b[?25l\x1b[41mABCDEF", cancellationToken);
+
+        TerminalRenderFrame frame = await controller.PrepareFrameAsync(
+            new TerminalViewport(80, 10),
+            cancellationToken);
+        TerminalDisplayRow row = frame.DisplayList.Rows[0];
+        TerminalTextCommand text = Assert.Single(row.Commands.OfType<TerminalTextCommand>());
+        TerminalFillRectangleCommand background = Assert.Single(
+            row.Commands.OfType<TerminalFillRectangleCommand>(),
+            command => command.Color != TerminalTheme.Default.Background);
+
+        Assert.Equal("ABCDEF", text.Text);
+        Assert.Equal(6, text.CellCount);
+        Assert.Equal(60, text.Rectangle.Width);
+        Assert.Equal(60, background.Rectangle.Width);
+    }
+
+    [Fact]
+    public async Task BlinkOnlyRebuildsRowsThatContainBlinkingText()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        await using var terminal = new Terminal(new TerminalOptions { Columns = 4, Rows = 2 });
+        using var controller = new TerminalRenderController(terminal, new FixedMetrics());
+        await terminal.WriteAsync("\x1b[?25l\x1b[5mA\x1b[0m\r\nB", cancellationToken);
+        TerminalViewport viewport = new(40, 20);
+
+        TerminalRenderFrame visible = await controller.PrepareFrameAsync(viewport, cancellationToken);
+        controller.SetBlinkPhases(cursorVisible: true, textVisible: false);
+        TerminalRenderFrame hidden = await controller.PrepareFrameAsync(viewport, cancellationToken);
+
+        Assert.NotSame(visible.DisplayList.Rows[0], hidden.DisplayList.Rows[0]);
+        Assert.Same(visible.DisplayList.Rows[1], hidden.DisplayList.Rows[1]);
+        Assert.Equal(new TerminalDamage(0, 0), hidden.Damage);
     }
 
     [Fact]

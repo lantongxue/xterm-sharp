@@ -31,6 +31,18 @@ public sealed class TerminalView : TemplatedControl
             nameof(RenderOptions),
             new TerminalRenderOptions());
 
+    public static readonly DirectProperty<TerminalView, int> ScrollValueProperty =
+        AvaloniaProperty.RegisterDirect<TerminalView, int>(nameof(ScrollValue), view => view.ScrollValue);
+
+    public static readonly DirectProperty<TerminalView, int> ScrollMaximumProperty =
+        AvaloniaProperty.RegisterDirect<TerminalView, int>(nameof(ScrollMaximum), view => view.ScrollMaximum);
+
+    public static readonly DirectProperty<TerminalView, int> ColumnsProperty =
+        AvaloniaProperty.RegisterDirect<TerminalView, int>(nameof(Columns), view => view.Columns);
+
+    public static readonly DirectProperty<TerminalView, int> RowsProperty =
+        AvaloniaProperty.RegisterDirect<TerminalView, int>(nameof(Rows), view => view.Rows);
+
     private readonly DispatcherTimer _blinkTimer;
     private readonly TerminalTextInputMethodClient _textInputClient;
     private readonly AvaloniaKeyStateTracker _keyState = new();
@@ -210,7 +222,6 @@ public sealed class TerminalView : TemplatedControl
         else if (change.Property == RenderOptionsProperty && _controller is not null)
         {
             _controller.Options = change.GetNewValue<TerminalRenderOptions>();
-            _backend?.ClearCaches();
         }
     }
 
@@ -461,7 +472,7 @@ public sealed class TerminalView : TemplatedControl
         }
         _backend?.Dispose();
         _backend = null;
-        _frame = null;
+        PublishFrame(null);
         _lastColumns = 0;
         _lastRows = 0;
         InvalidateVisual();
@@ -513,13 +524,21 @@ public sealed class TerminalView : TemplatedControl
                 Bounds.Height,
                 scale,
                 new TerminalThickness(padding.Left, padding.Top, padding.Right, padding.Bottom));
-            TerminalRenderFrame frame = await controller.PrepareFrameAsync(viewport, cancellation.Token);
+            TerminalRenderFrame frame = await Task.Run(
+                async () => await controller.PrepareFrameAsync(viewport, cancellation.Token).ConfigureAwait(false),
+                cancellation.Token);
             if (!ReferenceEquals(controller, _controller))
             {
                 return;
             }
-            _frame = frame;
-            _textInputClient.NotifyCursorChanged();
+            TerminalRenderFrame? previousFrame = _frame;
+            PublishFrame(frame);
+            if (previousFrame is null || previousFrame.CursorColumn != frame.CursorColumn ||
+                previousFrame.CursorRow != frame.CursorRow || previousFrame.Metrics != frame.Metrics ||
+                previousFrame.Viewport != frame.Viewport)
+            {
+                _textInputClient.NotifyCursorChanged();
+            }
             int columns = Math.Max(2, (int)Math.Floor((Bounds.Width - padding.Left - padding.Right) / frame.Metrics.CellWidth));
             int rows = Math.Max(1, (int)Math.Floor((Bounds.Height - padding.Top - padding.Bottom) / frame.Metrics.CellHeight));
             if (columns != _lastColumns || rows != _lastRows)
@@ -528,7 +547,10 @@ public sealed class TerminalView : TemplatedControl
                 _lastRows = rows;
                 await terminal.ResizeAsync(columns, rows, cancellation.Token);
             }
-            InvalidateVisual();
+            if (!ReferenceEquals(previousFrame, frame) && !frame.Damage.IsEmpty)
+            {
+                InvalidateVisual();
+            }
         }
         catch (OperationCanceledException)
         {
@@ -593,6 +615,31 @@ public sealed class TerminalView : TemplatedControl
             }
         }
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void PublishFrame(TerminalRenderFrame? frame)
+    {
+        int previousScrollValue = ScrollValue;
+        int previousScrollMaximum = ScrollMaximum;
+        int previousColumns = Columns;
+        int previousRows = Rows;
+        _frame = frame;
+        if (previousScrollValue != ScrollValue)
+        {
+            RaisePropertyChanged(ScrollValueProperty, previousScrollValue, ScrollValue);
+        }
+        if (previousScrollMaximum != ScrollMaximum)
+        {
+            RaisePropertyChanged(ScrollMaximumProperty, previousScrollMaximum, ScrollMaximum);
+        }
+        if (previousColumns != Columns)
+        {
+            RaisePropertyChanged(ColumnsProperty, previousColumns, Columns);
+        }
+        if (previousRows != Rows)
+        {
+            RaisePropertyChanged(RowsProperty, previousRows, Rows);
+        }
     }
 
     private static int CellKind(string text)
@@ -718,6 +765,9 @@ public sealed class TerminalView : TemplatedControl
         SkiaTerminalRenderBackend backend,
         TerminalRenderFrame frame) : ICustomDrawOperation
     {
+        private SkiaTerminalRenderBackend Backend { get; } = backend;
+        private TerminalRenderFrame Frame { get; } = frame;
+
         public Rect Bounds { get; } = bounds;
 
         public bool HitTest(Point p) => Bounds.Contains(p);
@@ -730,10 +780,12 @@ public sealed class TerminalView : TemplatedControl
                 return;
             }
             using ISkiaSharpApiLease lease = feature.Lease();
-            backend.Render(lease.SkCanvas, frame);
+            Backend.Render(lease.SkCanvas, Frame);
         }
 
-        public bool Equals(ICustomDrawOperation? other) => false;
+        public bool Equals(ICustomDrawOperation? other) =>
+            other is SkiaDrawOperation operation && Bounds == operation.Bounds &&
+            ReferenceEquals(Backend, operation.Backend) && ReferenceEquals(Frame, operation.Frame);
 
         public void Dispose()
         {

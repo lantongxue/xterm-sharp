@@ -33,11 +33,13 @@
 - Unchanged buffer lines reuse immutable line snapshots, avoiding repeated cell
   materialization for full-buffer publication.
 - `XtermSharp.Rendering` provides backend-neutral frame coordination, themes,
-  selection extraction, synchronized-output throttling and display lists.
+  selection extraction, synchronized-output throttling, damage tracking and batched text/background
+  display-list runs.
 - `XtermSharp.Rendering.Skia` provides SkiaSharp 3.119.4 and HarfBuzz shaping,
-  font fallback, styled lines and retained row pictures.
+  font fallback, cached fonts/paints and worker-prepared retained row pictures.
 - `XtermSharp.Avalonia` provides an externally bound `TerminalView` with DPI-aware
-  resizing, keyboard/mouse protocols, local selection, clipboard, focus and IME preedit.
+  resizing, worker-side frame preparation, change-only binding notifications, keyboard/mouse
+  protocols, local selection, clipboard, focus and IME preedit.
 
 ## Still required before 1.0
 
