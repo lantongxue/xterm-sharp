@@ -84,10 +84,4 @@ public sealed class EventTests
         Assert.Equal(1, count);
     }
 
-    private sealed class Receiver
-    {
-        public int Value { get; private set; }
-
-        public void Handle(int value) => Value = value;
-    }
 }

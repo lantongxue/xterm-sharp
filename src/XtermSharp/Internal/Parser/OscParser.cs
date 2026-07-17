@@ -4,16 +4,8 @@ namespace XtermSharp.Internal.Parser;
 
 internal sealed class OscParser : HandlerCollection<IOscParserHandler>
 {
-    private enum State
-    {
-        Start,
-        Identifier,
-        Payload,
-        Abort
-    }
-
     private Action<int, StringParserAction, object?>? _fallback;
-    private State _state;
+    private OscParserState _state;
     private int _identifier = -1;
 
     public void SetHandlerFallback(Action<int, StringParserAction, object?> fallback) =>
@@ -22,30 +14,30 @@ internal sealed class OscParser : HandlerCollection<IOscParserHandler>
     public void Start()
     {
         Reset();
-        _state = State.Identifier;
+        _state = OscParserState.Identifier;
     }
 
     public void Put(ReadOnlySpan<uint> data)
     {
-        if (_state == State.Abort)
+        if (_state == OscParserState.Abort)
         {
             return;
         }
         int index = 0;
-        if (_state == State.Identifier)
+        if (_state == OscParserState.Identifier)
         {
             while (index < data.Length)
             {
                 uint value = data[index++];
                 if (value == ';')
                 {
-                    _state = State.Payload;
+                    _state = OscParserState.Payload;
                     AnnounceStart();
                     break;
                 }
                 if (value is < '0' or > '9')
                 {
-                    _state = State.Abort;
+                    _state = OscParserState.Abort;
                     return;
                 }
                 if (_identifier == -1)
@@ -54,13 +46,13 @@ internal sealed class OscParser : HandlerCollection<IOscParserHandler>
                 }
                 if (_identifier > (int.MaxValue - (value - '0')) / 10)
                 {
-                    _state = State.Abort;
+                    _state = OscParserState.Abort;
                     return;
                 }
                 _identifier = _identifier * 10 + (int)(value - '0');
             }
         }
-        if (_state == State.Payload && index < data.Length)
+        if (_state == OscParserState.Payload && index < data.Length)
         {
             PutPayload(data[index..]);
         }
@@ -68,17 +60,17 @@ internal sealed class OscParser : HandlerCollection<IOscParserHandler>
 
     public async ValueTask EndAsync(bool success)
     {
-        if (_state == State.Start)
+        if (_state == OscParserState.Start)
         {
             return;
         }
-        if (_state == State.Abort)
+        if (_state == OscParserState.Abort)
         {
             ClearState();
             return;
         }
 
-        if (_state == State.Identifier)
+        if (_state == OscParserState.Identifier)
         {
             AnnounceStart();
         }
@@ -159,7 +151,7 @@ internal sealed class OscParser : HandlerCollection<IOscParserHandler>
 
     private void ClearState()
     {
-        _state = State.Start;
+        _state = OscParserState.Start;
         _identifier = -1;
         ClearActive();
     }

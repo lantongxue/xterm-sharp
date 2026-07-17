@@ -499,16 +499,4 @@ public sealed class CoreBehaviorTests
         return terminal;
     }
 
-    private sealed class CountingUnicodeProvider : IUnicodeProvider
-    {
-        public string Version => "input-handler-counting";
-
-        public int WidthCalls { get; private set; }
-
-        public int GetWidth(Rune rune)
-        {
-            WidthCalls++;
-            return 1;
-        }
-    }
 }

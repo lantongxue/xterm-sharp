@@ -148,6 +148,12 @@ dotnet run --project benchmarks/XtermSharp.Benchmarks/XtermSharp.Benchmarks.cspr
 See [the 2026-07-17 rendering performance log](docs/rendering-performance-2026-07-17.md) for the
 Avalonia/Skia optimization design, benchmark workload and measured results.
 
+## Code organization
+
+Source files follow a one-top-level-type-per-file convention and are grouped by responsibility.
+See the [code organization guide](docs/code-organization.md) for the core, rendering, platform,
+sample and test-support directory layout.
+
 ## Scope and limitations
 
 The core package does not start processes and does not implement PTY or SSH

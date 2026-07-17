@@ -41,18 +41,23 @@ tests and 40 local production-parser/safety regressions. `tests/upstream-port-ma
 
 ## Repository map
 
-- `src/XtermSharp/`: public API and headless terminal implementation.
-- `src/XtermSharp/Internal/TerminalEngine.cs`: VT execution, modes, cursor and buffer mutations.
+- `src/XtermSharp/`: public API and headless terminal implementation, grouped into `Events`,
+  `Input`, `Options`, `Parsing`, `Snapshots` and `Unicode` contracts.
+- `src/XtermSharp/Internal/Engine/TerminalEngine.cs`: VT execution, modes, cursor and buffer
+  mutations.
 - `src/XtermSharp/Internal/Parser/EscapeSequenceParser.cs`: the single VT500 state machine used by
   both production writes and parser conformance tests.
-- `src/XtermSharp/Internal/ParserRegistry.cs`: thread-safe public `ITerminalParser` facade over the
-  production parser core.
-- `src/XtermSharp/Internal/TerminalBuffer.cs` and `BufferLine.cs`: mutable internal buffer model.
-- `src/XtermSharp/Internal/TerminalDimensions.cs`: shared effective minimum of two columns and one
-  row.
-- `src/XtermSharp.Rendering/`: backend-neutral frames, display lists, themes and selection.
-- `src/XtermSharp.Rendering.Skia/`: SkiaSharp/HarfBuzz backend and retained row pictures.
-- `src/XtermSharp.Avalonia/`: interactive Avalonia `TerminalView` platform adapter.
+- `src/XtermSharp/Internal/Parser/ParserRegistry.cs`: thread-safe public `ITerminalParser` facade
+  over the production parser core.
+- `src/XtermSharp/Internal/Buffers/`: mutable buffer, line, cell, range and reflow implementation.
+- `src/XtermSharp/Internal/Engine/TerminalDimensions.cs`: shared effective minimum of two columns
+  and one row.
+- `src/XtermSharp/Internal/Services/`: charset, hyperlink, mouse, option and buffer services.
+- `src/XtermSharp.Rendering/`: backend-neutral configuration, display lists, geometry, themes,
+  selection and controller code grouped by responsibility.
+- `src/XtermSharp.Rendering.Skia/Backends/`: SkiaSharp/HarfBuzz backend and retained row pictures.
+- `src/XtermSharp.Avalonia/`: interactive Avalonia adapter grouped into `Controls`, `Input` and
+  `Diagnostics`.
 - `samples/XtermSharp.Avalonia.Demo/`: no-PTY ANSI playback and local input-echo smoke test.
 - `samples/XtermSharp.Avalonia.Demo.SSH/`: real SSH PTY integration sample with configurable
   password/private-key authentication and host-key verification.

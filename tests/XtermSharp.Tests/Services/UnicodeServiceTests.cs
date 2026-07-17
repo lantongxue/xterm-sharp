@@ -59,10 +59,4 @@ public sealed class UnicodeServiceTests
         Assert.Equal(10, service.GetStringCellWidth("🤣🤣🤣🤣🤣🤣🤣🤣🤣🤣"));
     }
 
-    private sealed class DoubleWidthProvider : IUnicodeProvider
-    {
-        public string Version => "123";
-
-        public int GetWidth(Rune rune) => 2;
-    }
 }

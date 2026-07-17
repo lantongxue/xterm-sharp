@@ -7,78 +7,6 @@ namespace XtermSharp;
 /// <summary>A headless, ordered terminal emulator.</summary>
 public sealed class Terminal : IDisposable, IAsyncDisposable
 {
-    private abstract class TerminalCommand
-    {
-        protected TerminalCommand(bool mutatesState, bool isWrite, PendingByteLimiter.Lease? lease)
-        {
-            MutatesState = mutatesState;
-            IsWrite = isWrite;
-            Lease = lease;
-        }
-
-        public bool MutatesState { get; }
-        public bool IsWrite { get; }
-        public PendingByteLimiter.Lease? Lease { get; }
-        public abstract ValueTask ExecuteAsync(TerminalEngine engine, long revision);
-        public abstract void Complete();
-        public abstract void Fail(Exception exception);
-    }
-
-    private sealed class MutationCommand(
-        Func<TerminalEngine, ValueTask> action,
-        bool isWrite,
-        PendingByteLimiter.Lease? lease,
-        Action? callback) : TerminalCommand(true, isWrite, lease)
-    {
-        private readonly TaskCompletionSource _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        public Task Task => _completion.Task;
-        public override ValueTask ExecuteAsync(TerminalEngine engine, long revision) => action(engine);
-        public override void Complete()
-        {
-            callback?.Invoke();
-            _completion.TrySetResult();
-        }
-        public override void Fail(Exception exception) => _completion.TrySetException(exception);
-    }
-
-    private sealed class ResultMutationCommand<TResult>(
-        Func<TerminalEngine, TResult> action) : TerminalCommand(true, false, null)
-    {
-        private readonly TaskCompletionSource<TResult> _completion =
-            new(TaskCreationOptions.RunContinuationsAsynchronously);
-        private TResult? _result;
-
-        public Task<TResult> Task => _completion.Task;
-
-        public override ValueTask ExecuteAsync(TerminalEngine engine, long revision)
-        {
-            _result = action(engine);
-            return ValueTask.CompletedTask;
-        }
-
-        public override void Complete() => _completion.TrySetResult(_result!);
-        public override void Fail(Exception exception) => _completion.TrySetException(exception);
-    }
-
-    private sealed class SnapshotCommand(SnapshotScope scope) : TerminalCommand(false, false, null)
-    {
-        private readonly TaskCompletionSource<TerminalSnapshot> _completion =
-            new(TaskCreationOptions.RunContinuationsAsynchronously);
-        private TerminalSnapshot? _snapshot;
-
-        public Task<TerminalSnapshot> Task => _completion.Task;
-
-        public override ValueTask ExecuteAsync(TerminalEngine engine, long revision)
-        {
-            _snapshot = engine.CreateSnapshot(revision, scope);
-            return ValueTask.CompletedTask;
-        }
-
-        public override void Complete() => _completion.TrySetResult(_snapshot!);
-        public override void Fail(Exception exception) => _completion.TrySetException(exception);
-    }
-
     private readonly ITerminalLogger _logger;
     private readonly UnicodeRegistry _unicode;
     private readonly ParserRegistry _parser;
@@ -453,7 +381,7 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
     {
         ThrowIfDisposed();
         cancellationToken.ThrowIfCancellationRequested();
-        PendingByteLimiter.Lease? lease = null;
+        PendingByteLease? lease = null;
         if (inputWeight > 0)
         {
             lease = await _inputLimiter.AcquireAsync(inputWeight, cancellationToken).ConfigureAwait(false);

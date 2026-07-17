@@ -110,11 +110,3 @@ static string FindRepositoryRoot(string start)
     }
     throw new DirectoryNotFoundException("Could not find the xterm-sharp repository root.");
 }
-
-internal sealed record PortMapFile(int SchemaVersion, IReadOnlyList<PortMapEntry> Entries);
-
-internal sealed record PortMapEntry(
-    string Id,
-    UpstreamTestStatus Status,
-    string CsharpTest,
-    string? Difference);

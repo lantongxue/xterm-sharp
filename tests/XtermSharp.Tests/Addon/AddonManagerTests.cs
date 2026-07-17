@@ -29,20 +29,4 @@ public sealed class AddonManagerTests
         Assert.All(addons, addon => Assert.Equal(1, addon.DisposeCount));
     }
 
-    private sealed class RecordingAddon : ITerminalAddon
-    {
-        public Terminal? ActivatedTerminal { get; private set; }
-
-        public int ActivationCount { get; private set; }
-
-        public int DisposeCount { get; private set; }
-
-        public void Activate(Terminal terminal)
-        {
-            ActivatedTerminal = terminal;
-            ActivationCount++;
-        }
-
-        public void Dispose() => DisposeCount++;
-    }
 }

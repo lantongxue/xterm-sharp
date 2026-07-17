@@ -257,11 +257,4 @@ public sealed class Win32InputModeTests
 
     private static string Id(int value) => $"XTJS-{value:0000}";
 
-    private readonly record struct Win32Packet(
-        int VirtualKey,
-        int ScanCode,
-        int UnicodeCharacter,
-        int KeyDown,
-        int ControlState,
-        int RepeatCount);
 }

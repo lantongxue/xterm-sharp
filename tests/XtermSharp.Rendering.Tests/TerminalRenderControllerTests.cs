@@ -119,9 +119,4 @@ public sealed class TerminalRenderControllerTests
         Assert.True(flushed.Revision > initial.Revision);
     }
 
-    private sealed class FixedMetrics : ITerminalFontMetricsProvider
-    {
-        public TerminalFontMetrics MeasureFont(TerminalRenderConfiguration configuration) =>
-            new(10, 10, 8, 9, 1, 5);
-    }
 }

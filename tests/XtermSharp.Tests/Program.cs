@@ -424,23 +424,3 @@ static async Task ThrowsAsync<TException>(Func<Task> action) where TException : 
     }
     throw new InvalidOperationException($"Expected {typeof(TException).Name}.");
 }
-
-sealed class TestAddon : ITerminalAddon
-{
-    public bool Activated { get; private set; }
-    public bool Disposed { get; private set; }
-    public void Activate(Terminal terminal) => Activated = true;
-    public void Dispose() => Disposed = true;
-}
-
-sealed class TestLogger : ITerminalLogger
-{
-    public int ExceptionCount { get; private set; }
-    public void Log(TerminalLogLevel level, string message, Exception? exception = null)
-    {
-        if (exception is not null)
-        {
-            ExceptionCount++;
-        }
-    }
-}
