@@ -916,8 +916,19 @@ internal sealed class TerminalEngine : IDisposable
 
         int effectiveColumns = Math.Max(columns, TerminalDimensions.MinimumColumns);
         int effectiveRows = Math.Max(rows, TerminalDimensions.MinimumRows);
-        _normal.Resize(effectiveColumns, effectiveRows, _options.Scrollback, EraseStyle);
-        _alternate.Resize(effectiveColumns, effectiveRows, 0, EraseStyle);
+        var resizeOptions = new BufferResizeOptions(ReflowCursorLine: _options.ReflowCursorLine);
+        _oscLinks.BeginBufferReflow();
+        try
+        {
+            _normal.Resize(effectiveColumns, effectiveRows, _options.Scrollback, EraseStyle, resizeOptions);
+            _alternate.Resize(effectiveColumns, effectiveRows, 0, EraseStyle, resizeOptions);
+            _oscLinks.CompleteBufferReflow(_normal, _alternate, _style.HyperlinkId);
+        }
+        catch
+        {
+            _oscLinks.CancelBufferReflow(_style.HyperlinkId);
+            throw;
+        }
         Array.Resize(ref _tabStops, effectiveColumns);
         for (int i = 0; i < effectiveColumns; i++)
         {
@@ -1113,6 +1124,9 @@ internal sealed class TerminalEngine : IDisposable
                     ImmutableArray<TerminalLineSnapshot>.Empty);
         }
 
+        ImmutableDictionary<int, TerminalHyperlinkMetadata> hyperlinks = scope == SnapshotScope.AllBuffers
+            ? _oscLinks.CreateSnapshotMetadata(normal, alternate)
+            : _oscLinks.CreateSnapshotMetadata(active);
         return new TerminalSnapshot(
             revision,
             Columns,
@@ -1121,7 +1135,8 @@ internal sealed class TerminalEngine : IDisposable
             _modes.Snapshot(),
             active,
             normal,
-            alternate);
+            alternate,
+            hyperlinks);
     }
 
     public IReadOnlyList<EngineEvent> ConsumeEvents(bool includeWriteParsed)
@@ -2267,16 +2282,23 @@ internal sealed class TerminalEngine : IDisposable
         }
 
         string? id = null;
+        bool idSeen = false;
+        var parsedParameters = ImmutableArray.CreateBuilder<TerminalHyperlinkParameter>();
         foreach (string parameter in parameters.Split(':'))
         {
-            if (parameter.StartsWith("id=", StringComparison.Ordinal))
+            int equals = parameter.IndexOf('=');
+            if (equals > 0)
+            {
+                parsedParameters.Add(new TerminalHyperlinkParameter(parameter[..equals], parameter[(equals + 1)..]));
+            }
+            if (!idSeen && parameter.StartsWith("id=", StringComparison.Ordinal))
             {
                 string value = parameter[3..];
                 id = value.Length == 0 ? null : value;
-                break;
+                idSeen = true;
             }
         }
-        int linkId = _oscLinks.RegisterLink(new OscLinkData(uri, id));
+        int linkId = _oscLinks.RegisterLink(new OscLinkData(uri, id, parsedParameters.ToImmutable()));
         _style = _style with { HyperlinkId = linkId };
         InvalidateSharedExtendedAttributes();
     }

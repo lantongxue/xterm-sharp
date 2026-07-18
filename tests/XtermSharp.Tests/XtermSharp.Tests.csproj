@@ -23,6 +23,7 @@
     <Using Include="XtermSharp.Addons" />
     <Using Include="XtermSharp.Events" />
     <Using Include="XtermSharp.Input" />
+    <Using Include="XtermSharp.Links" />
     <Using Include="XtermSharp.Logging" />
     <Using Include="XtermSharp.Markers" />
     <Using Include="XtermSharp.Options" />

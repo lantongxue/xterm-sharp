@@ -314,7 +314,6 @@ internal sealed class TerminalBuffer : IDisposable
             YDisp = Math.Max(0, YDisp - amount);
         }
 
-        CursorX = Math.Min(CursorX, columns - 1);
         CursorY = Math.Min(CursorY, rows - 1);
         CursorY = Math.Min(rows - 1, CursorY + addToCursorY);
         SavedCursorX = Math.Min(SavedCursorX, columns - 1);
@@ -471,6 +470,7 @@ internal sealed class TerminalBuffer : IDisposable
     {
         int oldColumns = _columns;
         int oldCursorLine = YBase + CursorY;
+        int oldLogicalCursorColumn = LogicalCursorX;
         int oldViewport = YDisp;
         bool viewportAtBottom = YDisp == YBase;
         var reflowed = new List<BufferLine>(_lines.Count);
@@ -481,16 +481,16 @@ internal sealed class TerminalBuffer : IDisposable
 
         for (int lineIndex = 0; lineIndex < _lines.Count;)
         {
+            int groupStart = lineIndex;
             int groupEnd = lineIndex + 1;
             while (groupEnd < _lines.Count && _lines[groupEnd].IsWrapped)
             {
                 groupEnd++;
             }
-            if (columns > oldColumns &&
-                !reflowCursorLine &&
-                groupEnd - lineIndex > 1 &&
-                oldCursorLine >= lineIndex &&
-                oldCursorLine < groupEnd)
+            bool containsCursor = oldCursorLine >= lineIndex && oldCursorLine < groupEnd;
+            bool preserveCursorGroup = !reflowCursorLine && containsCursor &&
+                (columns < oldColumns || groupEnd - lineIndex > 1);
+            if (preserveCursorGroup)
             {
                 int preservedGroupStart = reflowed.Count;
                 for (int sourceLine = lineIndex; sourceLine < groupEnd; sourceLine++)
@@ -507,26 +507,17 @@ internal sealed class TerminalBuffer : IDisposable
                     }
                 }
                 mappedCursorLine = preservedGroupStart + oldCursorLine - lineIndex;
-                mappedCursorColumn = WrapPending ? oldColumns : CursorX;
+                mappedCursorColumn = Math.Min(oldLogicalCursorColumn, columns - 1);
                 mappedWrapPending = false;
                 lineIndex = groupEnd;
                 continue;
             }
 
             var cells = new List<CellData>();
-            var groupMarkerOffsets = new Dictionary<TerminalMarker, int>();
             int groupCursorOffset = -1;
             do
             {
                 BufferLine line = _lines[lineIndex];
-                int markerOffset = cells.Count;
-                foreach (TerminalMarker marker in _markers)
-                {
-                    if (originalMarkerLines[marker] == lineIndex)
-                    {
-                        groupMarkerOffsets[marker] = markerOffset;
-                    }
-                }
                 bool hasWrappedSuccessor = lineIndex + 1 < _lines.Count && _lines[lineIndex + 1].IsWrapped;
                 int length;
                 if (hasWrappedSuccessor)
@@ -541,8 +532,7 @@ internal sealed class TerminalBuffer : IDisposable
                 }
                 if (lineIndex == oldCursorLine)
                 {
-                    int logicalColumn = WrapPending ? oldColumns : CursorX;
-                    groupCursorOffset = cells.Count + logicalColumn;
+                    groupCursorOffset = cells.Count + oldLogicalCursorColumn;
                 }
                 cells.AddRange(line.CopyCells(length));
                 lineIndex++;
@@ -595,24 +585,37 @@ internal sealed class TerminalBuffer : IDisposable
                 if (groupCursorOffset > 0 && groupCursorOffset % columns == 0 && groupCursorOffset >= cells.Count)
                 {
                     mappedCursorLine = newGroupStart + groupCursorOffset / columns - 1;
-                    mappedCursorColumn = columns - 1;
-                    mappedWrapPending = true;
+                    mappedWrapPending = false;
                 }
                 else
                 {
                     mappedCursorLine = newGroupStart + groupCursorOffset / columns;
-                    mappedCursorColumn = groupCursorOffset % columns;
                     mappedWrapPending = false;
                 }
+                mappedCursorColumn = Math.Min(oldLogicalCursorColumn, columns - 1);
                 while (reflowed.Count <= mappedCursorLine)
                 {
                     reflowed.Add(new BufferLine(columns, eraseStyle, reflowed.Count > newGroupStart, _stringCache));
                 }
             }
 
-            foreach ((TerminalMarker marker, int offset) in groupMarkerOffsets)
+            int newGroupLineCount = reflowed.Count - newGroupStart;
+            foreach (TerminalMarker marker in _markers.ToArray())
             {
-                marker.SetLine(newGroupStart + offset / columns);
+                int originalLine = originalMarkerLines[marker];
+                if (originalLine < groupStart || originalLine >= groupEnd)
+                {
+                    continue;
+                }
+                int relativeLine = originalLine - groupStart;
+                if (relativeLine >= newGroupLineCount)
+                {
+                    marker.Dispose();
+                }
+                else
+                {
+                    marker.SetLine(newGroupStart + relativeLine);
+                }
             }
         }
 

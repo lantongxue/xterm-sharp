@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace XtermSharp.Snapshots;
 
 public sealed record TerminalSnapshot(
@@ -8,4 +10,9 @@ public sealed record TerminalSnapshot(
     TerminalModes Modes,
     TerminalBufferSnapshot ActiveBuffer,
     TerminalBufferSnapshot? NormalBuffer,
-    TerminalBufferSnapshot? AlternateBuffer);
+    TerminalBufferSnapshot? AlternateBuffer,
+    ImmutableDictionary<int, TerminalHyperlinkMetadata> Hyperlinks)
+{
+    public TerminalHyperlinkMetadata? GetHyperlink(int linkId) =>
+        Hyperlinks.TryGetValue(linkId, out TerminalHyperlinkMetadata? hyperlink) ? hyperlink : null;
+}

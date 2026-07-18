@@ -23,7 +23,7 @@ from the inventory, or provided by upstream addons that have not been fully port
 - [x] 1,306 cases are direct ports and `XTJS-0799` is architecture-equivalent.
 - [x] The reference scenario reports `MATCH`.
 - [x] All 76 escape-sequence fixtures report `MATCH 76/76`.
-- [x] The solution test run passes 1,475/1,475 tests across all seven test projects.
+- [x] The solution test run passes 1,499/1,499 tests across all seven test projects.
 
 ## Priority definitions
 
@@ -39,9 +39,9 @@ from the inventory, or provided by upstream addons that have not been fully port
 | --- | --- | --- | --- |
 | UPG-001 | P0 | Complete Unicode 11 width tables | Ready for acceptance |
 | UPG-002 | P0 | Unicode 15 extended grapheme clustering | Ready for acceptance |
-| UPG-003 | P0 | Complex-cell resize/reflow parity | Not started |
-| UPG-004 | P0 | Marker, hyperlink and decoration tracking through reflow | Not started |
-| UPG-005 | P0 | Public OSC 8 metadata and interaction | Not started |
+| UPG-003 | P0 | Complex-cell resize/reflow parity | Ready for acceptance |
+| UPG-004 | P0 | Marker, hyperlink and decoration tracking through reflow | Ready for acceptance |
+| UPG-005 | P0 | Public OSC 8 metadata and interaction | Ready for acceptance |
 | UPG-006 | P0 | Remaining public headless option plumbing | Not started |
 | UPG-007 | P1 | Renderer color and minimum-contrast behavior | Not started |
 | UPG-008 | P1 | Decoration lifecycle and overview-ruler parity | Not started |
@@ -98,55 +98,70 @@ build completed with zero warnings/errors, and 1,482/1,482 tests passed._
 
 ### UPG-003: Complex-cell resize/reflow parity
 
-Current state: the mapped upstream reflow cases pass, but the project still explicitly calls out
-wide, combined and styled-cell edge cases as incomplete hardening work.
+Implemented state: the resize path now matches the pinned xterm.js behavior when the cursor's
+logical line is excluded from reflow, preserves the cursor's physical-column semantics when that
+line is reflowed, adjusts cursor rows for inserted or removed physical lines and clears delayed
+wrap after resize. The permanent differential suite compares complete complex-cell state across
+14 shrink/grow scenarios.
 
-- [ ] Add differential scenarios covering ASCII, wide, combining, grapheme, styled, protected and
+- [x] Add differential scenarios covering ASCII, wide, combining, grapheme, styled, protected and
       hyperlink cells.
-- [ ] Exercise shrink and grow operations with the viewport at the bottom and inside scrollback.
-- [ ] Cover cursor-line reflow enabled and disabled, delayed wrap and logical `x == cols` states.
-- [ ] Cover wide cells at both old and new right margins, including orphan width-0 cells.
-- [ ] Verify cursor, `YBase`, `YDisp`, wrapped flags, styles and trimmed content against xterm.js.
-- [ ] Convert every discovered mismatch into a stable regression test.
-- [ ] Extend the differential runner so the scenarios can be repeated during future baseline upgrades.
-- [ ] Run the complete verification matrix with no regression.
+- [x] Exercise shrink and grow operations with the viewport at the bottom and inside scrollback.
+- [x] Cover cursor-line reflow enabled and disabled, delayed wrap and logical `x == cols` states.
+- [x] Cover wide cells at both old and new right margins, including orphan width-0 cells.
+- [x] Verify cursor, `YBase`, `YDisp`, wrapped flags, styles and trimmed content against xterm.js.
+- [x] Convert every discovered mismatch into a stable regression test.
+- [x] Extend the differential runner so the scenarios can be repeated during future baseline upgrades.
+- [x] Run the complete verification matrix with no regression.
 
-Acceptance result: _Pending._
+Acceptance result: _Ready for user acceptance. Automated verification completed 2026-07-18:
+14/14 complex reflow scenarios matched the pinned xterm.js oracle, the solution build completed
+with zero warnings/errors, and 1,486/1,486 tests passed._
 
 ### UPG-004: Marker, hyperlink and decoration tracking through reflow
 
-Current state: basic marker trimming and reflow cases are implemented, but complex wrapped-line
-mapping and the lifetime of metadata anchored to those markers are not yet considered complete.
+Implemented state: markers now follow the pinned xterm.js physical-row insertion/deletion model
+during reflow. Existing physical rows retain their markers when shrink adds wrapped rows, while
+markers on physical rows removed by grow are disposed. OSC 8 metadata is reconciled against the
+post-resize cell references, and decorated search results are recomputed against the new layout.
 
-- [ ] Differentially test markers on each physical row of a wrapped logical line during shrink/grow.
-- [ ] Test markers during scrollback trimming, line insert/delete and cursor-line reflow suppression.
-- [ ] Verify marker disposal when a reflowed row is discarded.
-- [ ] Verify OSC 8 entries remain alive while any referenced cell remains in the buffer.
-- [ ] Verify decorations and search results remain attached to the intended logical text.
-- [ ] Ensure marker disposal and metadata cleanup cannot be interrupted by subscriber exceptions.
-- [ ] Add regression tests for every corrected mapping or lifetime issue.
-- [ ] Run the complete verification matrix with no regression.
+- [x] Differentially test markers on each physical row of a wrapped logical line during shrink/grow.
+- [x] Test markers during scrollback trimming, line insert/delete and cursor-line reflow suppression.
+- [x] Verify marker disposal when a reflowed row is discarded.
+- [x] Verify OSC 8 entries remain alive while any referenced cell remains in the buffer.
+- [x] Verify decorations and search results remain attached to the intended logical text.
+- [x] Ensure marker disposal and metadata cleanup cannot be interrupted by subscriber exceptions.
+- [x] Add regression tests for every corrected mapping or lifetime issue.
+- [x] Run the complete verification matrix with no regression.
 
-Acceptance result: _Pending._
+Acceptance result: _Ready for user acceptance. Automated verification completed 2026-07-18:
+7/7 marker and metadata scenarios matched the pinned xterm.js oracle, the solution build completed
+with zero warnings/errors, and 1,492/1,492 tests passed. XtermSharp additionally preserves OSC 8
+metadata when linked cells move out of a physical row discarded by grow-reflow; the pinned upstream
+build drops the metadata in that edge case even though referenced cells remain._
 
 ### UPG-005: Public OSC 8 metadata and interaction
 
-Current state: OSC 8 URI and optional ID data are stored by the internal `OscLinkService`, while
-public cell snapshots expose only an integer `HyperlinkId`. Consumers cannot resolve the URI from
-the public API, and `TerminalView` cannot activate these links.
+Implemented state: `TerminalSnapshot.Hyperlinks` exposes immutable, snapshot-scoped OSC 8 metadata
+for the cells present in that snapshot. The built-in provider resolves contiguous and wrapped cell
+ranges before registered text detectors, while `TerminalView` consumes it through the existing
+cancellable link pipeline. Activation raises application events and never opens a URI by default.
 
-- [ ] Add an immutable public hyperlink metadata model without exposing internal mutable services.
-- [ ] Provide snapshot-scoped metadata or a safe resolver that cannot race buffer mutation.
-- [ ] Preserve URI, explicit OSC 8 ID and all supported parameters required by the chosen public API.
-- [ ] Add a built-in OSC 8 link provider that maps contiguous and wrapped cell ranges.
-- [ ] Support hover, leave and activation in `TerminalView` with the same stale-query cancellation
+- [x] Add an immutable public hyperlink metadata model without exposing internal mutable services.
+- [x] Provide snapshot-scoped metadata or a safe resolver that cannot race buffer mutation.
+- [x] Preserve URI, explicit OSC 8 ID and all supported parameters required by the chosen public API.
+- [x] Add a built-in OSC 8 link provider that maps contiguous and wrapped cell ranges.
+- [x] Support hover, leave and activation in `TerminalView` with the same stale-query cancellation
       rules as registered link providers.
-- [ ] Define URI activation security and application override behavior.
-- [ ] Test trimming, buffer switching, resize/reflow, duplicate IDs and anonymous links.
-- [ ] Add headless and Avalonia integration tests.
-- [ ] Run the complete verification matrix with no regression.
+- [x] Define URI activation security and application override behavior.
+- [x] Test trimming, buffer switching, resize/reflow, duplicate IDs and anonymous links.
+- [x] Add headless and Avalonia integration tests.
+- [x] Run the complete verification matrix with no regression.
 
-Acceptance result: _Pending._
+Acceptance result: _Ready for user acceptance. Automated verification completed 2026-07-18:
+snapshot metadata, provider range mapping, trimming, buffer switching, duplicate/anonymous IDs,
+resize/reflow, safe activation events and Avalonia interaction are covered; the solution build
+completed with zero warnings/errors, and 1,499/1,499 tests passed._
 
 ### UPG-006: Remaining public headless option plumbing
 
@@ -355,5 +370,7 @@ dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.W
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet run --project tools/XtermSharp.TestMap/XtermSharp.TestMap.csproj --no-build -- --check
 node tools/compare-reference.mjs tools/sample-request.json
+node tools/compare-reflow-scenarios.mjs
+node tools/compare-marker-scenarios.mjs
 node tools/compare-fixtures.mjs
 ```

@@ -52,6 +52,7 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
         _rows = _engine.Rows;
         _options = validated;
         _latestSnapshot = _engine.CreateSnapshot(0, SnapshotScope.AllBuffers);
+        _linkProviders.Add(new OscLinkProvider(this));
         _processor = ProcessCommandsAsync();
     }
 
@@ -76,6 +77,7 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
     }
     public TerminalOptions Options => Volatile.Read(ref _options);
     public bool IsDisposed => Volatile.Read(ref _disposeState) != 0;
+    internal OscLinkData? GetLinkDataForDiagnostics(int linkId) => _engine.GetLinkData(linkId);
     public TerminalSelectionRange? Selection
     {
         get
@@ -157,6 +159,18 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
     public event EventHandler<TerminalEventArgs>? WriteParsed;
     public event EventHandler<EventArgs>? SelectionChanged;
     public event EventHandler<EventArgs>? DecorationsChanged;
+
+    /// <summary>Raised when an OSC 8 link is hovered in an interactive adapter.</summary>
+    public event EventHandler<TerminalHyperlinkEventArgs>? HyperlinkHovered;
+
+    /// <summary>Raised when the pointer leaves a previously hovered OSC 8 link.</summary>
+    public event EventHandler<TerminalHyperlinkEventArgs>? HyperlinkLeft;
+
+    /// <summary>
+    /// Raised when an OSC 8 link is activated. XtermSharp never opens the URI automatically;
+    /// applications must treat terminal-provided URIs as untrusted and explicitly validate them.
+    /// </summary>
+    public event EventHandler<TerminalHyperlinkEventArgs>? HyperlinkActivated;
 
     public ValueTask WriteAsync(string data, CancellationToken cancellationToken = default)
     {
@@ -399,7 +413,8 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
         {
             ActiveBuffer = active,
             NormalBuffer = null,
-            AlternateBuffer = null
+            AlternateBuffer = null,
+            Hyperlinks = FilterHyperlinks(snapshot.Hyperlinks, active)
         };
     }
 
@@ -867,6 +882,15 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
         }
     }
 
+    internal void NotifyHyperlinkHovered(TerminalLinkEvent terminalEvent, TerminalHyperlinkMetadata hyperlink) =>
+        Raise(HyperlinkHovered, new TerminalHyperlinkEventArgs(terminalEvent, hyperlink));
+
+    internal void NotifyHyperlinkLeft(TerminalLinkEvent terminalEvent, TerminalHyperlinkMetadata hyperlink) =>
+        Raise(HyperlinkLeft, new TerminalHyperlinkEventArgs(terminalEvent, hyperlink));
+
+    internal void NotifyHyperlinkActivated(TerminalLinkEvent terminalEvent, TerminalHyperlinkMetadata hyperlink) =>
+        Raise(HyperlinkActivated, new TerminalHyperlinkEventArgs(terminalEvent, hyperlink));
+
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposeState) != 0, this);
 
     private void ThrowIfProposedApiDisabled()
@@ -886,4 +910,26 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
         0,
         0,
         []);
+
+    private static ImmutableDictionary<int, TerminalHyperlinkMetadata> FilterHyperlinks(
+        ImmutableDictionary<int, TerminalHyperlinkMetadata> hyperlinks,
+        TerminalBufferSnapshot buffer)
+    {
+        if (hyperlinks.Count == 0)
+        {
+            return hyperlinks;
+        }
+        var linkIds = new HashSet<int>();
+        foreach (TerminalLineSnapshot line in buffer.Lines)
+        {
+            foreach (TerminalCellSnapshot cell in line.Cells)
+            {
+                if (cell.HyperlinkId != 0)
+                {
+                    linkIds.Add(cell.HyperlinkId);
+                }
+            }
+        }
+        return hyperlinks.Where(entry => linkIds.Contains(entry.Key)).ToImmutableDictionary();
+    }
 }

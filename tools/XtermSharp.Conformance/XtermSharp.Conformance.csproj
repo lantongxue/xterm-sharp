@@ -9,7 +9,9 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Markers" />
     <Using Include="XtermSharp.Options" />
     <Using Include="XtermSharp.Snapshots" />
+    <Using Include="XtermSharp.Unicode" />
   </ItemGroup>
 </Project>

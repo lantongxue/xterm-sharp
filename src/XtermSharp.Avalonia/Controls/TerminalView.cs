@@ -395,9 +395,7 @@ public sealed class TerminalView : TemplatedControl
             TerminalMouseAction.Down,
             e.KeyModifiers);
         _lastLinkEvent = linkEvent;
-        _pressedLink = _hoveredLink?.Range.Contains(linkEvent.Column, linkEvent.BufferLine, frame.Columns) == true
-            ? _hoveredLink
-            : null;
+        SetPressedLink(linkEvent, frame.Columns);
         TerminalMouseTrackingMode mouseTracking = frame.Modes?.MouseTracking ?? TerminalMouseTrackingMode.None;
         bool localSelection = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ||
             mouseTracking == TerminalMouseTrackingMode.None;
@@ -833,7 +831,7 @@ public sealed class TerminalView : TemplatedControl
         }
     }
 
-    private void SetHoveredLink(TerminalLink? link, TerminalLinkEvent terminalEvent)
+    internal void SetHoveredLink(TerminalLink? link, TerminalLinkEvent terminalEvent)
     {
         if (LinksEqual(_hoveredLink, link))
         {
@@ -869,7 +867,7 @@ public sealed class TerminalView : TemplatedControl
         }
     }
 
-    private void ClearHoveredLink(TerminalLinkEvent? terminalEvent)
+    internal void ClearHoveredLink(TerminalLinkEvent? terminalEvent)
     {
         _linkCancellation?.Cancel();
         if (_hoveredLink is TerminalLink link && terminalEvent is TerminalLinkEvent value)
@@ -881,7 +879,17 @@ public sealed class TerminalView : TemplatedControl
         RestoreLinkCursor();
     }
 
-    private void TryActivateLink(TerminalLinkEvent terminalEvent, int columns)
+    internal void SetPressedLink(TerminalLinkEvent terminalEvent, int columns)
+    {
+        _pressedLink = _hoveredLink?.Range.Contains(
+            terminalEvent.Column,
+            terminalEvent.BufferLine,
+            columns) == true
+            ? _hoveredLink
+            : null;
+    }
+
+    internal void TryActivateLink(TerminalLinkEvent terminalEvent, int columns)
     {
         if (_pressedLink is not TerminalLink pressed ||
             _hoveredLink is not TerminalLink hovered ||

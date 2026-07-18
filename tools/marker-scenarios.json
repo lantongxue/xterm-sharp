@@ -1,0 +1,91 @@
+{
+  "scenarios": [
+    {
+      "name": "wrapped-physical-row-markers-shrink",
+      "request": {
+        "options": { "cols": 4, "rows": 6, "scrollback": 10, "reflowCursorLine": true },
+        "operations": [
+          { "type": "write", "data": "abcdefghijkl\r\nZ" },
+          { "type": "registerMarker", "name": "row-0", "cursorYOffset": -3 },
+          { "type": "registerMarker", "name": "row-1", "cursorYOffset": -2 },
+          { "type": "registerMarker", "name": "row-2", "cursorYOffset": -1 },
+          { "type": "registerMarker", "name": "tail", "cursorYOffset": 0 },
+          { "type": "resize", "columns": 2, "rows": 6 }
+        ]
+      }
+    },
+    {
+      "name": "wrapped-physical-row-markers-grow",
+      "request": {
+        "options": { "cols": 2, "rows": 6, "scrollback": 10, "reflowCursorLine": true },
+        "operations": [
+          { "type": "write", "data": "abcdef\r\nZ" },
+          { "type": "registerMarker", "name": "row-0", "cursorYOffset": -3 },
+          { "type": "registerMarker", "name": "row-1", "cursorYOffset": -2 },
+          { "type": "registerMarker", "name": "row-2", "cursorYOffset": -1 },
+          { "type": "registerMarker", "name": "tail", "cursorYOffset": 0 },
+          { "type": "resize", "columns": 6, "rows": 6 }
+        ]
+      }
+    },
+    {
+      "name": "cursor-line-reflow-suppression",
+      "request": {
+        "options": { "cols": 4, "rows": 5, "scrollback": 5 },
+        "operations": [
+          { "type": "write", "data": "abcdefgh" },
+          { "type": "registerMarker", "name": "first", "cursorYOffset": -1 },
+          { "type": "registerMarker", "name": "cursor", "cursorYOffset": 0 },
+          { "type": "resize", "columns": 2, "rows": 5 }
+        ]
+      }
+    },
+    {
+      "name": "line-insert-delete-marker-lifecycle",
+      "request": {
+        "options": { "cols": 6, "rows": 5, "scrollback": 5 },
+        "operations": [
+          { "type": "write", "data": "row0\r\nrow1\r\nrow2" },
+          { "type": "registerMarker", "name": "row-0", "cursorYOffset": -2 },
+          { "type": "registerMarker", "name": "row-1", "cursorYOffset": -1 },
+          { "type": "registerMarker", "name": "row-2", "cursorYOffset": 0 },
+          { "type": "write", "data": "\u001b[2;1H\u001b[L\u001b[3;1H\u001b[M" }
+        ]
+      }
+    },
+    {
+      "name": "reflow-scrollback-trims-marker",
+      "request": {
+        "options": { "cols": 10, "rows": 11, "scrollback": 1, "reflowCursorLine": true },
+        "operations": [
+          { "type": "write", "data": "abcdefghij\r\n0123456789\r\nklmnopqrst" },
+          { "type": "registerMarker", "name": "first", "cursorYOffset": -2 },
+          { "type": "registerMarker", "name": "second", "cursorYOffset": -1 },
+          { "type": "registerMarker", "name": "third", "cursorYOffset": 0 },
+          { "type": "write", "data": "\u001b[4;1H" },
+          { "type": "resize", "columns": 2, "rows": 11 }
+        ]
+      }
+    },
+    {
+      "name": "osc-link-survives-partial-row-removal",
+      "request": {
+        "options": { "cols": 4, "rows": 5, "scrollback": 5, "reflowCursorLine": true },
+        "operations": [
+          { "type": "write", "data": "\u001b]8;id=keep;https://example.com\u001b\\ABCDEFG\u001b]8;;\u001b\\\r\nZ" },
+          { "type": "resize", "columns": 8, "rows": 5 }
+        ]
+      }
+    },
+    {
+      "name": "osc-link-drops-after-last-line-trim",
+      "request": {
+        "options": { "cols": 4, "rows": 2, "scrollback": 0 },
+        "operations": [
+          { "type": "write", "data": "\u001b]8;id=drop;https://example.com\u001b\\AB\u001b]8;;\u001b\\" },
+          { "type": "write", "data": "\r\nx\r\ny" }
+        ]
+      }
+    }
+  ]
+}

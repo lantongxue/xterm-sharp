@@ -47,6 +47,21 @@ public sealed class OscLinkServiceTests
         Assert.Equal(data, links.GetLinkData(linkId));
     }
 
+    [Fact]
+    public void MarkerObserverFailure_DoesNotInterruptLinkMetadataCleanup()
+    {
+        using BufferService buffers = CreateBufferService();
+        var links = new OscLinkService(buffers);
+        int linkId = links.RegisterLink(new OscLinkData("bar", "foo"));
+        TerminalMarker marker = Assert.Single(buffers.Buffer.Markers);
+        marker.Disposed += (_, _) => throw new InvalidOperationException("observer failure");
+
+        buffers.Buffer.NotifyTrim(1);
+
+        Assert.True(marker.IsDisposed);
+        Assert.Null(links.GetLinkData(linkId));
+    }
+
     private static BufferService CreateBufferService()
     {
         using var options = new OptionsService(new TerminalOptions { Rows = 3, Columns = 10 });

@@ -283,6 +283,108 @@ public sealed class BufferTests
         Assert.True(buffer.GetLine(1).IsWrapped);
     }
 
+    [Fact]
+    public void ReflowSmaller_DoesNotReflowCursorLogicalLineByDefault()
+    {
+        using TerminalBuffer buffer = CreateBuffer(columns: 6, rows: 3);
+        Write(buffer.GetLine(0), "abcdef");
+        buffer.CursorX = 5;
+        buffer.WrapPending = true;
+
+        buffer.Resize(4, 3, InitialScrollback, CellStyle.Default);
+
+        Assert.Equal("abcd", buffer.GetLine(0).TranslateToString());
+        Assert.Equal("    ", buffer.GetLine(1).TranslateToString());
+        Assert.False(buffer.GetLine(1).IsWrapped);
+        Assert.Equal((3, 0, false), (buffer.CursorX, buffer.CursorY, buffer.WrapPending));
+    }
+
+    [Fact]
+    public void ReflowCursorLine_ClampsPhysicalColumnAndAdjustsRowsLikeUpstream()
+    {
+        using TerminalBuffer buffer = CreateBuffer(columns: 6, rows: 3);
+        Write(buffer.GetLine(0), "abcdef");
+        buffer.CursorX = 5;
+        buffer.WrapPending = true;
+        var options = new BufferResizeOptions(ReflowCursorLine: true);
+
+        buffer.Resize(4, 3, InitialScrollback, CellStyle.Default, options);
+
+        Assert.Equal("abcd", buffer.GetLine(0).TranslateToString());
+        Assert.Equal("ef  ", buffer.GetLine(1).TranslateToString());
+        Assert.True(buffer.GetLine(1).IsWrapped);
+        Assert.Equal((3, 1, false), (buffer.CursorX, buffer.CursorY, buffer.WrapPending));
+
+        buffer.Resize(8, 3, InitialScrollback, CellStyle.Default, options);
+
+        Assert.Equal("abcdef  ", buffer.GetLine(0).TranslateToString());
+        Assert.False(buffer.GetLine(0).IsWrapped);
+        Assert.Equal((3, 0, false), (buffer.CursorX, buffer.CursorY, buffer.WrapPending));
+    }
+
+    [Fact]
+    public void Reflow_PreservesCombinedWideStyledProtectedAndHyperlinkCells()
+    {
+        using TerminalBuffer buffer = CreateBuffer(columns: 6, rows: 4);
+        CellStyle complexStyle = CellStyle.Default with
+        {
+            Foreground = TerminalColor.Rgb(1, 2, 3),
+            Background = TerminalColor.Palette(4),
+            UnderlineColor = TerminalColor.Rgb(5, 6, 7),
+            Attributes = CellAttributes.Bold | CellAttributes.Underline,
+            UnderlineStyle = TerminalUnderlineStyle.Curly,
+            HyperlinkId = 17,
+            IsProtected = true
+        };
+        CellStyle tailStyle = CellStyle.Default with
+        {
+            Foreground = TerminalColor.Palette(2),
+            Attributes = CellAttributes.Italic
+        };
+        BufferLine line = buffer.GetLine(0);
+        line.SetCell(0, CellData.FromText("e\u0301", 1, complexStyle));
+        line.SetCell(1, CellData.FromText("界", 2, complexStyle));
+        line.SetCell(2, CellData.FromText(string.Empty, 0, complexStyle));
+        line.SetCell(3, CellData.FromText("x", 1, tailStyle));
+        buffer.CursorY = 3;
+
+        buffer.Resize(3, 4, InitialScrollback, CellStyle.Default);
+        buffer.Resize(8, 4, InitialScrollback, CellStyle.Default, new BufferResizeOptions(ReflowCursorLine: true));
+
+        Assert.Equal("e\u0301界x", buffer.GetLine(0).TranslateToString(true));
+        Assert.Equal(complexStyle, buffer.GetLine(0).GetCell(0).Style);
+        Assert.Equal(complexStyle, buffer.GetLine(0).GetCell(1).Style);
+        Assert.Equal(complexStyle, buffer.GetLine(0).GetCell(2).Style);
+        Assert.Equal((1, 2, 0), (
+            buffer.GetLine(0).GetWidth(0),
+            buffer.GetLine(0).GetWidth(1),
+            buffer.GetLine(0).GetWidth(2)));
+        Assert.Equal(tailStyle, buffer.GetLine(0).GetCell(3).Style);
+    }
+
+    [Fact]
+    public void Reflow_NormalizesOrphanContinuationAndPreservesFollowingCells()
+    {
+        using TerminalBuffer buffer = CreateBuffer(columns: 4, rows: 3);
+        BufferLine line = buffer.GetLine(0);
+        line.SetCell(0, new CellData { Width = 0, Style = CellStyle.Default });
+        line.SetCell(1, CellData.FromText("a", 1, CellStyle.Default));
+        line.SetCell(2, CellData.FromText("界", 2, CellStyle.Default));
+        line.SetCell(3, CellData.FromText(string.Empty, 0, CellStyle.Default));
+        buffer.CursorY = 2;
+
+        buffer.Resize(3, 3, InitialScrollback, CellStyle.Default);
+        buffer.Resize(5, 3, InitialScrollback, CellStyle.Default, new BufferResizeOptions(ReflowCursorLine: true));
+
+        Assert.Equal("a界", buffer.GetLine(0).TranslateToString(true));
+        Assert.Equal((1, 2, 0), (
+            buffer.GetLine(0).GetWidth(0),
+            buffer.GetLine(0).GetWidth(1),
+            buffer.GetLine(0).GetWidth(2)));
+        Assert.Equal(1, buffer.GetLine(0).GetWidth(3));
+        Assert.Equal(1, buffer.GetLine(0).GetWidth(4));
+    }
+
     [UpstreamFact("XTJS-0032", "Buffer resize reflow should discard parts of wrapped lines that go out of the scrollback")]
     public void Reflow_DiscardsLogicalLinePrefixBeyondScrollback()
     {
@@ -336,6 +438,53 @@ public sealed class BufferTests
         buffer.Resize(10, 16, InitialScrollback, CellStyle.Default, new BufferResizeOptions(ReflowCursorLine: true));
         Assert.Equal((0, 1, 2), (first.Line, second.Line, third.Line));
         Assert.False(first.IsDisposed || second.IsDisposed || third.IsDisposed);
+    }
+
+    [Fact]
+    public void ReflowSmaller_PreservesMarkersOnExistingPhysicalRows()
+    {
+        using TerminalBuffer buffer = CreateBuffer(columns: 4, rows: 6);
+        Write(buffer.GetLine(0), "abcd");
+        Write(buffer.GetLine(1), "efgh");
+        buffer.GetLine(1).IsWrapped = true;
+        Write(buffer.GetLine(2), "ijkl");
+        buffer.GetLine(2).IsWrapped = true;
+        Write(buffer.GetLine(3), "Z");
+        buffer.CursorY = 3;
+        TerminalMarker first = buffer.AddMarker(0);
+        TerminalMarker second = buffer.AddMarker(1);
+        TerminalMarker third = buffer.AddMarker(2);
+        TerminalMarker tail = buffer.AddMarker(3);
+
+        buffer.Resize(2, 6, InitialScrollback, CellStyle.Default, new BufferResizeOptions(ReflowCursorLine: true));
+
+        Assert.Equal((0, 1, 2, 6), (first.Line, second.Line, third.Line, tail.Line));
+        Assert.False(first.IsDisposed || second.IsDisposed || third.IsDisposed || tail.IsDisposed);
+    }
+
+    [Fact]
+    public void ReflowLarger_DisposesMarkersOnRemovedPhysicalRows()
+    {
+        using TerminalBuffer buffer = CreateBuffer(columns: 2, rows: 6);
+        Write(buffer.GetLine(0), "ab");
+        Write(buffer.GetLine(1), "cd");
+        buffer.GetLine(1).IsWrapped = true;
+        Write(buffer.GetLine(2), "ef");
+        buffer.GetLine(2).IsWrapped = true;
+        Write(buffer.GetLine(3), "Z");
+        buffer.CursorY = 3;
+        TerminalMarker first = buffer.AddMarker(0);
+        TerminalMarker second = buffer.AddMarker(1);
+        TerminalMarker third = buffer.AddMarker(2);
+        TerminalMarker tail = buffer.AddMarker(3);
+
+        buffer.Resize(6, 6, InitialScrollback, CellStyle.Default, new BufferResizeOptions(ReflowCursorLine: true));
+
+        Assert.Equal(0, first.Line);
+        Assert.True(second.IsDisposed);
+        Assert.True(third.IsDisposed);
+        Assert.Equal(1, tail.Line);
+        Assert.False(first.IsDisposed || tail.IsDisposed);
     }
 
     [UpstreamFact("XTJS-0036", "Buffer resize reflow should dispose markers whose rows are trimmed during a reflow")]
@@ -561,6 +710,22 @@ public sealed class BufferTests
         marker.Disposed += (_, _) => calls++;
         buffer.NotifyTrim(1);
         Assert.Equal(1, calls);
+    }
+
+    [Fact]
+    public void AddMarker_DisposalContinuesAfterSubscriberFailure()
+    {
+        using TerminalBuffer buffer = CreateBuffer(scrollback: 0);
+        TerminalMarker marker = buffer.AddMarker(0);
+        bool cleanupCalled = false;
+        marker.Disposed += (_, _) => throw new InvalidOperationException("observer failure");
+        marker.Disposed += (_, _) => cleanupCalled = true;
+
+        buffer.NotifyTrim(1);
+
+        Assert.True(cleanupCalled);
+        Assert.True(marker.IsDisposed);
+        Assert.Empty(buffer.Markers);
     }
 
     [UpstreamFact("XTJS-0057", "Buffer translateBufferLineToString should handle selecting a section of ascii text")]

@@ -23,6 +23,7 @@ public sealed class TerminalOptions
     public long MaxPendingInputBytes { get; init; } = 50_000_000;
     public string UnicodeVersion { get; init; } = UnicodeV6Provider.VersionName;
     public ITerminalLogger? Logger { get; init; }
+    internal bool ReflowCursorLine { get; init; }
 
     internal TerminalOptions ValidateAndClone()
     {
@@ -88,7 +89,8 @@ public sealed class TerminalOptions
             WindowOptions = (WindowOptions ?? new TerminalWindowOptions()).Clone(),
             MaxPendingInputBytes = MaxPendingInputBytes,
             UnicodeVersion = UnicodeVersion,
-            Logger = Logger
+            Logger = Logger,
+            ReflowCursorLine = ReflowCursorLine
         };
     }
 
@@ -116,7 +118,8 @@ public sealed class TerminalOptions
             WindowOptions = (update.WindowOptions ?? WindowOptions).Clone(),
             MaxPendingInputBytes = MaxPendingInputBytes,
             UnicodeVersion = update.UnicodeVersion ?? UnicodeVersion,
-            Logger = Logger
+            Logger = Logger,
+            ReflowCursorLine = ReflowCursorLine
         }.ValidateAndClone();
     }
 }

@@ -61,7 +61,11 @@ public sealed class OscColorAndLinkTests
         int linkId = engine.CurrentHyperlinkId;
 
         Assert.NotEqual(0, linkId);
-        Assert.Equal(new OscLinkData("http://localhost:3000", "100"), engine.GetLinkData(linkId));
+        OscLinkData data = Assert.IsType<OscLinkData>(engine.GetLinkData(linkId));
+        Assert.Equal("http://localhost:3000", data.Uri);
+        Assert.Equal("100", data.Id);
+        TerminalHyperlinkParameter parameter = Assert.Single(data.Parameters);
+        Assert.Equal(("id", "100"), (parameter.Name, parameter.Value));
         Assert.Equal(linkId, engine.CreateSnapshot(0, SnapshotScope.Viewport).ActiveBuffer.Lines[0].Cells[0].HyperlinkId);
 
         await engine.WriteAsync("\x1b]8;;\x07");
@@ -82,6 +86,36 @@ public sealed class OscColorAndLinkTests
 
         await engine.WriteAsync("\x1b]8;;\x07");
         Assert.Equal(0, engine.CurrentHyperlinkId);
+    }
+
+    [Fact]
+    public async Task Osc8_ReflowKeepsMetadataWhenLinkedCellsMoveFromARemovedRow()
+    {
+        await using var terminal = new Terminal(new TerminalOptions
+        {
+            Columns = 4,
+            Rows = 5,
+            Scrollback = 5,
+            ReflowCursorLine = true
+        });
+        await terminal.WriteAsync("ABCDE", TestContext.Current.CancellationToken);
+        await terminal.WriteAsync(
+            "\x1b]8;id=moved;https://example.com\x1b\\FG\x1b]8;;\x1b\\\r\nZ",
+            TestContext.Current.CancellationToken);
+        TerminalSnapshot before = terminal.GetCurrentSnapshot(SnapshotScope.ActiveBuffer);
+        int linkId = before.ActiveBuffer.Lines[1].Cells[1].HyperlinkId;
+
+        Assert.NotEqual(0, linkId);
+        OscLinkData beforeData = Assert.IsType<OscLinkData>(terminal.GetLinkDataForDiagnostics(linkId));
+        Assert.Equal(("https://example.com", "moved"), (beforeData.Uri, beforeData.Id));
+
+        await terminal.ResizeAsync(8, 5, TestContext.Current.CancellationToken);
+
+        TerminalSnapshot after = terminal.GetCurrentSnapshot(SnapshotScope.ActiveBuffer);
+        Assert.Equal(linkId, after.ActiveBuffer.Lines[0].Cells[5].HyperlinkId);
+        Assert.Equal(linkId, after.ActiveBuffer.Lines[0].Cells[6].HyperlinkId);
+        OscLinkData afterData = Assert.IsType<OscLinkData>(terminal.GetLinkDataForDiagnostics(linkId));
+        Assert.Equal(("https://example.com", "moved"), (afterData.Uri, afterData.Id));
     }
 
     [UpstreamFact("XTJS-0957", "InputHandler OSC 104: restore events")]

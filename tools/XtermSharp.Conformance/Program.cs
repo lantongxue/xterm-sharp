@@ -13,11 +13,15 @@ var options = new TerminalOptions
     Columns = GetInt(optionsElement, "cols", GetInt(optionsElement, "columns", 80)),
     Rows = GetInt(optionsElement, "rows", 24),
     Scrollback = GetInt(optionsElement, "scrollback", 1000),
-    ConvertEol = GetBool(optionsElement, "convertEol", false)
+    ConvertEol = GetBool(optionsElement, "convertEol", false),
+    UnicodeVersion = GetString(optionsElement, "unicodeVersion", UnicodeV6Provider.VersionName),
+    ReflowCursorLine = GetBool(optionsElement, "reflowCursorLine", false)
 };
 
 await using var terminal = new Terminal(options);
 var events = new List<object>();
+var markers = new List<(string Name, TerminalMarker Marker)>();
+var observedLinkIds = new HashSet<int>();
 terminal.Bell += (_, _) => events.Add(new { type = "bell" });
 terminal.Data += (_, args) => events.Add(new { type = "data", data = args.Data });
 terminal.CursorMoved += (_, _) => events.Add(new { type = "cursor" });
@@ -54,9 +58,15 @@ if (root.TryGetProperty("operations", out JsonElement operations))
             case "scrollToLine":
                 await terminal.ScrollToLineAsync(operation.GetProperty("line").GetInt32());
                 break;
+            case "registerMarker":
+                markers.Add((
+                    operation.GetProperty("name").GetString() ?? string.Empty,
+                    await terminal.RegisterMarkerAsync(GetInt(operation, "cursorYOffset", 0))));
+                break;
             default:
                 throw new InvalidOperationException($"Unknown operation '{type}'.");
         }
+        CaptureSnapshotLinkIds(terminal.GetCurrentSnapshot(SnapshotScope.AllBuffers), observedLinkIds);
     }
 }
 
@@ -83,6 +93,22 @@ var result = new
     },
     normal = Normalize(snapshot.NormalBuffer!),
     alternate = Normalize(snapshot.AlternateBuffer!),
+    markers = markers.Select(marker => new
+    {
+        name = marker.Name,
+        line = marker.Marker.Line,
+        isDisposed = marker.Marker.IsDisposed
+    }),
+    linkMetadata = observedLinkIds.Order().Select(linkId =>
+    {
+        var data = terminal.GetLinkDataForDiagnostics(linkId);
+        return new
+        {
+            id = linkId,
+            uri = data?.Uri,
+            explicitId = data?.Id
+        };
+    }),
     events
 };
 
@@ -111,11 +137,16 @@ static object Normalize(TerminalBufferSnapshot buffer) => new
             dim = cell.Attributes.HasFlag(CellAttributes.Dim),
             italic = cell.Attributes.HasFlag(CellAttributes.Italic),
             underline = cell.Attributes.HasFlag(CellAttributes.Underline),
+            underlineStyle = (int)cell.UnderlineStyle,
+            underlineColorMode = ColorName(cell.UnderlineColor.Mode),
+            underlineColor = ColorValue(cell.UnderlineColor),
             blink = cell.Attributes.HasFlag(CellAttributes.Blink),
             inverse = cell.Attributes.HasFlag(CellAttributes.Inverse),
             invisible = cell.Attributes.HasFlag(CellAttributes.Invisible),
             strikethrough = cell.Attributes.HasFlag(CellAttributes.Strikethrough),
-            overline = cell.Attributes.HasFlag(CellAttributes.Overline)
+            overline = cell.Attributes.HasFlag(CellAttributes.Overline),
+            hyperlinkId = cell.HyperlinkId,
+            isProtected = cell.IsProtected
         })
     })
 };
@@ -129,6 +160,24 @@ static string ColorName(TerminalColorMode mode) => mode switch
 };
 static int ColorValue(TerminalColor color) =>
     color.Mode == TerminalColorMode.Default ? -1 : color.Value;
+static void CaptureSnapshotLinkIds(TerminalSnapshot snapshot, HashSet<int> linkIds)
+{
+    CaptureBufferLinkIds(snapshot.NormalBuffer!, linkIds);
+    CaptureBufferLinkIds(snapshot.AlternateBuffer!, linkIds);
+}
+static void CaptureBufferLinkIds(TerminalBufferSnapshot buffer, HashSet<int> linkIds)
+{
+    foreach (TerminalLineSnapshot line in buffer.Lines)
+    {
+        foreach (TerminalCellSnapshot cell in line.Cells)
+        {
+            if (cell.HyperlinkId != 0)
+            {
+                linkIds.Add(cell.HyperlinkId);
+            }
+        }
+    }
+}
 static string MouseName(TerminalMouseTrackingMode mode) => mode switch
 {
     TerminalMouseTrackingMode.X10 => "x10",
@@ -141,3 +190,7 @@ static int GetInt(JsonElement element, string name, int fallback) =>
     element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out JsonElement value) ? value.GetInt32() : fallback;
 static bool GetBool(JsonElement element, string name, bool fallback) =>
     element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out JsonElement value) ? value.GetBoolean() : fallback;
+static string GetString(JsonElement element, string name, string fallback) =>
+    element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out JsonElement value)
+        ? value.GetString() ?? fallback
+        : fallback;

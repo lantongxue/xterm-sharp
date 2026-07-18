@@ -61,5 +61,8 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>XtermSharp.ReferenceTests</_Parameter1>
     </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>XtermSharp.Conformance</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

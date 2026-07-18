@@ -19,7 +19,7 @@
 
 ## Current conformance status
 
-Last fully verified on 2026-07-17. Update this section whenever the pinned baseline or counts change.
+Last fully verified on 2026-07-18. Update this section whenever the pinned baseline or counts change.
 
 | Item | Current result |
 | --- | ---: |
@@ -30,25 +30,27 @@ Last fully verified on 2026-07-17. Update this section whenever the pinned basel
 | Architecture-equivalent cases | 1 |
 | Pending applicable cases | 0 |
 | Upstream escape-sequence fixtures | 76/76 matching |
-| Main xUnit suite | 1,434/1,434 passing |
+| Complex reflow differential scenarios | 14/14 matching |
+| Marker and metadata differential scenarios | 7/7 matching |
+| Main xUnit suite | 1,449/1,449 passing |
 | Reference infrastructure suite | 1/1 passing |
-| Rendering suites | 22/22 passing |
+| Rendering suites | 23/23 passing |
 | Web links addon suite | 12/12 passing |
-| Search addon suite | 13/13 passing |
+| Search addon suite | 14/14 passing |
 
 `XTJS-0799` is the sole `ArchitectureEquivalent` case. xterm.js parses large writes in
 131,072-code-point array chunks; XtermSharp streams each `Rune` without an intermediate parse
 array and tests the equivalent bounded, ordered behavior.
 
-The 1,434 main tests consist of 1,307 upstream bindings, 76 escape fixtures, two manifest audit
-tests and 49 local production-parser, Unicode and safety regressions. `tests/upstream-port-map.json` contains
+The 1,449 main tests consist of 1,307 upstream bindings, 76 escape fixtures, two manifest audit
+tests and 64 local production-parser, Unicode, resize/reflow, marker/link-lifetime, public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
 1,307 unique bindings and must remain free of duplicate or missing IDs.
 
 ## Repository map
 
 - `src/XtermSharp/`: public API and headless terminal implementation, grouped into `Decorations`,
   `Events`, `Input`, `Links`, `Options`, `Parsing`, `Selection`, `Snapshots` and `Unicode`
-  contracts.
+  contracts. Snapshot-scoped OSC 8 metadata and the built-in link provider live in `Links`.
 - `src/XtermSharp.Addons.WebLinks/`: optional `addon-web-links` port with strict URL matching,
   wrapped-line range mapping and configurable activation/hover/leave callbacks.
 - `src/XtermSharp.Addons.Search/`: optional `addon-search` port with forward/reverse search,
@@ -96,6 +98,10 @@ tests and 49 local production-parser, Unicode and safety regressions. `tests/ups
   from the pinned addon and official Unicode 15.0 acceptance files.
 - `tools/unicode/15.0.0/`: pinned Unicode grapheme-property, emoji-property and break-test data.
 - `tools/compare-reference.mjs`: compares one JSON scenario with xterm.js headless.
+- `tools/compare-reflow-scenarios.mjs` and `tools/reflow-scenarios.json`: compare complex-cell
+  shrink/grow, scrollback, cursor-line and delayed-wrap behavior with xterm.js headless.
+- `tools/compare-marker-scenarios.mjs` and `tools/marker-scenarios.json`: compare marker physical-row
+  mapping, trimming, line insertion/deletion and OSC 8 metadata lifetime with xterm.js headless.
 - `tools/compare-fixtures.mjs`: compares all 76 escape fixtures with xterm.js headless.
 - `xterm.js/`: pinned upstream source and oracle build, with its own nested `AGENTS.md`.
 
@@ -157,6 +163,14 @@ tests and 49 local production-parser, Unicode and safety regressions. `tests/ups
   the physical `CursorX` at `cols - 1` and uses `WrapPending`. Use `LogicalCursorX` when an operation
   permits the logical right-margin position. In particular, ED/EL must not blanket-cancel pending
   wrap, and CBT must treat the logical `x == cols` state as a no-op.
+- Reflow markers follow physical-row insertion/deletion semantics, not logical text offsets. Shrink
+  keeps markers on existing rows and inserts new wrapped rows after them; grow disposes markers on
+  removed rows. After resize, OSC 8 tracking must restore markers for every surviving linked cell
+  so metadata cannot disappear while its numeric link ID remains in the buffer.
+- OSC 8 metadata exposed through `TerminalSnapshot.Hyperlinks` must contain only links referenced by
+  that snapshot's lines. The built-in provider uses the same cancellable resolution path as other
+  providers. Neither core nor `TerminalView` may open terminal-provided URIs automatically;
+  applications handle `HyperlinkActivated` and apply their own allowlist policy.
 - ANSI newline mode `CSI 20 h/l` changes `TerminalOptions.ConvertEol`; it is not an independent mode
   layered on top of the option. LF, VT and FF all apply the current `ConvertEol` value.
 
@@ -213,12 +227,15 @@ dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.W
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet run --project tools/XtermSharp.TestMap/XtermSharp.TestMap.csproj --no-build -- --check
 node tools/compare-reference.mjs tools/sample-request.json
+node tools/compare-reflow-scenarios.mjs
+node tools/compare-marker-scenarios.mjs
 node tools/compare-fixtures.mjs
 ```
 
-Expected final signals are zero build warnings/errors, 1,434 main tests passing, 22 rendering
-tests passing, 12 web-links addon tests passing, 13 search addon tests passing, one reference test
-passing, 1,307 verified bindings, `MATCH`, and `MATCH 76/76 escape-sequence fixtures`.
+Expected final signals are zero build warnings/errors, 1,449 main tests passing, 23 rendering
+tests passing, 12 web-links addon tests passing, 14 search addon tests passing, one reference test
+passing, 1,307 verified bindings, `MATCH`, `MATCH 14/14 complex reflow scenarios`,
+`MATCH 7/7 marker and metadata scenarios`, and `MATCH 76/76 escape-sequence fixtures`.
 
 The Node-based checks require the pinned upstream build. If it is absent, prepare it with:
 
@@ -234,6 +251,4 @@ npm run esbuild-package-headless-only
 
 - Keep manifests, differential tools and documentation synchronized during future upstream upgrades.
 - Expand differential scenarios beyond the current sample and fixture corpus.
-- Continue hardening resize/reflow behavior for wide, combined and styled-cell edge cases.
-- Improve marker behavior through scroll/reflow and richer hyperlink metadata APIs.
 - Add parser chunk-boundary fuzzing and benchmark-driven packed-cell storage work.

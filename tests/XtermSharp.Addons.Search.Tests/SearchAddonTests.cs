@@ -183,6 +183,42 @@ public sealed class SearchAddonTests
     }
 
     [Fact]
+    public async Task DecoratedSearchReattachesToLogicalTextAfterReflow()
+    {
+        await using var terminal = CreateTerminal(6, 4);
+        using SearchAddon addon = LoadAddon(terminal);
+        await terminal.WriteAsync("xxTARGET\r\nZ", TestContext.Current.CancellationToken);
+        SearchOptions options = new() { Decorations = Decorations };
+
+        Assert.True(addon.FindNext("TARGET", options));
+        AssertSelection(terminal, 2, 0, 2, 1);
+
+        await terminal.ResizeAsync(4, 4, TestContext.Current.CancellationToken);
+        await Task.Delay(350, TestContext.Current.CancellationToken);
+
+        AssertSelection(terminal, 2, 0, 0, 2);
+        TerminalDecorationRange[] highlights = terminal.Decorations
+            .Where(decoration => decoration.Layer == TerminalDecorationLayer.Bottom)
+            .Select(decoration => decoration.Range)
+            .ToArray();
+        Assert.Equal(
+            [new TerminalDecorationRange(2, 0, 2), new TerminalDecorationRange(0, 1, 4)],
+            highlights);
+
+        await terminal.ResizeAsync(6, 4, TestContext.Current.CancellationToken);
+        await Task.Delay(350, TestContext.Current.CancellationToken);
+
+        AssertSelection(terminal, 2, 0, 2, 1);
+        highlights = terminal.Decorations
+            .Where(decoration => decoration.Layer == TerminalDecorationLayer.Bottom)
+            .Select(decoration => decoration.Range)
+            .ToArray();
+        Assert.Equal(
+            [new TerminalDecorationRange(2, 0, 4), new TerminalDecorationRange(0, 1, 2)],
+            highlights);
+    }
+
+    [Fact]
     public async Task BeforeAndAfterEventsBracketSearchAndActiveDecorationCanBeCleared()
     {
         await using var terminal = CreateTerminal(10, 2);

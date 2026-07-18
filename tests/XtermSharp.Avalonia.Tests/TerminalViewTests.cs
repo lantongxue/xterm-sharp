@@ -18,6 +18,44 @@ public sealed class TerminalViewTests
     }
 
     [Fact]
+    public async Task OscHyperlinkUsesTerminalViewHoverLeaveAndActivationPipeline()
+    {
+        await using var terminal = new Terminal(new TerminalOptions { Columns = 8, Rows = 2 });
+        await terminal.WriteAsync(
+            "\x1b]8;id=view;https://example.com\x1b\\link\x1b]8;;\x1b\\",
+            TestContext.Current.CancellationToken);
+        TerminalLink link = Assert.IsType<TerminalLink>(await terminal.GetLinkAtAsync(
+            2,
+            1,
+            TestContext.Current.CancellationToken));
+        link.Decorations.PointerCursor = false;
+        var interactions = new List<string>();
+        terminal.HyperlinkHovered += (_, args) => interactions.Add($"hover:{args.Hyperlink.Id}");
+        terminal.HyperlinkActivated += (_, args) => interactions.Add($"activate:{args.Hyperlink.Id}");
+        terminal.HyperlinkLeft += (_, args) => interactions.Add($"leave:{args.Hyperlink.Id}");
+        var view = new TerminalView { Terminal = terminal };
+        var move = new TerminalLinkEvent(
+            2,
+            1,
+            10,
+            10,
+            TerminalMouseButton.None,
+            TerminalMouseAction.Move);
+        var release = move with
+        {
+            Button = TerminalMouseButton.Left,
+            Action = TerminalMouseAction.Up
+        };
+
+        view.SetHoveredLink(link, move);
+        view.SetPressedLink(move, terminal.Columns);
+        view.TryActivateLink(release, terminal.Columns);
+        view.ClearHoveredLink(release);
+
+        Assert.Equal(["hover:view", "activate:view", "leave:view"], interactions);
+    }
+
+    [Fact]
     public void RenderingDebugOverlayUsesRollingFrameIntervals()
     {
         var view = new TerminalView();

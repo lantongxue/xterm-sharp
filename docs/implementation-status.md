@@ -5,13 +5,14 @@
 - Ordered async writes, resize, reset, clear, scrolling and user-input events.
 - Configurable pending-input backpressure with cancellation before admission.
 - Streaming UTF-8 and UTF-16 input across write boundaries.
-- Normal and alternate buffers, scrollback, delayed wrap and basic resize reflow.
+- Normal and alternate buffers, scrollback, delayed wrap and complex-cell resize reflow verified
+  against the pinned xterm.js oracle across shrink/grow, cursor-line and scrollback scenarios.
 - C0 controls and common ESC/CSI commands for cursor movement, insertion,
   deletion, erase, scrolling, tabs and scroll regions.
 - SGR flags, 16/256-color palette values, true color and underline color.
 - DEC private modes for cursor, origin, wrapping, alternate screen, mouse
   tracking, focus, bracketed paste and synchronized output.
-- OSC title and OSC 8 hyperlink tracking.
+- OSC title handling plus snapshot-scoped immutable OSC 8 URI, explicit ID and parameter metadata.
 - DSR status/cursor responses through the `Data` event.
 - Immutable viewport/full-buffer snapshots with cell attributes.
 - Custom CSI, ESC, OSC, DCS and APC handlers, including asynchronous handlers.
@@ -36,6 +37,15 @@
   documented architecture-equivalent streaming test).
 - All 76 upstream escape-sequence fixtures run in xUnit and are differentially
   checked against the pinned xterm.js headless build.
+- Fourteen permanent complex-cell resize/reflow scenarios differentially verify ASCII, wide,
+  combined, grapheme, styled, protected and hyperlink cells, including cursor-line suppression,
+  delayed wrap, orphan continuations and viewport/scrollback positioning.
+- Seven permanent marker and metadata scenarios differentially verify physical-row mapping during
+  shrink/grow, discarded-row disposal, scrollback trimming, line insertion/deletion, cursor-line
+  suppression and OSC 8 lifetime. Search decorations are recomputed against the reflowed layout.
+- A built-in OSC 8 link provider maps contiguous and wrapped cell ranges. `TerminalView` uses the
+  normal cancellable link pipeline for hover, leave and activation; activation only raises an
+  application event and never launches an untrusted terminal-provided URI automatically.
 - Manifest generation and auditing enforce unique upstream-to-C# bindings with
   no pending applicable cases.
 - Ordered `PasteAsync` and focus reporting APIs keep UI protocol decisions on
@@ -62,12 +72,15 @@ The prioritized implementation and test acceptance criteria are maintained in th
 - Keep the manifest and differential oracle synchronized when the pinned
   xterm.js baseline is upgraded.
 - Extend differential coverage beyond the current reference scenarios and
-  escape-sequence fixture corpus.
-- Match xterm.js reflow behavior for every wide/combined/styled-cell edge case.
-- Add marker tracking through scroll/reflow and richer hyperlink metadata APIs.
+  complex-cell reflow, marker/metadata and escape-sequence fixture corpora.
 - Add fuzzing for parser chunk boundaries and benchmark-driven packed-cell storage.
 - Add WPF/WinUI controls, native Windows rendering backends, accessibility,
-  OSC 8 interaction, mutable link-decoration notifications and renderer-specific differential fixtures.
+  mutable link-decoration notifications and renderer-specific differential fixtures.
 
 Any intentional behavioral difference from xterm.js must be recorded here before
 a stable release.
+
+Current intentional difference: after grow-reflow removes the only physical row marker for an OSC
+8 link but moves linked cells into a retained row, XtermSharp rebuilds the marker from the surviving
+cell references. The pinned xterm.js baseline drops the metadata while leaving cells with the link
+ID; XtermSharp preserves it to maintain resolvable buffer state.

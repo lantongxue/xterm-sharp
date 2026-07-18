@@ -21,4 +21,5 @@ public sealed class TerminalLink
     public Action<TerminalLinkEvent, string>? Hover { get; set; }
     public Action<TerminalLinkEvent, string>? Leave { get; set; }
     public TerminalLinkDecorations Decorations { get; init; } = new();
+    public TerminalHyperlinkMetadata? Hyperlink { get; init; }
 }

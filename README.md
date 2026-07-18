@@ -24,7 +24,7 @@ interactive Avalonia control, while optional addons provide web-link detection a
 - DEC modes, mouse/key input encoding, focus and bracketed-paste modes,
   synchronized output, OSC titles, OSC 8 hyperlinks and DSR responses.
 - Immutable viewport or full-buffer snapshots, terminal events, markers,
-  addons, ordered link providers and pluggable Unicode providers.
+  snapshot-scoped OSC 8 metadata, addons, ordered link providers and pluggable Unicode providers.
 - An optional `XtermSharp.Addons.WebLinks` package matching the pinned
   `addon-web-links` URL detection and wrapped-cell mapping behavior.
 - An optional `XtermSharp.Addons.Search` package matching the pinned `addon-search` forward/reverse,
@@ -82,6 +82,16 @@ await terminal.WriteAsync("\x1b[32mhello from Skia\x1b[0m\r\n");
 
 The control subscribes to the terminal but never disposes it. Applications
 continue to own PTY/session wiring and the terminal lifetime.
+
+### OSC 8 hyperlinks
+
+OSC 8 URI, explicit ID and parameter metadata is available from the immutable
+`TerminalSnapshot.Hyperlinks` map. The core also supplies an automatic OSC 8 link provider, so
+`TerminalView` supports hover, leave and click interaction without an addon.
+
+For security, OSC 8 activation never opens an external application by default. Subscribe to
+`Terminal.HyperlinkActivated`, validate the terminal-provided URI against an application allowlist
+and perform navigation explicitly. See [the OSC 8 guide](docs/osc-hyperlinks.md).
 
 ### Web links addon
 
@@ -162,14 +172,16 @@ architecture-equivalent streaming test.
 
 The current verification results are:
 
-- 1,434/1,434 main xUnit tests passing, including all 1,307 upstream bindings,
-  all 76 escape-sequence fixtures, two manifest audits and 49 local parser, Unicode and
-  safety regressions.
-- Twenty-two rendering tests passing across the backend-neutral, Skia and Avalonia suites.
+- 1,449/1,449 main xUnit tests passing, including all 1,307 upstream bindings,
+  all 76 escape-sequence fixtures, two manifest audits and 64 local parser, Unicode,
+  resize/reflow, marker/link-lifetime, public OSC 8 and safety regressions.
+- Twenty-three rendering tests passing across the backend-neutral, Skia and Avalonia suites.
 - Twelve `addon-web-links` compatibility and integration tests passing.
-- Thirteen `addon-search` compatibility, regression and rendering-integration tests passing.
+- Fourteen `addon-search` compatibility, regression and rendering-integration tests passing.
 - 1/1 reference infrastructure test passing.
 - 1,307 unique manifest bindings with no pending applicable cases.
+- All 14 complex-cell resize/reflow scenarios matching the pinned xterm.js headless oracle.
+- All seven marker, trimming and metadata-lifetime scenarios matching the pinned xterm.js oracle.
 - All 76 escape-sequence fixtures matching the pinned xterm.js headless oracle.
 
 ## Build and verification
@@ -191,6 +203,8 @@ dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.W
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet run --project tools/XtermSharp.TestMap/XtermSharp.TestMap.csproj --no-build -- --check
 node tools/compare-reference.mjs tools/sample-request.json
+node tools/compare-reflow-scenarios.mjs
+node tools/compare-marker-scenarios.mjs
 node tools/compare-fixtures.mjs
 ```
 
@@ -229,9 +243,7 @@ live in separate optional packages; WPF, WinUI, GDI and Direct2D backends remain
 out of scope for the current release.
 
 Before a stable 1.0 release, the project still needs broader differential and
-parser fuzz coverage, additional resize/reflow hardening for complex cells,
-stronger marker tracking through scroll/reflow, richer hyperlink metadata and
-further storage/performance work.
+parser fuzz coverage and further storage/performance work.
 
 XtermSharp is licensed under MIT. See [NOTICE.md](NOTICE.md) for the upstream
 baseline and attribution.
