@@ -12,6 +12,10 @@ public sealed class TerminalOptionsUpdate
     public bool? ConvertEol { get; init; }
     public bool? ScrollOnUserInput { get; init; }
     public bool? ScrollOnEraseInDisplay { get; init; }
+    public bool? ReflowCursorLine { get; init; }
+    public TerminalWindowsPtyOptions? WindowsPty { get; init; }
+    public bool? DisableStdin { get; init; }
+    public TerminalVtExtensions? VtExtensions { get; init; }
     public bool? ColorSchemeQuery { get; init; }
     public bool? MacOptionIsMeta { get; init; }
     public TerminalWindowOptions? WindowOptions { get; init; }

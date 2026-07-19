@@ -33,6 +33,16 @@ internal sealed class OptionsService : IDisposable
         FireIfChanged(TerminalOption.TabStopWidth, previous.TabStopWidth, next.TabStopWidth);
         FireIfChanged(TerminalOption.ConvertEol, previous.ConvertEol, next.ConvertEol);
         FireIfChanged(TerminalOption.ScrollOnUserInput, previous.ScrollOnUserInput, next.ScrollOnUserInput);
+        FireIfChanged(TerminalOption.ReflowCursorLine, previous.ReflowCursorLine, next.ReflowCursorLine);
+        FireIfChanged(
+            TerminalOption.WindowsPty,
+            (previous.WindowsPty.Backend, previous.WindowsPty.BuildNumber),
+            (next.WindowsPty.Backend, next.WindowsPty.BuildNumber));
+        FireIfChanged(TerminalOption.DisableStdin, previous.DisableStdin, next.DisableStdin);
+        FireIfChanged(
+            TerminalOption.VtExtensions,
+            previous.VtExtensions.KittySgrBoldFaintControl,
+            next.VtExtensions.KittySgrBoldFaintControl);
         FireIfChanged(TerminalOption.MacOptionIsMeta, previous.MacOptionIsMeta, next.MacOptionIsMeta);
         FireIfChanged(TerminalOption.UnicodeVersion, previous.UnicodeVersion, next.UnicodeVersion);
         return next;
@@ -79,6 +89,10 @@ internal sealed class OptionsService : IDisposable
             TabStopWidth = options.TabStopWidth > 0 ? options.TabStopWidth : defaults.TabStopWidth,
             ConvertEol = options.ConvertEol,
             ScrollOnUserInput = options.ScrollOnUserInput,
+            ReflowCursorLine = options.ReflowCursorLine,
+            WindowsPty = (options.WindowsPty ?? new TerminalWindowsPtyOptions()).Clone(),
+            DisableStdin = options.DisableStdin,
+            VtExtensions = (options.VtExtensions ?? new TerminalVtExtensions()).Clone(),
             MacOptionIsMeta = options.MacOptionIsMeta,
             EnableKittyKeyboard = options.EnableKittyKeyboard,
             EnableWin32InputMode = options.EnableWin32InputMode,
@@ -98,6 +112,10 @@ internal sealed class OptionsService : IDisposable
         TerminalOption.TabStopWidth => _options.TabStopWidth,
         TerminalOption.ConvertEol => _options.ConvertEol,
         TerminalOption.ScrollOnUserInput => _options.ScrollOnUserInput,
+        TerminalOption.ReflowCursorLine => _options.ReflowCursorLine,
+        TerminalOption.WindowsPty => _options.WindowsPty,
+        TerminalOption.DisableStdin => _options.DisableStdin,
+        TerminalOption.VtExtensions => _options.VtExtensions,
         TerminalOption.MacOptionIsMeta => _options.MacOptionIsMeta,
         TerminalOption.UnicodeVersion => _options.UnicodeVersion,
         _ => throw new ArgumentOutOfRangeException(nameof(option))

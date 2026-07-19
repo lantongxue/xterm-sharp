@@ -15,6 +15,10 @@ public sealed class TerminalOptions
     public bool ConvertEol { get; init; }
     public bool ScrollOnUserInput { get; init; } = true;
     public bool ScrollOnEraseInDisplay { get; init; }
+    public bool ReflowCursorLine { get; init; }
+    public TerminalWindowsPtyOptions WindowsPty { get; init; } = new();
+    public bool DisableStdin { get; init; }
+    public TerminalVtExtensions VtExtensions { get; init; } = new();
     public bool ColorSchemeQuery { get; init; } = true;
     public bool MacOptionIsMeta { get; init; }
     public bool EnableKittyKeyboard { get; init; } = true;
@@ -23,7 +27,6 @@ public sealed class TerminalOptions
     public long MaxPendingInputBytes { get; init; } = 50_000_000;
     public string UnicodeVersion { get; init; } = UnicodeV6Provider.VersionName;
     public ITerminalLogger? Logger { get; init; }
-    internal bool ReflowCursorLine { get; init; }
 
     internal TerminalOptions ValidateAndClone()
     {
@@ -82,6 +85,10 @@ public sealed class TerminalOptions
             ConvertEol = ConvertEol,
             ScrollOnUserInput = ScrollOnUserInput,
             ScrollOnEraseInDisplay = ScrollOnEraseInDisplay,
+            ReflowCursorLine = ReflowCursorLine,
+            WindowsPty = (WindowsPty ?? new TerminalWindowsPtyOptions()).Clone(),
+            DisableStdin = DisableStdin,
+            VtExtensions = (VtExtensions ?? new TerminalVtExtensions()).Clone(),
             ColorSchemeQuery = ColorSchemeQuery,
             MacOptionIsMeta = MacOptionIsMeta,
             EnableKittyKeyboard = EnableKittyKeyboard,
@@ -89,8 +96,7 @@ public sealed class TerminalOptions
             WindowOptions = (WindowOptions ?? new TerminalWindowOptions()).Clone(),
             MaxPendingInputBytes = MaxPendingInputBytes,
             UnicodeVersion = UnicodeVersion,
-            Logger = Logger,
-            ReflowCursorLine = ReflowCursorLine
+            Logger = Logger
         };
     }
 
@@ -111,6 +117,10 @@ public sealed class TerminalOptions
             ConvertEol = update.ConvertEol ?? ConvertEol,
             ScrollOnUserInput = update.ScrollOnUserInput ?? ScrollOnUserInput,
             ScrollOnEraseInDisplay = update.ScrollOnEraseInDisplay ?? ScrollOnEraseInDisplay,
+            ReflowCursorLine = update.ReflowCursorLine ?? ReflowCursorLine,
+            WindowsPty = (update.WindowsPty ?? WindowsPty).Clone(),
+            DisableStdin = update.DisableStdin ?? DisableStdin,
+            VtExtensions = (update.VtExtensions ?? VtExtensions).Clone(),
             ColorSchemeQuery = update.ColorSchemeQuery ?? ColorSchemeQuery,
             MacOptionIsMeta = update.MacOptionIsMeta ?? MacOptionIsMeta,
             EnableKittyKeyboard = EnableKittyKeyboard,
@@ -118,8 +128,7 @@ public sealed class TerminalOptions
             WindowOptions = (update.WindowOptions ?? WindowOptions).Clone(),
             MaxPendingInputBytes = MaxPendingInputBytes,
             UnicodeVersion = update.UnicodeVersion ?? UnicodeVersion,
-            Logger = Logger,
-            ReflowCursorLine = ReflowCursorLine
+            Logger = Logger
         }.ValidateAndClone();
     }
 }

@@ -23,7 +23,7 @@ from the inventory, or provided by upstream addons that have not been fully port
 - [x] 1,306 cases are direct ports and `XTJS-0799` is architecture-equivalent.
 - [x] The reference scenario reports `MATCH`.
 - [x] All 76 escape-sequence fixtures report `MATCH 76/76`.
-- [x] The solution test run passes 1,499/1,499 tests across all seven test projects.
+- [x] The solution test run passes 1,511/1,511 tests across all seven test projects.
 
 ## Priority definitions
 
@@ -42,7 +42,7 @@ from the inventory, or provided by upstream addons that have not been fully port
 | UPG-003 | P0 | Complex-cell resize/reflow parity | Ready for acceptance |
 | UPG-004 | P0 | Marker, hyperlink and decoration tracking through reflow | Ready for acceptance |
 | UPG-005 | P0 | Public OSC 8 metadata and interaction | Ready for acceptance |
-| UPG-006 | P0 | Remaining public headless option plumbing | Not started |
+| UPG-006 | P0 | Remaining public headless option plumbing | Ready for acceptance |
 | UPG-007 | P1 | Renderer color and minimum-contrast behavior | Not started |
 | UPG-008 | P1 | Decoration lifecycle and overview-ruler parity | Not started |
 | UPG-009 | P1 | Avalonia accessibility and screen-reader support | Not started |
@@ -168,19 +168,22 @@ completed with zero warnings/errors, and 1,499/1,499 tests passed._
 Initial target options: `reflowCursorLine`, `windowsPty`, `disableStdin` and
 `vtExtensions.kittySgrBoldFaintControl`.
 
-- [ ] Add typed public construction and runtime-update options where upstream permits mutation.
-- [ ] Pass `reflowCursorLine` and Windows PTY information into `BufferResizeOptions` from the
+- [x] Add typed public construction and runtime-update options where upstream permits mutation.
+- [x] Pass `reflowCursorLine` and Windows PTY information into `BufferResizeOptions` from the
       production `TerminalEngine.Resize` path.
-- [ ] Apply `disableStdin` consistently to keyboard, paste, focus and mouse application input without
+- [x] Apply `disableStdin` consistently to keyboard, paste, focus and mouse application input without
       blocking terminal output writes.
-- [ ] Gate SGR 221/222 behavior with `kittySgrBoldFaintControl`.
-- [ ] Match upstream defaults, or document and test every intentional default difference.
-- [ ] Raise one committed options-changed event with the correct revision for each update.
-- [ ] Add public API, engine integration and runtime-update tests.
-- [ ] Update README option documentation.
-- [ ] Run the complete verification matrix with no regression.
+- [x] Gate SGR 221/222 behavior with `kittySgrBoldFaintControl`.
+- [x] Match upstream defaults, or document and test every intentional default difference.
+- [x] Raise one committed options-changed event with the correct revision for each update.
+- [x] Add public API, engine integration and runtime-update tests.
+- [x] Update README option documentation.
+- [x] Run the complete verification matrix with no regression.
 
-Acceptance result: _Pending._
+Acceptance result: _Ready for user acceptance. Automated verification completed 2026-07-19:
+typed construction and runtime updates, nested-model cloning, committed option events, cursor-line
+and Windows PTY resize behavior, stdin gating and Kitty SGR control are covered; the solution build
+completed with zero warnings/errors, and 1,511/1,511 tests passed._
 
 ## P1: desktop and addon compatibility
 

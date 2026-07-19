@@ -6,6 +6,10 @@ internal enum TerminalOption
     TabStopWidth,
     ConvertEol,
     ScrollOnUserInput,
+    ReflowCursorLine,
+    WindowsPty,
+    DisableStdin,
+    VtExtensions,
     MacOptionIsMeta,
     UnicodeVersion
 }

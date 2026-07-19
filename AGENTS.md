@@ -19,7 +19,7 @@
 
 ## Current conformance status
 
-Last fully verified on 2026-07-18. Update this section whenever the pinned baseline or counts change.
+Last fully verified on 2026-07-19. Update this section whenever the pinned baseline or counts change.
 
 | Item | Current result |
 | --- | ---: |
@@ -32,7 +32,7 @@ Last fully verified on 2026-07-18. Update this section whenever the pinned basel
 | Upstream escape-sequence fixtures | 76/76 matching |
 | Complex reflow differential scenarios | 14/14 matching |
 | Marker and metadata differential scenarios | 7/7 matching |
-| Main xUnit suite | 1,449/1,449 passing |
+| Main xUnit suite | 1,461/1,461 passing |
 | Reference infrastructure suite | 1/1 passing |
 | Rendering suites | 23/23 passing |
 | Web links addon suite | 12/12 passing |
@@ -42,8 +42,9 @@ Last fully verified on 2026-07-18. Update this section whenever the pinned basel
 131,072-code-point array chunks; XtermSharp streams each `Rune` without an intermediate parse
 array and tests the equivalent bounded, ordered behavior.
 
-The 1,449 main tests consist of 1,307 upstream bindings, 76 escape fixtures, two manifest audit
-tests and 64 local production-parser, Unicode, resize/reflow, marker/link-lifetime, public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
+The 1,461 main tests consist of 1,307 upstream bindings, 76 escape fixtures, two manifest audit
+tests and 76 local production-parser, Unicode, resize/reflow, option-plumbing, marker/link-lifetime,
+public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
 1,307 unique bindings and must remain free of duplicate or missing IDs.
 
 ## Repository map
@@ -173,6 +174,10 @@ tests and 64 local production-parser, Unicode, resize/reflow, marker/link-lifeti
   applications handle `HyperlinkActivated` and apply their own allowlist policy.
 - ANSI newline mode `CSI 20 h/l` changes `TerminalOptions.ConvertEol`; it is not an independent mode
   layered on top of the option. LF, VT and FF all apply the current `ConvertEol` value.
+- `TerminalOptions.WindowsPty` enables Windows row-growth compatibility when either backend or build
+  number is configured. A non-zero build number permits column reflow only for ConPTY build 21376
+  or newer. `DisableStdin` suppresses every outgoing PTY data path, including terminal responses,
+  without blocking output parsing. Kitty SGR 221/222 remain enabled by default.
 
 ## Upstream test mapping workflow
 
@@ -232,7 +237,7 @@ node tools/compare-marker-scenarios.mjs
 node tools/compare-fixtures.mjs
 ```
 
-Expected final signals are zero build warnings/errors, 1,449 main tests passing, 23 rendering
+Expected final signals are zero build warnings/errors, 1,461 main tests passing, 23 rendering
 tests passing, 12 web-links addon tests passing, 14 search addon tests passing, one reference test
 passing, 1,307 verified bindings, `MATCH`, `MATCH 14/14 complex reflow scenarios`,
 `MATCH 7/7 marker and metadata scenarios`, and `MATCH 76/76 escape-sequence fixtures`.

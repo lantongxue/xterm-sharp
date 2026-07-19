@@ -916,7 +916,11 @@ internal sealed class TerminalEngine : IDisposable
 
         int effectiveColumns = Math.Max(columns, TerminalDimensions.MinimumColumns);
         int effectiveRows = Math.Max(rows, TerminalDimensions.MinimumRows);
-        var resizeOptions = new BufferResizeOptions(ReflowCursorLine: _options.ReflowCursorLine);
+        TerminalWindowsPtyOptions windowsPty = _options.WindowsPty;
+        var resizeOptions = new BufferResizeOptions(
+            IsWindowsPty: windowsPty.IsConfigured,
+            WindowsBuildNumber: windowsPty.ReflowBuildNumber,
+            ReflowCursorLine: _options.ReflowCursorLine);
         _oscLinks.BeginBufferReflow();
         try
         {
@@ -1020,12 +1024,16 @@ internal sealed class TerminalEngine : IDisposable
 
     public void SendInput(string data, bool wasUserInput)
     {
+        if (_options.DisableStdin)
+        {
+            return;
+        }
         if (wasUserInput && _options.ScrollOnUserInput)
         {
             _active.ScrollToBottom();
             ScrollChanged();
         }
-        _events.Add(new EngineEvent(EngineEventKind.Data, data));
+        EmitData(data);
     }
 
     public void Paste(string data)
@@ -1608,8 +1616,12 @@ internal sealed class TerminalEngine : IDisposable
                     InvalidateSharedExtendedAttributes();
                     break;
                 case 22: RemoveAttribute(CellAttributes.Bold | CellAttributes.Dim); break;
-                case 221: RemoveAttribute(CellAttributes.Bold); break;
-                case 222: RemoveAttribute(CellAttributes.Dim); break;
+                case 221 when _options.VtExtensions.KittySgrBoldFaintControl:
+                    RemoveAttribute(CellAttributes.Bold);
+                    break;
+                case 222 when _options.VtExtensions.KittySgrBoldFaintControl:
+                    RemoveAttribute(CellAttributes.Dim);
+                    break;
                 case 23: RemoveAttribute(CellAttributes.Italic); break;
                 case 24:
                     RemoveAttribute(CellAttributes.Underline);
@@ -2394,7 +2406,13 @@ internal sealed class TerminalEngine : IDisposable
     private void RemoveAttribute(CellAttributes attributes) =>
         _style = _style with { Attributes = _style.Attributes & ~attributes };
 
-    private void EmitData(string data) => _events.Add(new EngineEvent(EngineEventKind.Data, data));
+    private void EmitData(string data)
+    {
+        if (!_options.DisableStdin)
+        {
+            _events.Add(new EngineEvent(EngineEventKind.Data, data));
+        }
+    }
 
     private void CursorMoved() => _events.Add(new EngineEvent(EngineEventKind.CursorMoved));
 

@@ -64,6 +64,24 @@ All state-changing operations use one ordered asynchronous command queue.
 only while waiting for queue capacity; an admitted write always finishes in
 order so the terminal byte stream cannot be corrupted.
 
+### Headless compatibility options
+
+`TerminalOptions` and `TerminalOptionsUpdate` expose the remaining mutable xterm.js headless
+compatibility controls:
+
+- `ReflowCursorLine` includes the logical line containing the cursor during column reflow. It is
+  disabled by default.
+- `WindowsPty` identifies a `ConPty` or `WinPty` backend and optional Windows build number. Any
+  configured field enables Windows row-growth behavior. A non-zero build number gates column
+  reflow to ConPTY build 21376 or newer, matching xterm.js.
+- `DisableStdin` suppresses keyboard, paste, focus, mouse and terminal-response data sent toward a
+  PTY while continuing to accept and render terminal output through `WriteAsync`.
+- `VtExtensions.KittySgrBoldFaintControl` controls Kitty SGR 221/222. It is enabled by default so
+  bold and faint can be cleared independently.
+
+Runtime changes are serialized on the terminal command queue and raise one `OptionsChanged` event
+with the committed revision.
+
 ### Avalonia control
 
 Reference `XtermSharp.Avalonia` and bind an externally owned terminal instance:
@@ -172,9 +190,9 @@ architecture-equivalent streaming test.
 
 The current verification results are:
 
-- 1,449/1,449 main xUnit tests passing, including all 1,307 upstream bindings,
-  all 76 escape-sequence fixtures, two manifest audits and 64 local parser, Unicode,
-  resize/reflow, marker/link-lifetime, public OSC 8 and safety regressions.
+- 1,461/1,461 main xUnit tests passing, including all 1,307 upstream bindings,
+  all 76 escape-sequence fixtures, two manifest audits and 76 local parser, Unicode,
+  resize/reflow, option-plumbing, marker/link-lifetime, public OSC 8 and safety regressions.
 - Twenty-three rendering tests passing across the backend-neutral, Skia and Avalonia suites.
 - Twelve `addon-web-links` compatibility and integration tests passing.
 - Fourteen `addon-search` compatibility, regression and rendering-integration tests passing.

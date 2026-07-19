@@ -50,6 +50,9 @@
   no pending applicable cases.
 - Ordered `PasteAsync` and focus reporting APIs keep UI protocol decisions on
   the terminal processor queue; runtime option changes carry committed revisions.
+- Public construction and runtime-update models cover cursor-line reflow, Windows PTY backend/build
+  compatibility, stdin suppression and Kitty SGR 221/222 control with upstream defaults. Nested
+  option objects are cloned before publication, and each update raises one committed event.
 - Unchanged buffer lines reuse immutable line snapshots, avoiding repeated cell
   materialization for full-buffer publication.
 - `XtermSharp.Rendering` provides backend-neutral frame coordination, themes,
