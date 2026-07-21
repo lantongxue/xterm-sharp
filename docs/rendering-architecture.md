@@ -17,12 +17,12 @@ XtermSharp.Rendering.Skia.Backends
   font metrics and fallback
   HarfBuzz shaping
   retained SKPicture rows
-                |
-                v
-XtermSharp.Avalonia.Controls.TerminalView
-  dispatcher, GPU-aware presentation and frame scheduling
-  DPI-aware resize
-  keyboard, mouse, clipboard and IME
+         |                         |
+         v                         v
+XtermSharp.Avalonia         XtermSharp.Maui
+  GPU-aware presentation      SKCanvasView presentation
+  keyboard/mouse/IME          touch and soft keyboard
+  clipboard and resize        clipboard, links and resize
 ```
 
 ## Threading and frames
@@ -82,9 +82,15 @@ and current row pictures are cached with bounded stale-picture eviction. Theme, 
 invalidate the relevant display rows; different backends are expected to preserve terminal
 semantics, not pixel-identical rasterization.
 
+The MAUI adapter uses the same `SkiaTerminalRenderBackend` and retained row pictures as Avalonia.
+It presents them through `SkiaSharp.Views.Maui.Controls.SKCanvasView`, scales logical terminal
+coordinates to the platform surface and maps Skia touch coordinates back to MAUI logical units.
+Applications call `UseXtermSharpMaui()` while building their `MauiApp` to register the SkiaSharp
+view handler.
+
 ## Platform ownership
 
 `TerminalView.Terminal` is externally assigned. The control subscribes, renders and forwards input
 but never disposes the terminal. Applications remain responsible for PTY/session wiring. When the
-control detaches or receives another terminal, it cancels pending frame work, releases Skia
+control detaches or receives another terminal, it cancels pending frame work, releases backend
 resources and unsubscribes from the old instance.

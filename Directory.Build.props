@@ -6,6 +6,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
     <AvaloniaVersion>12.1.0</AvaloniaVersion>
+    <MauiVersion>10.0.80</MauiVersion>
     <SkiaSharpVersion>3.119.4</SkiaSharpVersion>
   </PropertyGroup>
 </Project>

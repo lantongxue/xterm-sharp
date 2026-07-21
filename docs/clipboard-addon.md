@@ -2,7 +2,7 @@
 
 `XtermSharp.Addons.Clipboard` ports the pinned xterm.js 6.0.0 `addon-clipboard` OSC 52 behavior to
 .NET. The addon is platform-neutral: applications supply an `IClipboardProvider`, while the
-optional Avalonia package supplies an adapter for the system clipboard.
+optional Avalonia and MAUI packages supply adapters for the system clipboard.
 
 ## Usage
 
@@ -50,6 +50,26 @@ terminal.LoadAddon(addon);
 `AvaloniaClipboardProvider` dispatches clipboard calls to the Avalonia UI dispatcher. It maps all
 OSC 52 selections to the platform clipboard because Avalonia does not expose separate primary or
 secondary selections.
+
+## .NET MAUI provider
+
+`MauiClipboardProvider` accepts the MAUI `IClipboard` service and an optional UI dispatcher.
+When no clipboard is supplied it uses `Clipboard.Default`:
+
+```csharp
+using XtermSharp.Addons.Clipboard;
+using XtermSharp.Maui.Clipboard;
+
+var provider = new MauiClipboardProvider();
+var addon = new ClipboardAddon(provider, new ClipboardAddonOptions
+{
+    AllowWrite = true
+});
+terminal.LoadAddon(addon);
+```
+
+Like the Avalonia adapter, it maps every OSC 52 selection to the one system clipboard exposed by
+the platform.
 
 ## Security policy
 

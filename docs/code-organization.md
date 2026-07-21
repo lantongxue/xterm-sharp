@@ -75,6 +75,12 @@ src/XtermSharp.Avalonia/
 ├── Controls/               TerminalView
 ├── Diagnostics/            Rendering metrics and overlay
 └── Input/                  Avalonia keyboard and IME adapters
+
+src/XtermSharp.Maui/
+├── Clipboard/              MAUI system-clipboard provider
+├── Controls/               SKCanvasView-based TerminalView
+├── Hosting/                MAUI/SkiaSharp handler registration
+└── Input/                  Soft-keyboard commit/backspace translation
 ```
 
 Samples separate application startup, views, models, services, events and exceptions. Test support
@@ -87,6 +93,10 @@ decoration ordering. `tests/XtermSharp.Addons.Progress.Tests/` covers every pinn
 case plus programmatic state and handler lifecycle behavior.
 `tests/XtermSharp.Addons.Clipboard.Tests/` covers every pinned upstream clipboard behavior plus
 permissions, payload limits, invalid input, cancellation and handler lifecycle.
+`tests/XtermSharp.Maui.Tests/` covers Skia backend/view integration, soft-keyboard translation,
+clipboard mapping, terminal ownership and public key forwarding. The
+MAUI SSH Core sample links the existing Avalonia SSH transport sources and compiles in the default
+solution; its platform app project is built separately with the requested MAUI workload.
 
 The pinned `xterm.js/` reference tree is intentionally excluded from this convention and must not
 be reorganized locally.

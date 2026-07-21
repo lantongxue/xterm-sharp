@@ -13,9 +13,10 @@
   task is explicitly an upstream-baseline upgrade.
 - `XtermSharp` remains a common/headless package. Optional `XtermSharp.Addons.WebLinks`,
   `XtermSharp.Addons.Search`, `XtermSharp.Addons.Progress`, `XtermSharp.Addons.Clipboard`,
-  `XtermSharp.Rendering`, `XtermSharp.Rendering.Skia` and `XtermSharp.Avalonia` packages provide
-  link detection, buffer search, progress tracking, policy-controlled OSC 52 clipboard access,
-  display-list, Skia and Avalonia integration without adding UI dependencies to the core package.
+  `XtermSharp.Rendering`, `XtermSharp.Rendering.Skia`, `XtermSharp.Avalonia` and
+  `XtermSharp.Maui` packages provide link detection, buffer search, progress tracking,
+  policy-controlled OSC 52 clipboard access, display-list, Skia, Avalonia and MAUI
+  integration without adding UI dependencies to the core package.
   Browser, DOM, WebGL, accessibility rendering, built-in PTY/SSH transports, WPF and WinUI
   integration remain outside the current scope; the SSH sample integrates SSH.NET without changing
   the library boundary.
@@ -38,6 +39,7 @@ Last fully verified on 2026-07-21. Update this section whenever the pinned basel
 | Main xUnit suite | 1,462/1,462 passing |
 | Reference infrastructure suite | 1/1 passing |
 | Rendering suites | 24/24 passing |
+| .NET MAUI suite | 8/8 passing |
 | Web links addon suite | 12/12 passing |
 | Search addon suite | 14/14 passing |
 | Progress addon suite | 12/12 passing |
@@ -80,10 +82,15 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
 - `src/XtermSharp.Rendering.Skia/Backends/`: SkiaSharp/HarfBuzz backend and retained row pictures.
 - `src/XtermSharp.Avalonia/`: interactive Avalonia adapter grouped into `Clipboard`, `Controls`,
   `Input` and `Diagnostics`.
+- `src/XtermSharp.Maui/`: interactive .NET MAUI adapter using the shared SkiaSharp/HarfBuzz backend
+  through `SKCanvasView`, with soft-keyboard/touch input and system clipboard integration.
 - `samples/XtermSharp.Avalonia.Demo/`: no-PTY ANSI playback and local input-echo smoke test with
   interactive web-links and search-addon demonstrations.
 - `samples/XtermSharp.Avalonia.Demo.SSH/`: real SSH PTY integration sample with configurable
   password/private-key authentication and host-key verification.
+- `samples/XtermSharp.Maui.Demo.SSH/`: Android, iOS and Mac Catalyst SSH PTY sample. Its Core
+  project links the Avalonia sample's platform-neutral SSH transport source so both demos preserve
+  identical authentication, host-key, PTY resize and data-pump behavior.
 - `tests/XtermSharp.Tests/`: xUnit v3 behavior, upstream-port and fixture tests.
 - `tests/XtermSharp.Tests/InputHandler/ProductionParserIntegrationTests.cs`: production parser
   wiring, error recovery, payload-limit and identifier regressions.
@@ -93,6 +100,8 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
 - `tests/XtermSharp.ReferenceTests/`: reference-test infrastructure checks.
 - `tests/XtermSharp.Rendering.Tests/`, `XtermSharp.Rendering.Skia.Tests/` and
   `XtermSharp.Avalonia.Tests/`: renderer and platform-adapter verification.
+- `tests/XtermSharp.Maui.Tests/`: Skia integration, input, clipboard and control ownership
+  verification.
 - `tests/XtermSharp.Addons.WebLinks.Tests/`: upstream addon behavior, provider lifecycle and hover
   decoration verification.
 - `tests/XtermSharp.Addons.Search.Tests/`: upstream search behavior, regression fixture, result
@@ -156,6 +165,9 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
   movement, resize, detach or terminal hot-swap.
 - Rendering backends consume backend-neutral display lists. Do not expose `SKCanvas` or another
   graphics-library type through `XtermSharp.Rendering` public data structures.
+- `XtermSharp.Maui` reuses `SkiaTerminalRenderBackend` through `SKCanvasView`; preserve logical-to-
+  surface pixel scaling, register the handler through `UseXtermSharpMaui()` and keep touch hit
+  testing in MAUI logical coordinates.
 - Skia font-family lists must skip unavailable candidates before selecting the primary grid font.
   Use that resolved family for metrics and normal glyph lookup, then apply per-glyph fallback; a
   missing first family must not silently force proportional metrics when a later monospace family
@@ -244,6 +256,7 @@ dotnet test --project tests/XtermSharp.ReferenceTests/XtermSharp.ReferenceTests.
 dotnet test --project tests/XtermSharp.Rendering.Tests/XtermSharp.Rendering.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Rendering.Skia.Tests/XtermSharp.Rendering.Skia.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Maui.Tests/XtermSharp.Maui.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Progress.Tests/XtermSharp.Addons.Progress.Tests.csproj --no-build
@@ -256,8 +269,8 @@ node tools/compare-fixtures.mjs
 ```
 
 Expected final signals are zero build warnings/errors, 1,462 main tests passing, 24 rendering
-tests passing, 12 web-links addon tests passing, 14 search addon tests passing, 12 progress addon
-tests passing, 19 clipboard addon tests passing, one reference test passing, 1,307 verified
+tests passing, eight MAUI tests passing, 12 web-links addon tests passing, 14 search addon tests
+passing, 12 progress addon tests passing, 19 clipboard addon tests passing, one reference test passing, 1,307 verified
 bindings, `MATCH`, `MATCH 14/14 complex reflow scenarios`, `MATCH 7/7 marker and metadata
 scenarios`, and `MATCH 76/76 escape-sequence fixtures`.
 

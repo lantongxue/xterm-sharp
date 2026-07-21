@@ -3,8 +3,8 @@
 XtermSharp is an experimental pure C# terminal emulator for .NET 10, aligned
 with the common/headless behavior of xterm.js 6.0.0. The core package parses
 terminal output and exposes immutable snapshots; optional rendering packages
-provide a backend-neutral display list, a SkiaSharp/HarfBuzz backend and an
-interactive Avalonia control, while optional addons provide web-link detection, buffer search,
+provide a backend-neutral display list, a SkiaSharp/HarfBuzz backend and interactive Avalonia and
+.NET MAUI controls, while optional addons provide web-link detection, buffer search,
 ConEmu progress tracking and policy-controlled OSC 52 clipboard access.
 
 > Current version: `0.1.0-alpha.1`. All 1,307 headless-applicable cases in the
@@ -38,6 +38,8 @@ ConEmu progress tracking and policy-controlled OSC 52 clipboard access.
   frame publication.
 - SkiaSharp/HarfBuzz rendering and an Avalonia `TerminalView` with selection,
   clipboard, keyboard, mouse, focus, scrolling and IME preedit support.
+- SkiaSharp/HarfBuzz rendering in a MAUI `TerminalView` with touch selection, link activation,
+  soft-keyboard input, clipboard, focus and scrolling support.
 
 ## Usage
 
@@ -108,6 +110,35 @@ continue to own PTY/session wiring and the terminal lifetime. It automatically r
 Skia pictures on Avalonia's GPU-backed surface when one is available and falls back to software
 Skia otherwise. `ActiveRenderMode` and `IsGpuAccelerated` expose the mode used by the most recently
 presented frame; GPU API selection remains an Avalonia application-host responsibility.
+
+### .NET MAUI control
+
+Reference `XtermSharp.Maui` and assign an application-owned terminal:
+
+```csharp
+using Microsoft.Maui.Hosting;
+using XtermSharp;
+using XtermSharp.Maui.Controls;
+using XtermSharp.Maui.Hosting;
+using XtermSharp.Options;
+
+MauiApp app = MauiApp.CreateBuilder()
+    .UseMauiApp<App>()
+    .UseXtermSharpMaui()
+    .Build();
+
+var terminal = new Terminal(new TerminalOptions { Columns = 80, Rows = 24 });
+var view = new TerminalView { Terminal = terminal };
+
+terminal.Data += (_, e) => pty.Write(e.Data);
+await terminal.WriteAsync("\x1b[32mhello from MAUI Skia\x1b[0m\r\n");
+```
+
+The MAUI control reuses `XtermSharp.Rendering.Skia` for font measurement, HarfBuzz shaping and
+retained row pictures, then presents them through `SKCanvasView`. `UseXtermSharpMaui()` registers
+the required SkiaSharp MAUI handler. The view handles device-pixel scaling, resize, soft-keyboard
+input, touch selection, mouse-protocol forwarding, link activation and clipboard operations while
+leaving terminal and transport ownership with the application.
 
 ### OSC 8 hyperlinks
 
@@ -199,9 +230,10 @@ var clipboard = new ClipboardAddon(provider, new ClipboardAddonOptions
 terminal.LoadAddon(clipboard);
 ```
 
-`XtermSharp.Avalonia` provides `AvaloniaClipboardProvider` for an Avalonia `IClipboard`. Clipboard
-reads can expose host secrets to remote applications, so write-only access is recommended unless
-query support is explicitly required. See [the addon and security guide](docs/clipboard-addon.md).
+`XtermSharp.Avalonia` provides `AvaloniaClipboardProvider` and `XtermSharp.Maui` provides
+`MauiClipboardProvider`. Clipboard reads can expose host secrets to remote applications, so
+write-only access is recommended unless query support is explicitly required. See
+[the addon and security guide](docs/clipboard-addon.md).
 
 Set `ShowRenderingDebugOverlay` to display the active GPU/software renderer, rolling FPS and
 average/maximum/minimum frame intervals.
@@ -228,6 +260,11 @@ The non-PTY `XtermSharp.Avalonia.Demo` loads both `WebLinksAddon` and `SearchAdd
 demonstrates regex, case-sensitive and whole-word buffer searches with highlighted results, while
 the terminal content includes clickable web links.
 
+`XtermSharp.Maui.Demo.SSH` provides the equivalent Android, iOS and Mac Catalyst application with
+SkiaSharp/HarfBuzz rendering. Its Core project compiles the same SSH transport source files used
+by the Avalonia demo, so authentication, host-key verification, PTY resize and ordered data pumps
+stay identical. See the [MAUI SSH demo README](samples/XtermSharp.Maui.Demo.SSH/README.md).
+
 ## Conformance
 
 The compatibility baseline is xterm.js 6.0.0 at commit
@@ -243,6 +280,7 @@ The current verification results are:
   all 76 escape-sequence fixtures, two manifest audits and 77 local parser, Unicode,
   resize/reflow, option-plumbing, marker/link-lifetime, public OSC 8 and safety regressions.
 - Twenty-four rendering tests passing across the backend-neutral, Skia and Avalonia suites.
+- Eight .NET MAUI Skia-integration, input, clipboard and ownership tests passing.
 - Twelve `addon-web-links` compatibility and integration tests passing.
 - Fourteen `addon-search` compatibility, regression and rendering-integration tests passing.
 - Twelve `addon-progress` compatibility, programmatic-state and lifecycle tests passing.
@@ -268,6 +306,7 @@ dotnet test --project tests/XtermSharp.ReferenceTests/XtermSharp.ReferenceTests.
 dotnet test --project tests/XtermSharp.Rendering.Tests/XtermSharp.Rendering.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Rendering.Skia.Tests/XtermSharp.Rendering.Skia.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Maui.Tests/XtermSharp.Maui.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Progress.Tests/XtermSharp.Addons.Progress.Tests.csproj --no-build
@@ -309,8 +348,8 @@ sample and test-support directory layout.
 
 The core package does not start processes and does not implement PTY or SSH
 transport, browser, DOM, canvas, WebGL or accessibility rendering. The SSH demo
-shows application-owned transport wiring through SSH.NET. Avalonia and Skia
-live in separate optional packages; WPF, WinUI, GDI and Direct2D backends remain
+shows application-owned transport wiring through SSH.NET. Avalonia and MAUI are optional adapters
+over the shared Skia package, while WPF, WinUI, GDI and Direct2D backends remain
 out of scope for the current release.
 
 Before a stable 1.0 release, the project still needs broader differential and

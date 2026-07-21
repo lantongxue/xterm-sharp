@@ -72,8 +72,14 @@
   resizing, worker-side frame preparation, change-only binding notifications, keyboard/mouse
   protocols, local selection, clipboard, focus, IME preedit, registered-link interaction and an
   optional rendering telemetry overlay.
+- `XtermSharp.Maui` provides an externally bound `TerminalView` that reuses the SkiaSharp/HarfBuzz
+  backend through `SKCanvasView`. It supports device-pixel scaling, resize, touch selection,
+  tracked mouse input, link activation, soft-keyboard text/backspace/enter input, scrolling and
+  clipboard integration.
 - The no-PTY Avalonia demo loads both optional addons and exposes interactive link activation plus
   case-sensitive, whole-word and regex search controls with previous/next result navigation.
+- The MAUI SSH demo targets Android, iOS and Mac Catalyst and compiles the same transport source as
+  the Avalonia SSH demo for identical authentication, host-key verification and PTY behavior.
 
 ## Still required before 1.0
 
