@@ -40,7 +40,7 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
         _unicode = new UnicodeRegistry(validated.UnicodeVersion);
         var parserCore = new EscapeSequenceParser();
         _engine = new TerminalEngine(validated, _unicode, parserCore);
-        _parser = new ParserRegistry(parserCore);
+        _parser = new ParserRegistry(parserCore, data => _engine.SendInput(data, wasUserInput: false));
         _inputLimiter = new PendingByteLimiter(validated.MaxPendingInputBytes);
         _commands = Channel.CreateUnbounded<TerminalCommand>(new UnboundedChannelOptions
         {

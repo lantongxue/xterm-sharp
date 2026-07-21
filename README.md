@@ -4,8 +4,8 @@ XtermSharp is an experimental pure C# terminal emulator for .NET 10, aligned
 with the common/headless behavior of xterm.js 6.0.0. The core package parses
 terminal output and exposes immutable snapshots; optional rendering packages
 provide a backend-neutral display list, a SkiaSharp/HarfBuzz backend and an
-interactive Avalonia control, while optional addons provide web-link detection, buffer search and
-ConEmu progress tracking.
+interactive Avalonia control, while optional addons provide web-link detection, buffer search,
+ConEmu progress tracking and policy-controlled OSC 52 clipboard access.
 
 > Current version: `0.1.0-alpha.1`. All 1,307 headless-applicable cases in the
 > pinned upstream inventory are covered by C# tests. XtermSharp remains a
@@ -32,6 +32,8 @@ ConEmu progress tracking.
   regex, incremental, wrapped-cell and highlighted-result behavior.
 - An optional `XtermSharp.Addons.Progress` package matching the pinned `addon-progress` OSC 9;4
   parsing, state preservation, percentage normalization and change-notification behavior.
+- An optional `XtermSharp.Addons.Clipboard` package matching the pinned `addon-clipboard` OSC 52
+  read/write protocol with explicit permissions, payload limits and a platform-neutral provider.
 - Backend-neutral terminal display lists with damage tracking and immutable
   frame publication.
 - SkiaSharp/HarfBuzz rendering and an Avalonia `TerminalView` with selection,
@@ -178,6 +180,26 @@ Values are clamped to 0 through 100. Error and pause sequences with a missing or
 the last percentage, while indeterminate sequences preserve it without presenting it as a known
 percentage. See [the addon guide](docs/progress-addon.md).
 
+### Clipboard addon
+
+Reference `XtermSharp.Addons.Clipboard`, supply a platform clipboard provider and opt into only the
+OSC 52 operations that the session needs. Reads and writes are both denied by default.
+
+```csharp
+using XtermSharp.Addons.Clipboard;
+
+var clipboard = new ClipboardAddon(provider, new ClipboardAddonOptions
+{
+    AllowRead = false,
+    AllowWrite = true
+});
+terminal.LoadAddon(clipboard);
+```
+
+`XtermSharp.Avalonia` provides `AvaloniaClipboardProvider` for an Avalonia `IClipboard`. Clipboard
+reads can expose host secrets to remote applications, so write-only access is recommended unless
+query support is explicitly required. See [the addon and security guide](docs/clipboard-addon.md).
+
 Set `ShowRenderingDebugOverlay` to display rolling FPS and average/maximum/minimum frame intervals.
 See the [rendering debug overlay change log](docs/rendering-debug-overlay-2026-07-17.md) for sampling
 semantics, SSH demo integration and verification details.
@@ -213,13 +235,14 @@ architecture-equivalent streaming test.
 
 The current verification results are:
 
-- 1,461/1,461 main xUnit tests passing, including all 1,307 upstream bindings,
-  all 76 escape-sequence fixtures, two manifest audits and 76 local parser, Unicode,
+- 1,462/1,462 main xUnit tests passing, including all 1,307 upstream bindings,
+  all 76 escape-sequence fixtures, two manifest audits and 77 local parser, Unicode,
   resize/reflow, option-plumbing, marker/link-lifetime, public OSC 8 and safety regressions.
-- Twenty-three rendering tests passing across the backend-neutral, Skia and Avalonia suites.
+- Twenty-four rendering tests passing across the backend-neutral, Skia and Avalonia suites.
 - Twelve `addon-web-links` compatibility and integration tests passing.
 - Fourteen `addon-search` compatibility, regression and rendering-integration tests passing.
 - Twelve `addon-progress` compatibility, programmatic-state and lifecycle tests passing.
+- Nineteen `addon-clipboard` compatibility, security-policy and lifecycle tests passing.
 - 1/1 reference infrastructure test passing.
 - 1,307 unique manifest bindings with no pending applicable cases.
 - All 14 complex-cell resize/reflow scenarios matching the pinned xterm.js headless oracle.
@@ -244,6 +267,7 @@ dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.
 dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Progress.Tests/XtermSharp.Addons.Progress.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Addons.Clipboard.Tests/XtermSharp.Addons.Clipboard.Tests.csproj --no-build
 dotnet run --project tools/XtermSharp.TestMap/XtermSharp.TestMap.csproj --no-build -- --check
 node tools/compare-reference.mjs tools/sample-request.json
 node tools/compare-reflow-scenarios.mjs

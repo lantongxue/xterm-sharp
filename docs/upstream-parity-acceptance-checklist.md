@@ -23,7 +23,7 @@ from the inventory, or provided by upstream addons that have not been fully port
 - [x] 1,306 cases are direct ports and `XTJS-0799` is architecture-equivalent.
 - [x] The reference scenario reports `MATCH`.
 - [x] All 76 escape-sequence fixtures report `MATCH 76/76`.
-- [x] The solution test run passes 1,523/1,523 tests across all eight test projects.
+- [x] The solution test run passes 1,544/1,544 tests across all nine test projects.
 
 ## Priority definitions
 
@@ -47,7 +47,7 @@ from the inventory, or provided by upstream addons that have not been fully port
 | UPG-008 | P1 | Decoration lifecycle and overview-ruler parity | Not started |
 | UPG-009 | P1 | Avalonia accessibility and screen-reader support | Not started |
 | UPG-010 | P1 | Progress addon | Ready for acceptance |
-| UPG-011 | P1 | Clipboard/OSC 52 addon | Not started |
+| UPG-011 | P1 | Clipboard/OSC 52 addon | Ready for acceptance |
 | UPG-012 | P1 | Serialize addon | Not started |
 | UPG-013 | P2 | Inline image addon | Not started |
 | UPG-014 | P2 | Ligatures and character joiners | Not started |
@@ -250,16 +250,25 @@ matched the pinned xterm.js baseline._
 
 ### UPG-011: Clipboard/OSC 52 addon
 
-- [ ] Add an optional clipboard addon with a platform-neutral provider interface.
-- [ ] Implement OSC 52 query and set behavior with UTF-8-safe Base64 encoding and decoding.
-- [ ] Make clipboard reads and writes explicitly configurable; default to the safer policy.
-- [ ] Enforce payload limits and reject invalid Base64 without corrupting parser state.
-- [ ] Provide an Avalonia clipboard provider without introducing UI dependencies into core.
-- [ ] Port the upstream addon tests and add security-policy tests.
-- [ ] Document the security implications for local and remote sessions.
-- [ ] Run the complete verification matrix with no regression.
+- [x] Add an optional clipboard addon with a platform-neutral provider interface.
+- [x] Implement OSC 52 query and set behavior with UTF-8-safe Base64 encoding and decoding.
+- [x] Make clipboard reads and writes explicitly configurable; default to the safer policy.
+- [x] Enforce payload limits and reject invalid Base64 without corrupting parser state.
+- [x] Provide an Avalonia clipboard provider without introducing UI dependencies into core.
+- [x] Port the upstream addon tests and add security-policy tests.
+- [x] Document the security implications for local and remote sessions.
+- [x] Run the complete verification matrix with no regression.
 
-Acceptance result: _Pending._
+Intentional differences: the pinned addon has no addon-level permissions or decoded payload limit,
+forwards arbitrary selection strings, replaces malformed UTF-8 and converts arbitrary invalid
+Base64 into an empty write. XtermSharp requires explicit permissions, bounds decoded payloads,
+validates selections and rejects malformed UTF-8 or Base64 without invoking the provider. Empty
+payloads and `!` remain explicit clear operations.
+
+Acceptance result: _Ready for user acceptance. Automated verification completed 2026-07-21:
+solution build completed with zero warnings/errors, all 1,544 tests passed, all 1,307 bindings were
+verified, and the reference, 14 reflow, seven marker/metadata and 76 fixture differential checks
+matched the pinned xterm.js baseline._
 
 ### UPG-012: Serialize addon
 
@@ -329,7 +338,7 @@ Acceptance result: _Pending._
 | `addon-unicode11` | Exact generated core provider | Keep synchronized with the pinned source under UPG-001. |
 | `addon-unicode-graphemes` | Exact generated core providers | Keep synchronized with the pinned width source and Unicode 15.0 data under UPG-002. |
 | `addon-fit` | Architecture-equivalent | Keep `TerminalView` bounds-to-cell auto-resize behavior. |
-| `addon-clipboard` | Local UI clipboard only | Implement OSC 52 behavior under UPG-011. |
+| `addon-clipboard` | Ported | Keep synchronized with baseline upgrades. |
 | `addon-ligatures` | Partial HarfBuzz shaping | Complete under UPG-014. |
 | `addon-progress` | Ported | Keep synchronized with baseline upgrades. |
 | `addon-serialize` | Missing | Implement under UPG-012. |
@@ -375,6 +384,7 @@ dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.
 dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Progress.Tests/XtermSharp.Addons.Progress.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Addons.Clipboard.Tests/XtermSharp.Addons.Clipboard.Tests.csproj --no-build
 dotnet run --project tools/XtermSharp.TestMap/XtermSharp.TestMap.csproj --no-build -- --check
 node tools/compare-reference.mjs tools/sample-request.json
 node tools/compare-reflow-scenarios.mjs

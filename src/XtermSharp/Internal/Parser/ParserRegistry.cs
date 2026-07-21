@@ -2,7 +2,7 @@ using XtermSharp.Internal.Parser;
 
 namespace XtermSharp.Internal.Parser;
 
-internal sealed class ParserRegistry(EscapeSequenceParser parser) : ITerminalParser
+internal sealed class ParserRegistry(EscapeSequenceParser parser, Action<string>? sendResponse = null) : ITerminalParser
 {
     public IDisposable RegisterCsiHandler(
         FunctionIdentifier identifier,
@@ -32,6 +32,33 @@ internal sealed class ParserRegistry(EscapeSequenceParser parser) : ITerminalPar
         }
         ArgumentNullException.ThrowIfNull(handler);
         return parser.RegisterOscHandler(identifier, handler);
+    }
+
+    public IDisposable RegisterOscHandler(
+        int identifier,
+        Func<string, ITerminalParserContext, ValueTask<bool>> handler)
+    {
+        if (identifier < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(identifier));
+        }
+        ArgumentNullException.ThrowIfNull(handler);
+        if (sendResponse is null)
+        {
+            throw new InvalidOperationException("This parser registry cannot send terminal responses.");
+        }
+        return parser.RegisterOscHandler(identifier, async data =>
+        {
+            var context = new TerminalParserContext(sendResponse);
+            try
+            {
+                return await handler(data, context).ConfigureAwait(false);
+            }
+            finally
+            {
+                context.Complete();
+            }
+        });
     }
 
     public IDisposable RegisterDcsHandler(

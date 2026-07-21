@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Addons.Search", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Addons.Progress", "src\XtermSharp.Addons.Progress\XtermSharp.Addons.Progress.csproj", "{CEF1E7C8-0DD2-483B-BE76-76B5F742FD18}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Addons.Clipboard", "src\XtermSharp.Addons.Clipboard\XtermSharp.Addons.Clipboard.csproj", "{D123EDB2-585E-43F0-9299-BAEFE6BC8A7C}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Rendering", "src\XtermSharp.Rendering\XtermSharp.Rendering.csproj", "{8D1F7B90-2C05-4ED5-B50A-D06F4026C253}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Rendering.Skia", "src\XtermSharp.Rendering.Skia\XtermSharp.Rendering.Skia.csproj", "{90F13B8D-1DBC-43D7-97CD-3C859C03A0F5}"
@@ -39,6 +41,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Addons.Search.Tests", "tests\XtermSharp.Addons.Search.Tests\XtermSharp.Addons.Search.Tests.csproj", "{6C809B9C-8A45-48B1-A1F8-334A1E05D30C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Addons.Progress.Tests", "tests\XtermSharp.Addons.Progress.Tests\XtermSharp.Addons.Progress.Tests.csproj", "{473EE3F0-995B-4ED6-9F2B-AA74D1E20451}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Addons.Clipboard.Tests", "tests\XtermSharp.Addons.Clipboard.Tests\XtermSharp.Addons.Clipboard.Tests.csproj", "{300BDEC0-AC79-40EF-B494-BDF4888A03D5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.Avalonia.Demo", "samples\XtermSharp.Avalonia.Demo\XtermSharp.Avalonia.Demo.csproj", "{4D5F8311-97A6-455B-AC40-CD7B8ACFE9E3}"
 EndProject
@@ -134,5 +138,13 @@ Global
 		{473EE3F0-995B-4ED6-9F2B-AA74D1E20451}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{473EE3F0-995B-4ED6-9F2B-AA74D1E20451}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{473EE3F0-995B-4ED6-9F2B-AA74D1E20451}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D123EDB2-585E-43F0-9299-BAEFE6BC8A7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D123EDB2-585E-43F0-9299-BAEFE6BC8A7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D123EDB2-585E-43F0-9299-BAEFE6BC8A7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D123EDB2-585E-43F0-9299-BAEFE6BC8A7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{300BDEC0-AC79-40EF-B494-BDF4888A03D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{300BDEC0-AC79-40EF-B494-BDF4888A03D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{300BDEC0-AC79-40EF-B494-BDF4888A03D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{300BDEC0-AC79-40EF-B494-BDF4888A03D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

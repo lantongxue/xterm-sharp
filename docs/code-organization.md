@@ -65,7 +65,13 @@ src/XtermSharp.Addons.Search/
 src/XtermSharp.Addons.Progress/
 └── ProgressAddon           Upstream-compatible OSC 9;4 state tracking and notifications
 
+src/XtermSharp.Addons.Clipboard/
+├── ClipboardAddon          Policy-controlled OSC 52 parser integration
+├── ClipboardBase64         Strict UTF-8 Base64 codec
+└── IClipboardProvider      Platform-neutral clipboard boundary
+
 src/XtermSharp.Avalonia/
+├── Clipboard/              Avalonia system-clipboard provider
 ├── Controls/               TerminalView
 ├── Diagnostics/            Rendering metrics and overlay
 └── Input/                  Avalonia keyboard and IME adapters
@@ -79,6 +85,8 @@ addon cases plus the core provider and backend-neutral hover-decoration integrat
 wide/wrapped mapping, the upstream issue-2444 fixture, result tracking, debounce and display-list
 decoration ordering. `tests/XtermSharp.Addons.Progress.Tests/` covers every pinned upstream progress
 case plus programmatic state and handler lifecycle behavior.
+`tests/XtermSharp.Addons.Clipboard.Tests/` covers every pinned upstream clipboard behavior plus
+permissions, payload limits, invalid input, cancellation and handler lifecycle.
 
 The pinned `xterm.js/` reference tree is intentionally excluded from this convention and must not
 be reorganized locally.

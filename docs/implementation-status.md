@@ -35,6 +35,10 @@
   indeterminate and pause states through the public production parser. It strictly validates
   decimal payloads, clamps percentages, preserves prior values where upstream does, exposes
   programmatic reset/restore and unregisters cleanly on disposal.
+- The optional `XtermSharp.Addons.Clipboard` port handles OSC 52 query, set and explicit clear
+  operations through a platform-neutral provider. Read and write permissions default to denied,
+  decoded UTF-8 payloads are bounded, malformed input is rejected without changing clipboard
+  state, and `XtermSharp.Avalonia` supplies a UI-dispatched system clipboard adapter.
 - The pinned xterm.js 6.0.0 inventory contains 1,361 concrete upstream cases:
   54 front-end renderer cases are explicitly excluded, while all 1,307
   headless-applicable cases are covered by C# tests (1,306 direct ports and one
@@ -91,3 +95,10 @@ Current intentional difference: after grow-reflow removes the only physical row 
 8 link but moves linked cells into a retained row, XtermSharp rebuilds the marker from the surviving
 cell references. The pinned xterm.js baseline drops the metadata while leaving cells with the link
 ID; XtermSharp preserves it to maintain resolvable buffer state.
+
+The pinned `addon-clipboard` has no addon-level permissions or decoded payload limit, forwards
+arbitrary selection strings, replaces malformed UTF-8 and clears the clipboard when an OSC 52
+payload contains arbitrary invalid Base64. XtermSharp requires explicit permissions, limits decoded
+payloads, validates selections and rejects malformed UTF-8 or Base64 without invoking the provider
+because malformed terminal input should not mutate host clipboard state. Empty payloads and `!`
+remain explicit clear operations.

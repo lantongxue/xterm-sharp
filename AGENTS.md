@@ -3,20 +3,22 @@
 ## Project snapshot
 
 - XtermSharp is an experimental headless terminal emulator written in pure C# for .NET 10.
-- `XtermSharp.Addons.WebLinks`, `XtermSharp.Addons.Search` and `XtermSharp.Addons.Progress` are the
-  optional upstream-compatible web-link detection, buffer-search and progress-tracking addons.
+- `XtermSharp.Addons.WebLinks`, `XtermSharp.Addons.Search`, `XtermSharp.Addons.Progress` and
+  `XtermSharp.Addons.Clipboard` are the optional upstream-compatible web-link detection,
+  buffer-search, progress-tracking and OSC 52 clipboard addons.
 - Package version: `0.1.0-alpha.1`.
 - Compatibility baseline: xterm.js `6.0.0`, commit
   `b1aee19ac6d6f4e4d11e4a10a3731b852956bdb7`.
 - `xterm.js/` is the pinned development reference. Do not modify it or change its commit unless the
   task is explicitly an upstream-baseline upgrade.
 - `XtermSharp` remains a common/headless package. Optional `XtermSharp.Addons.WebLinks`,
-  `XtermSharp.Addons.Search`, `XtermSharp.Addons.Progress`, `XtermSharp.Rendering`,
-  `XtermSharp.Rendering.Skia` and `XtermSharp.Avalonia` packages provide link detection, buffer
-  search, progress tracking, display-list, Skia and Avalonia integration without adding UI
-  dependencies to the core package. Browser, DOM, WebGL, accessibility rendering, built-in PTY/SSH
-  transports, WPF and WinUI integration remain outside the current scope; the SSH sample integrates
-  SSH.NET without changing the library boundary.
+  `XtermSharp.Addons.Search`, `XtermSharp.Addons.Progress`, `XtermSharp.Addons.Clipboard`,
+  `XtermSharp.Rendering`, `XtermSharp.Rendering.Skia` and `XtermSharp.Avalonia` packages provide
+  link detection, buffer search, progress tracking, policy-controlled OSC 52 clipboard access,
+  display-list, Skia and Avalonia integration without adding UI dependencies to the core package.
+  Browser, DOM, WebGL, accessibility rendering, built-in PTY/SSH transports, WPF and WinUI
+  integration remain outside the current scope; the SSH sample integrates SSH.NET without changing
+  the library boundary.
 
 ## Current conformance status
 
@@ -33,19 +35,20 @@ Last fully verified on 2026-07-21. Update this section whenever the pinned basel
 | Upstream escape-sequence fixtures | 76/76 matching |
 | Complex reflow differential scenarios | 14/14 matching |
 | Marker and metadata differential scenarios | 7/7 matching |
-| Main xUnit suite | 1,461/1,461 passing |
+| Main xUnit suite | 1,462/1,462 passing |
 | Reference infrastructure suite | 1/1 passing |
-| Rendering suites | 23/23 passing |
+| Rendering suites | 24/24 passing |
 | Web links addon suite | 12/12 passing |
 | Search addon suite | 14/14 passing |
 | Progress addon suite | 12/12 passing |
+| Clipboard addon suite | 19/19 passing |
 
 `XTJS-0799` is the sole `ArchitectureEquivalent` case. xterm.js parses large writes in
 131,072-code-point array chunks; XtermSharp streams each `Rune` without an intermediate parse
 array and tests the equivalent bounded, ordered behavior.
 
-The 1,461 main tests consist of 1,307 upstream bindings, 76 escape fixtures, two manifest audit
-tests and 76 local production-parser, Unicode, resize/reflow, option-plumbing, marker/link-lifetime,
+The 1,462 main tests consist of 1,307 upstream bindings, 76 escape fixtures, two manifest audit
+tests and 77 local production-parser, Unicode, resize/reflow, option-plumbing, marker/link-lifetime,
 public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
 1,307 unique bindings and must remain free of duplicate or missing IDs.
 
@@ -60,6 +63,8 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
   wrapped/wide/UTF-16 mapping, result tracking and backend-neutral decorations.
 - `src/XtermSharp.Addons.Progress/`: optional `addon-progress` port with strict OSC 9;4 parsing,
   normalized state/value tracking and change notifications.
+- `src/XtermSharp.Addons.Clipboard/`: optional `addon-clipboard` port with configurable OSC 52
+  permissions, strict UTF-8 Base64 handling and a platform-neutral provider contract.
 - `src/XtermSharp/Internal/Engine/TerminalEngine.cs`: VT execution, modes, cursor and buffer
   mutations.
 - `src/XtermSharp/Internal/Parser/EscapeSequenceParser.cs`: the single VT500 state machine used by
@@ -73,8 +78,8 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
 - `src/XtermSharp.Rendering/`: backend-neutral configuration, display lists, geometry, themes,
   selection and controller code grouped by responsibility.
 - `src/XtermSharp.Rendering.Skia/Backends/`: SkiaSharp/HarfBuzz backend and retained row pictures.
-- `src/XtermSharp.Avalonia/`: interactive Avalonia adapter grouped into `Controls`, `Input` and
-  `Diagnostics`.
+- `src/XtermSharp.Avalonia/`: interactive Avalonia adapter grouped into `Clipboard`, `Controls`,
+  `Input` and `Diagnostics`.
 - `samples/XtermSharp.Avalonia.Demo/`: no-PTY ANSI playback and local input-echo smoke test with
   interactive web-links and search-addon demonstrations.
 - `samples/XtermSharp.Avalonia.Demo.SSH/`: real SSH PTY integration sample with configurable
@@ -94,6 +99,8 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
   tracking, decoration and renderer integration verification.
 - `tests/XtermSharp.Addons.Progress.Tests/`: upstream progress behavior, programmatic state and
   handler lifecycle verification.
+- `tests/XtermSharp.Addons.Clipboard.Tests/`: upstream clipboard behavior, permission, payload,
+  encoding, cancellation and handler lifecycle verification.
 - `tests/upstream-port-map.json`: maintained C# binding/status map.
 - `tests/upstream-tests.json`: generated expanded upstream inventory; do not hand-edit it.
 - `tools/XtermSharp.Conformance/`: JSON snapshot/event runner for differential tests.
@@ -128,6 +135,9 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
   exceptions fail the current write, abort active string handlers and reset the parser before the
   next queued command. Any already-executed prefix is committed with its own revision and events,
   but does not raise `WriteParsed`.
+- OSC handlers that need to report a response use their short-lived `ITerminalParserContext`.
+  Responses are emitted in the triggering write's commit; the context is invalid after the handler
+  completes, and queuing a separate terminal command from the active handler would deadlock.
 - OSC, DCS and APC string handlers share the upstream 10,000,000-UTF-16-code-unit payload limit.
   Limit breaches and invalid or overflowing OSC identifiers must not invoke user or built-in
   handlers, and parsing must resume normally after the terminator.
@@ -237,6 +247,7 @@ dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.
 dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Progress.Tests/XtermSharp.Addons.Progress.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Addons.Clipboard.Tests/XtermSharp.Addons.Clipboard.Tests.csproj --no-build
 dotnet run --project tools/XtermSharp.TestMap/XtermSharp.TestMap.csproj --no-build -- --check
 node tools/compare-reference.mjs tools/sample-request.json
 node tools/compare-reflow-scenarios.mjs
@@ -244,11 +255,11 @@ node tools/compare-marker-scenarios.mjs
 node tools/compare-fixtures.mjs
 ```
 
-Expected final signals are zero build warnings/errors, 1,461 main tests passing, 23 rendering
+Expected final signals are zero build warnings/errors, 1,462 main tests passing, 24 rendering
 tests passing, 12 web-links addon tests passing, 14 search addon tests passing, 12 progress addon
-tests passing, one reference test passing, 1,307 verified bindings, `MATCH`, `MATCH 14/14 complex
-reflow scenarios`, `MATCH 7/7 marker and metadata scenarios`, and `MATCH 76/76 escape-sequence
-fixtures`.
+tests passing, 19 clipboard addon tests passing, one reference test passing, 1,307 verified
+bindings, `MATCH`, `MATCH 14/14 complex reflow scenarios`, `MATCH 7/7 marker and metadata
+scenarios`, and `MATCH 76/76 escape-sequence fixtures`.
 
 The Node-based checks require the pinned upstream build. If it is absent, prepare it with:
 

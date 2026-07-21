@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>XtermSharp.Addons.Clipboard</RootNamespace>
+    <AssemblyName>XtermSharp.Addons.Clipboard</AssemblyName>
+    <PackageId>XtermSharp.Addons.Clipboard</PackageId>
+    <Version>0.1.0-alpha.1</Version>
+    <Description>Secure OSC 52 clipboard addon for XtermSharp.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/xterm-sharp/xterm-sharp</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../XtermSharp/XtermSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Addons" />
+    <Using Include="XtermSharp.Parsing" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../NOTICE.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
+    <None Include="../../docs/clipboard-addon.md" Pack="true" PackagePath="docs/" />
+  </ItemGroup>
+</Project>

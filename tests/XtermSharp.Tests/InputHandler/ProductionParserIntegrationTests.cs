@@ -158,6 +158,34 @@ public sealed class ProductionParserIntegrationTests
     }
 
     [Fact]
+    public async Task OscHandlerContextSendsAnOrderedResponseInTheCurrentCommit()
+    {
+        await using var terminal = NewTerminal();
+        var events = new List<(string Kind, long Revision, string? Data)>();
+        terminal.Data += (_, args) => events.Add(("data", args.Revision, args.Data));
+        terminal.WriteParsed += (_, args) => events.Add(("parsed", args.Revision, null));
+        ITerminalParserContext? escapedContext = null;
+        using IDisposable registration = terminal.Parser.RegisterOscHandler(
+            777,
+            async (data, context) =>
+            {
+                Assert.Equal("query", data);
+                await Task.Yield();
+                context.SendResponse("response");
+                escapedContext = context;
+                return true;
+            });
+
+        await WriteAsync(terminal, "\x1b]777;query\a");
+
+        Assert.Equal(
+            [("data", terminal.Revision, "response"), ("parsed", terminal.Revision, null)],
+            events);
+        Assert.NotNull(escapedContext);
+        Assert.Throws<InvalidOperationException>(() => escapedContext.SendResponse("late"));
+    }
+
+    [Fact]
     public async Task CsiCaret_IsAnAliasForScrollDown()
     {
         await using var caret = NewTerminal(columns: 5, rows: 4);

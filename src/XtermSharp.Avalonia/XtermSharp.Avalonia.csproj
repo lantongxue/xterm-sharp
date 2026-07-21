@@ -13,11 +13,13 @@
     <NoWarn>$(NoWarn);1591;XTSR0001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../XtermSharp.Addons.Clipboard/XtermSharp.Addons.Clipboard.csproj" />
     <ProjectReference Include="../XtermSharp.Rendering/XtermSharp.Rendering.csproj" />
     <ProjectReference Include="../XtermSharp.Rendering.Skia/XtermSharp.Rendering.Skia.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Addons.Clipboard" />
     <Using Include="XtermSharp.Events" />
     <Using Include="XtermSharp.Input" />
     <Using Include="XtermSharp.Links" />
@@ -35,6 +37,7 @@
     <Using Include="XtermSharp.Rendering.Themes" />
     <Using Include="XtermSharp.Rendering.Skia.Backends" />
     <Using Include="XtermSharp.Avalonia.Controls" />
+    <Using Include="XtermSharp.Avalonia.Clipboard" />
     <Using Include="XtermSharp.Avalonia.Diagnostics" />
     <Using Include="XtermSharp.Avalonia.Input" />
   </ItemGroup>
