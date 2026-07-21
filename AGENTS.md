@@ -81,7 +81,8 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
   selection and controller code grouped by responsibility.
 - `src/XtermSharp.Rendering.Skia/Backends/`: SkiaSharp/HarfBuzz backend and retained row pictures.
 - `src/XtermSharp.Avalonia/`: interactive Avalonia adapter grouped into `Clipboard`, `Controls`,
-  `Input` and `Diagnostics`.
+  `Input` and `Diagnostics`, with GPU-aware presentation through Avalonia's current Skia lease and
+  automatic software fallback.
 - `src/XtermSharp.Maui/`: interactive .NET MAUI adapter using the shared SkiaSharp/HarfBuzz backend
   through `SKCanvasView`, with soft-keyboard/touch input and system clipboard integration.
 - `samples/XtermSharp.Avalonia.Demo/`: no-PTY ANSI playback and local input-echo smoke test with
@@ -165,6 +166,13 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
   movement, resize, detach or terminal hot-swap.
 - Rendering backends consume backend-neutral display lists. Do not expose `SKCanvas` or another
   graphics-library type through `XtermSharp.Rendering` public data structures.
+- `XtermSharp.Avalonia` must replay retained pictures through Avalonia's current
+  `ISkiaSharpApiLeaseFeature`; do not create or select a separate graphics context in the control.
+  The application host owns GPU API selection, `GRContext` presence determines the reported render
+  mode, and unavailable GPU state falls back to the same software Skia display-list path.
+- Avalonia `TerminalView.ActiveRenderMode` and `IsGpuAccelerated` describe the most recently
+  presented frame, not a requested capability. Keep their notifications on the UI thread and reset
+  them to `Unknown` when the control detaches or changes terminal sessions.
 - `XtermSharp.Maui` reuses `SkiaTerminalRenderBackend` through `SKCanvasView`; preserve logical-to-
   surface pixel scaling, register the handler through `UseXtermSharpMaui()` and keep touch hit
   testing in MAUI logical coordinates.
