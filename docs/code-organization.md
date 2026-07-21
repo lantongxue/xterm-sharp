@@ -62,6 +62,9 @@ src/XtermSharp.Addons.Search/
 ├── SearchEngine            Wrapped-line and UTF-16-aware forward/reverse matching
 └── SearchDecorationProvider Backend-neutral result and active-match decorations
 
+src/XtermSharp.Addons.Progress/
+└── ProgressAddon           Upstream-compatible OSC 9;4 state tracking and notifications
+
 src/XtermSharp.Avalonia/
 ├── Controls/               TerminalView
 ├── Diagnostics/            Rendering metrics and overlay
@@ -74,7 +77,8 @@ suites use dedicated subdirectories. `tests/XtermSharp.Addons.WebLinks.Tests/` c
 addon cases plus the core provider and backend-neutral hover-decoration integration.
 `tests/XtermSharp.Addons.Search.Tests/` covers search cycling, regex and incremental options,
 wide/wrapped mapping, the upstream issue-2444 fixture, result tracking, debounce and display-list
-decoration ordering.
+decoration ordering. `tests/XtermSharp.Addons.Progress.Tests/` covers every pinned upstream progress
+case plus programmatic state and handler lifecycle behavior.
 
 The pinned `xterm.js/` reference tree is intentionally excluded from this convention and must not
 be reorganized locally.

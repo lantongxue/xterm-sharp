@@ -31,6 +31,10 @@
   highlighting, active-result tracking and debounced updates after writes or resize. Overview-ruler
   colors are exposed as decoration metadata; the current Avalonia adapter has no overview-ruler
   surface.
+- The optional `XtermSharp.Addons.Progress` port tracks ConEmu OSC 9;4 remove, percentage, error,
+  indeterminate and pause states through the public production parser. It strictly validates
+  decimal payloads, clamps percentages, preserves prior values where upstream does, exposes
+  programmatic reset/restore and unregisters cleanly on disposal.
 - The pinned xterm.js 6.0.0 inventory contains 1,361 concrete upstream cases:
   54 front-end renderer cases are explicitly excluded, while all 1,307
   headless-applicable cases are covered by C# tests (1,306 direct ports and one

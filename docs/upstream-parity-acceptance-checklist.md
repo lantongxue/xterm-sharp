@@ -23,7 +23,7 @@ from the inventory, or provided by upstream addons that have not been fully port
 - [x] 1,306 cases are direct ports and `XTJS-0799` is architecture-equivalent.
 - [x] The reference scenario reports `MATCH`.
 - [x] All 76 escape-sequence fixtures report `MATCH 76/76`.
-- [x] The solution test run passes 1,511/1,511 tests across all seven test projects.
+- [x] The solution test run passes 1,523/1,523 tests across all eight test projects.
 
 ## Priority definitions
 
@@ -46,7 +46,7 @@ from the inventory, or provided by upstream addons that have not been fully port
 | UPG-007 | P1 | Renderer color and minimum-contrast behavior | Not started |
 | UPG-008 | P1 | Decoration lifecycle and overview-ruler parity | Not started |
 | UPG-009 | P1 | Avalonia accessibility and screen-reader support | Not started |
-| UPG-010 | P1 | Progress addon | Not started |
+| UPG-010 | P1 | Progress addon | Ready for acceptance |
 | UPG-011 | P1 | Clipboard/OSC 52 addon | Not started |
 | UPG-012 | P1 | Serialize addon | Not started |
 | UPG-013 | P2 | Inline image addon | Not started |
@@ -235,15 +235,18 @@ Acceptance result: _Pending._
 
 ### UPG-010: Progress addon
 
-- [ ] Add an optional `XtermSharp.Addons.Progress` package.
-- [ ] Parse ConEmu OSC 9;4 progress sequences through the public production parser.
-- [ ] Expose state 0-4, normalized percentage values and a change event.
-- [ ] Support programmatic read/reset/restore of the current state.
-- [ ] Port the upstream addon tests and invalid-input cases.
-- [ ] Add a minimal demo or documentation example.
-- [ ] Run the complete verification matrix with no regression.
+- [x] Add an optional `XtermSharp.Addons.Progress` package.
+- [x] Parse ConEmu OSC 9;4 progress sequences through the public production parser.
+- [x] Expose state 0-4, normalized percentage values and a change event.
+- [x] Support programmatic read/reset/restore of the current state.
+- [x] Port the upstream addon tests and invalid-input cases.
+- [x] Add a minimal demo or documentation example.
+- [x] Run the complete verification matrix with no regression.
 
-Acceptance result: _Pending._
+Acceptance result: _Ready for user acceptance. Automated verification completed 2026-07-21:
+solution build completed with zero warnings/errors, all 1,523 tests passed, all 1,307 bindings were
+verified, and the reference, 14 reflow, seven marker/metadata and 76 fixture differential checks
+matched the pinned xterm.js baseline._
 
 ### UPG-011: Clipboard/OSC 52 addon
 
@@ -328,7 +331,7 @@ Acceptance result: _Pending._
 | `addon-fit` | Architecture-equivalent | Keep `TerminalView` bounds-to-cell auto-resize behavior. |
 | `addon-clipboard` | Local UI clipboard only | Implement OSC 52 behavior under UPG-011. |
 | `addon-ligatures` | Partial HarfBuzz shaping | Complete under UPG-014. |
-| `addon-progress` | Missing | Implement under UPG-010. |
+| `addon-progress` | Ported | Keep synchronized with baseline upgrades. |
 | `addon-serialize` | Missing | Implement under UPG-012. |
 | `addon-image` | Missing | Implement under UPG-013. |
 | `addon-attach` | Intentionally outside core | Keep transport wiring application-owned. |
@@ -371,6 +374,7 @@ dotnet test --project tests/XtermSharp.Rendering.Skia.Tests/XtermSharp.Rendering
 dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Addons.Progress.Tests/XtermSharp.Addons.Progress.Tests.csproj --no-build
 dotnet run --project tools/XtermSharp.TestMap/XtermSharp.TestMap.csproj --no-build -- --check
 node tools/compare-reference.mjs tools/sample-request.json
 node tools/compare-reflow-scenarios.mjs

@@ -4,7 +4,8 @@ XtermSharp is an experimental pure C# terminal emulator for .NET 10, aligned
 with the common/headless behavior of xterm.js 6.0.0. The core package parses
 terminal output and exposes immutable snapshots; optional rendering packages
 provide a backend-neutral display list, a SkiaSharp/HarfBuzz backend and an
-interactive Avalonia control, while optional addons provide web-link detection and buffer search.
+interactive Avalonia control, while optional addons provide web-link detection, buffer search and
+ConEmu progress tracking.
 
 > Current version: `0.1.0-alpha.1`. All 1,307 headless-applicable cases in the
 > pinned upstream inventory are covered by C# tests. XtermSharp remains a
@@ -29,6 +30,8 @@ interactive Avalonia control, while optional addons provide web-link detection a
   `addon-web-links` URL detection and wrapped-cell mapping behavior.
 - An optional `XtermSharp.Addons.Search` package matching the pinned `addon-search` forward/reverse,
   regex, incremental, wrapped-cell and highlighted-result behavior.
+- An optional `XtermSharp.Addons.Progress` package matching the pinned `addon-progress` OSC 9;4
+  parsing, state preservation, percentage normalization and change-notification behavior.
 - Backend-neutral terminal display lists with damage tracking and immutable
   frame publication.
 - SkiaSharp/HarfBuzz rendering and an Avalonia `TerminalView` with selection,
@@ -155,6 +158,26 @@ The addon supports case-sensitive, whole-word, regex and incremental searches, t
 counts, and debounces decorated-result recomputation after writes and resizes. See
 [the addon guide](docs/search-addon.md).
 
+### Progress addon
+
+Reference `XtermSharp.Addons.Progress` and load the addon to track ConEmu OSC 9;4 progress reports.
+The current state can also be reset or restored programmatically.
+
+```csharp
+using XtermSharp.Addons.Progress;
+
+var progress = new ProgressAddon();
+terminal.LoadAddon(progress);
+progress.ProgressChanged += (_, args) =>
+    Console.WriteLine($"{args.State}: {args.Value}%");
+
+progress.Progress = new ProgressState(ProgressType.Remove, 0);
+```
+
+Values are clamped to 0 through 100. Error and pause sequences with a missing or zero value preserve
+the last percentage, while indeterminate sequences preserve it without presenting it as a known
+percentage. See [the addon guide](docs/progress-addon.md).
+
 Set `ShowRenderingDebugOverlay` to display rolling FPS and average/maximum/minimum frame intervals.
 See the [rendering debug overlay change log](docs/rendering-debug-overlay-2026-07-17.md) for sampling
 semantics, SSH demo integration and verification details.
@@ -196,6 +219,7 @@ The current verification results are:
 - Twenty-three rendering tests passing across the backend-neutral, Skia and Avalonia suites.
 - Twelve `addon-web-links` compatibility and integration tests passing.
 - Fourteen `addon-search` compatibility, regression and rendering-integration tests passing.
+- Twelve `addon-progress` compatibility, programmatic-state and lifecycle tests passing.
 - 1/1 reference infrastructure test passing.
 - 1,307 unique manifest bindings with no pending applicable cases.
 - All 14 complex-cell resize/reflow scenarios matching the pinned xterm.js headless oracle.
@@ -219,6 +243,7 @@ dotnet test --project tests/XtermSharp.Rendering.Skia.Tests/XtermSharp.Rendering
 dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Addons.Progress.Tests/XtermSharp.Addons.Progress.Tests.csproj --no-build
 dotnet run --project tools/XtermSharp.TestMap/XtermSharp.TestMap.csproj --no-build -- --check
 node tools/compare-reference.mjs tools/sample-request.json
 node tools/compare-reflow-scenarios.mjs
