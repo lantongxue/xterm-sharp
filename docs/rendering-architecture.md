@@ -20,7 +20,7 @@ XtermSharp.Rendering.Skia.Backends
                 |
                 v
 XtermSharp.Avalonia.Controls.TerminalView
-  dispatcher and frame scheduling
+  dispatcher, GPU-aware presentation and frame scheduling
   DPI-aware resize
   keyboard, mouse, clipboard and IME
 ```
@@ -36,10 +36,25 @@ reuse cached display rows, and frames with empty pixel damage do not invalidate 
 visual. Scroll, column, row and extent properties are direct Avalonia properties whose bindings
 are notified only when their values actually change.
 
-`TerminalView.ShowRenderingDebugOverlay` enables a top-right retained Skia overlay with rolling
-presentation FPS plus average, maximum and minimum frame intervals. Sampling resets after a long
-idle gap so terminal inactivity is not reported as a single slow frame. The overlay is disabled by
-default and can be enabled from XAML:
+## GPU acceleration
+
+`TerminalView` presents its retained Skia pictures directly through Avalonia's current Skia API
+lease. When Avalonia supplies a `GRContext`, picture replay, text, fills and decorations execute on
+the GPU-backed surface. If the host selected a software renderer, or the graphics device is
+temporarily unavailable, the same display list is rendered by Skia in software without changing
+terminal behavior or requiring a second graphics context.
+
+GPU selection belongs to the Avalonia application host. Desktop applications using
+`UsePlatformDetect()` use Avalonia's platform renderer selection and normally prefer Metal,
+Direct3D, Vulkan or OpenGL where supported. `TerminalView.ActiveRenderMode` reports `Unknown`,
+`Software` or `Gpu` for the most recently presented frame, and `TerminalView.IsGpuAccelerated`
+provides a bindable boolean convenience property. Both reset when the control detaches or changes
+terminal sessions.
+
+`TerminalView.ShowRenderingDebugOverlay` enables a top-right retained Skia overlay with the active
+GPU/software renderer, rolling presentation FPS and average, maximum and minimum frame intervals.
+Sampling resets after a long idle gap so terminal inactivity is not reported as a single slow
+frame. The overlay is disabled by default and can be enabled from XAML:
 
 ```xml
 <Window xmlns:xterm="clr-namespace:XtermSharp.Avalonia.Controls;assembly=XtermSharp.Avalonia">

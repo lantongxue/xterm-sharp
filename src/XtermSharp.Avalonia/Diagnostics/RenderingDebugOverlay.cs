@@ -5,12 +5,23 @@ namespace XtermSharp.Avalonia.Diagnostics;
 
 internal static class RenderingDebugOverlay
 {
-    public static void Draw(SKCanvas canvas, SKRect bounds, RenderingDebugSnapshot snapshot)
+    public static void Draw(
+        SKCanvas canvas,
+        SKRect bounds,
+        RenderingDebugSnapshot snapshot,
+        TerminalRenderMode renderMode)
     {
+        string mode = renderMode switch
+        {
+            TerminalRenderMode.Gpu => "RENDER GPU",
+            TerminalRenderMode.Software => "RENDER CPU",
+            _ => "RENDER --"
+        };
         string[] lines = snapshot.SampleCount == 0
-            ? ["FPS     --", "AVG     -- ms", "MAX     -- ms", "MIN     -- ms"]
+            ? [mode, "FPS     --", "AVG     -- ms", "MAX     -- ms", "MIN     -- ms"]
             :
             [
+                mode,
                 string.Create(CultureInfo.InvariantCulture, $"FPS {snapshot.FramesPerSecond,6:F1}"),
                 string.Create(CultureInfo.InvariantCulture, $"AVG {snapshot.AverageFrameTimeMilliseconds,6:F2} ms"),
                 string.Create(CultureInfo.InvariantCulture, $"MAX {snapshot.MaximumFrameTimeMilliseconds,6:F2} ms"),

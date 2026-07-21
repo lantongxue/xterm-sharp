@@ -12,10 +12,12 @@ internal sealed class SkiaDrawOperation(
     Rect bounds,
     SkiaTerminalRenderBackend backend,
     TerminalRenderFrame frame,
+    RenderingBackendState renderingBackendState,
     RenderingDebugMetrics? debugMetrics) : ICustomDrawOperation
 {
     private SkiaTerminalRenderBackend Backend { get; } = backend;
     private TerminalRenderFrame Frame { get; } = frame;
+    private RenderingBackendState RenderingBackendState { get; } = renderingBackendState;
     private RenderingDebugMetrics? DebugMetrics { get; } = debugMetrics;
 
     public Rect Bounds { get; } = bounds;
@@ -30,6 +32,10 @@ internal sealed class SkiaDrawOperation(
             return;
         }
         using ISkiaSharpApiLease lease = feature.Lease();
+        TerminalRenderMode mode = lease.GrContext is null
+            ? TerminalRenderMode.Software
+            : TerminalRenderMode.Gpu;
+        RenderingBackendState.Record(mode);
         Backend.Render(lease.SkCanvas, Frame);
         if (DebugMetrics is not null)
         {
@@ -40,13 +46,15 @@ internal sealed class SkiaDrawOperation(
                     (float)Bounds.Top,
                     (float)Bounds.Right,
                     (float)Bounds.Bottom),
-                DebugMetrics.RecordFrame());
+                DebugMetrics.RecordFrame(),
+                mode);
         }
     }
 
     public bool Equals(ICustomDrawOperation? other) =>
         other is SkiaDrawOperation operation && Bounds == operation.Bounds &&
         ReferenceEquals(Backend, operation.Backend) && ReferenceEquals(Frame, operation.Frame) &&
+        ReferenceEquals(RenderingBackendState, operation.RenderingBackendState) &&
         ReferenceEquals(DebugMetrics, operation.DebugMetrics);
 
     public void Dispose()

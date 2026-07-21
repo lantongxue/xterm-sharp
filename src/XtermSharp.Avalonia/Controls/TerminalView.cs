@@ -46,11 +46,22 @@ public sealed class TerminalView : TemplatedControl
     public static readonly DirectProperty<TerminalView, int> RowsProperty =
         AvaloniaProperty.RegisterDirect<TerminalView, int>(nameof(Rows), view => view.Rows);
 
+    public static readonly DirectProperty<TerminalView, TerminalRenderMode> ActiveRenderModeProperty =
+        AvaloniaProperty.RegisterDirect<TerminalView, TerminalRenderMode>(
+            nameof(ActiveRenderMode),
+            view => view.ActiveRenderMode);
+
+    public static readonly DirectProperty<TerminalView, bool> IsGpuAcceleratedProperty =
+        AvaloniaProperty.RegisterDirect<TerminalView, bool>(
+            nameof(IsGpuAccelerated),
+            view => view.IsGpuAccelerated);
+
     private readonly DispatcherTimer _blinkTimer;
     private readonly TerminalTextInputMethodClient _textInputClient;
     private readonly AvaloniaKeyStateTracker _keyState = new();
     private readonly RenderingDebugMetrics _renderingDebugMetrics = new();
     private SkiaTerminalRenderBackend? _backend;
+    private RenderingBackendState? _renderingBackendState;
     private TerminalRenderController? _controller;
     private TerminalRenderFrame? _frame;
     private CancellationTokenSource? _prepareCancellation;
@@ -78,6 +89,7 @@ public sealed class TerminalView : TemplatedControl
     private bool _attached;
     private bool _pointerInside;
     private bool _linkCursorApplied;
+    private TerminalRenderMode _activeRenderMode;
 
     public TerminalView()
     {
@@ -108,7 +120,7 @@ public sealed class TerminalView : TemplatedControl
     }
 
     /// <summary>
-    /// Gets or sets whether the top-right rendering FPS and frame-time overlay is visible.
+    /// Gets or sets whether the top-right renderer, FPS and frame-time overlay is visible.
     /// </summary>
     public bool ShowRenderingDebugOverlay
     {
@@ -123,17 +135,28 @@ public sealed class TerminalView : TemplatedControl
     public int Columns => _frame?.Columns ?? Terminal?.Columns ?? 0;
     public int Rows => _frame?.Rows ?? Terminal?.Rows ?? 0;
 
+    /// <summary>
+    /// Gets the renderer that presented the most recent terminal frame.
+    /// </summary>
+    public TerminalRenderMode ActiveRenderMode => _activeRenderMode;
+
+    /// <summary>
+    /// Gets whether the most recent terminal frame used Avalonia's GPU-backed Skia surface.
+    /// </summary>
+    public bool IsGpuAccelerated => ActiveRenderMode == TerminalRenderMode.Gpu;
+
     public event EventHandler? SelectionChanged;
 
     public override void Render(DrawingContext context)
     {
         base.Render(context);
-        if (_backend is not null && _frame is not null)
+        if (_backend is not null && _frame is not null && _renderingBackendState is not null)
         {
             context.Custom(new SkiaDrawOperation(
                 new Rect(Bounds.Size),
                 _backend,
                 _frame,
+                _renderingBackendState,
                 ShowRenderingDebugOverlay ? _renderingDebugMetrics : null));
         }
     }
@@ -519,6 +542,8 @@ public sealed class TerminalView : TemplatedControl
         {
             return;
         }
+        _renderingBackendState = new RenderingBackendState();
+        _renderingBackendState.Changed += OnRenderingBackendChanged;
         _backend = new SkiaTerminalRenderBackend();
         _controller = new TerminalRenderController(terminal, _backend, RenderOptions, TerminalTheme);
         _controller.IsFocused = IsFocused;
@@ -535,6 +560,12 @@ public sealed class TerminalView : TemplatedControl
         _linkCancellation = null;
         _pressedLink = null;
         ClearHoveredLink(_lastLinkEvent);
+        if (_renderingBackendState is not null)
+        {
+            _renderingBackendState.Changed -= OnRenderingBackendChanged;
+            _renderingBackendState = null;
+        }
+        SetActiveRenderMode(TerminalRenderMode.Unknown);
         Terminal? terminal = _controller?.Terminal;
         if (terminal is not null)
         {
@@ -556,6 +587,42 @@ public sealed class TerminalView : TemplatedControl
     }
 
     private void OnControllerInvalidated(object? sender, EventArgs args) => SchedulePrepareFrame();
+
+    private void OnRenderingBackendChanged(RenderingBackendState state, TerminalRenderMode mode)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            if (ReferenceEquals(_renderingBackendState, state))
+            {
+                SetActiveRenderMode(mode);
+            }
+            return;
+        }
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (ReferenceEquals(_renderingBackendState, state))
+            {
+                SetActiveRenderMode(state.ActiveMode);
+            }
+        }, DispatcherPriority.Render);
+    }
+
+    private void SetActiveRenderMode(TerminalRenderMode mode)
+    {
+        TerminalRenderMode previousMode = _activeRenderMode;
+        if (previousMode == mode)
+        {
+            return;
+        }
+        bool wasGpuAccelerated = previousMode == TerminalRenderMode.Gpu;
+        _activeRenderMode = mode;
+        RaisePropertyChanged(ActiveRenderModeProperty, previousMode, mode);
+        bool isGpuAccelerated = mode == TerminalRenderMode.Gpu;
+        if (wasGpuAccelerated != isGpuAccelerated)
+        {
+            RaisePropertyChanged(IsGpuAcceleratedProperty, wasGpuAccelerated, isGpuAccelerated);
+        }
+    }
 
     private void OnTerminalSelectionChanged(object? sender, EventArgs args)
     {

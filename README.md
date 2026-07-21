@@ -104,7 +104,10 @@ await terminal.WriteAsync("\x1b[32mhello from Skia\x1b[0m\r\n");
 ```
 
 The control subscribes to the terminal but never disposes it. Applications
-continue to own PTY/session wiring and the terminal lifetime.
+continue to own PTY/session wiring and the terminal lifetime. It automatically renders retained
+Skia pictures on Avalonia's GPU-backed surface when one is available and falls back to software
+Skia otherwise. `ActiveRenderMode` and `IsGpuAccelerated` expose the mode used by the most recently
+presented frame; GPU API selection remains an Avalonia application-host responsibility.
 
 ### OSC 8 hyperlinks
 
@@ -200,7 +203,8 @@ terminal.LoadAddon(clipboard);
 reads can expose host secrets to remote applications, so write-only access is recommended unless
 query support is explicitly required. See [the addon and security guide](docs/clipboard-addon.md).
 
-Set `ShowRenderingDebugOverlay` to display rolling FPS and average/maximum/minimum frame intervals.
+Set `ShowRenderingDebugOverlay` to display the active GPU/software renderer, rolling FPS and
+average/maximum/minimum frame intervals.
 See the [rendering debug overlay change log](docs/rendering-debug-overlay-2026-07-17.md) for sampling
 semantics, SSH demo integration and verification details.
 

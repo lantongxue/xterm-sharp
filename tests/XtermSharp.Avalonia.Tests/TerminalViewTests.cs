@@ -56,12 +56,24 @@ public sealed class TerminalViewTests
     }
 
     [Fact]
-    public void RenderingDebugOverlayUsesRollingFrameIntervals()
+    public void RenderingDebugOverlayReportsGpuModeAndRollingFrameIntervals()
     {
         var view = new TerminalView();
         var metrics = new RenderingDebugMetrics();
+        var backendState = new RenderingBackendState();
+        var modeChanges = new List<TerminalRenderMode>();
+        backendState.Changed += (_, mode) => modeChanges.Add(mode);
 
         Assert.False(view.ShowRenderingDebugOverlay);
+        Assert.Equal(TerminalRenderMode.Unknown, view.ActiveRenderMode);
+        Assert.False(view.IsGpuAccelerated);
+        Assert.Equal(TerminalRenderMode.Unknown, backendState.ActiveMode);
+        backendState.Record(TerminalRenderMode.Software);
+        backendState.Record(TerminalRenderMode.Software);
+        backendState.Record(TerminalRenderMode.Gpu);
+        Assert.Equal(TerminalRenderMode.Gpu, backendState.ActiveMode);
+        Assert.Equal([TerminalRenderMode.Software, TerminalRenderMode.Gpu], modeChanges);
+        Assert.Throws<ArgumentOutOfRangeException>(() => backendState.Record(TerminalRenderMode.Unknown));
         view.ShowRenderingDebugOverlay = true;
         RenderingDebugSnapshot snapshot = metrics.RecordFrameTime(10);
         snapshot = metrics.RecordFrameTime(20);
@@ -77,7 +89,11 @@ public sealed class TerminalViewTests
         using var bitmap = new SKBitmap(300, 150);
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(SKColors.Transparent);
-        RenderingDebugOverlay.Draw(canvas, new SKRect(0, 0, 300, 150), snapshot);
+        RenderingDebugOverlay.Draw(
+            canvas,
+            new SKRect(0, 0, 300, 150),
+            snapshot,
+            TerminalRenderMode.Gpu);
         canvas.Flush();
 
         Assert.True(bitmap.GetPixel(290, 10).Alpha > 0);
