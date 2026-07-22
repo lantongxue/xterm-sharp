@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>XtermSharp.WinForms.Demo.SSH</RootNamespace>
+    <NoWarn>$(NoWarn);XTSR0001</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/XtermSharp.WinForms/XtermSharp.WinForms.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="SSH.NET" Version="2025.1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Events" />
+    <Using Include="XtermSharp.Options" />
+    <Using Include="XtermSharp.WinForms.Controls" />
+  </ItemGroup>
+</Project>

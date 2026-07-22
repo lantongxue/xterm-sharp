@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>XtermSharp.WinForms</RootNamespace>
+    <AssemblyName>XtermSharp.WinForms</AssemblyName>
+    <PackageId>XtermSharp.WinForms</PackageId>
+    <Version>0.1.0-alpha.1</Version>
+    <Description>Windows Forms terminal control for XtermSharp.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/xterm-sharp/xterm-sharp</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591;XTSR0001</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../XtermSharp.Addons.Clipboard/XtermSharp.Addons.Clipboard.csproj" />
+    <ProjectReference Include="../XtermSharp.Rendering/XtermSharp.Rendering.csproj" />
+    <ProjectReference Include="../XtermSharp.Rendering.Skia/XtermSharp.Rendering.Skia.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Addons.Clipboard" />
+    <Using Include="XtermSharp.Events" />
+    <Using Include="XtermSharp.Input" />
+    <Using Include="XtermSharp.Links" />
+    <Using Include="XtermSharp.Logging" />
+    <Using Include="XtermSharp.Options" />
+    <Using Include="XtermSharp.Selection" />
+    <Using Include="XtermSharp.Snapshots" />
+    <Using Include="XtermSharp.Rendering.Configuration" />
+    <Using Include="XtermSharp.Rendering.Colors" />
+    <Using Include="XtermSharp.Rendering.Controllers" />
+    <Using Include="XtermSharp.Rendering.Display" />
+    <Using Include="XtermSharp.Rendering.Geometry" />
+    <Using Include="XtermSharp.Rendering.Selection" />
+    <Using Include="XtermSharp.Rendering.Skia.Backends" />
+    <Using Include="XtermSharp.Rendering.Themes" />
+    <Using Include="XtermSharp.WinForms.Clipboard" />
+    <Using Include="XtermSharp.WinForms.Controls" />
+    <Using Include="XtermSharp.WinForms.Input" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>XtermSharp.WinForms.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../NOTICE.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
+    <None Include="../../docs/rendering-architecture.md" Pack="true" PackagePath="docs/" />
+  </ItemGroup>
+</Project>

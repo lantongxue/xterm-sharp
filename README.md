@@ -3,8 +3,8 @@
 XtermSharp is an experimental pure C# terminal emulator for .NET 10, aligned
 with the common/headless behavior of xterm.js 6.0.0. The core package parses
 terminal output and exposes immutable snapshots; optional rendering packages
-provide a backend-neutral display list, a SkiaSharp/HarfBuzz backend and an
-interactive Avalonia control, while optional addons provide web-link detection, buffer search,
+provide a backend-neutral display list, a SkiaSharp/HarfBuzz backend and interactive Avalonia and
+Windows Forms controls, while optional addons provide web-link detection, buffer search,
 ConEmu progress tracking and policy-controlled OSC 52 clipboard access.
 
 > Current version: `0.1.0-alpha.1`. All 1,307 headless-applicable cases in the
@@ -36,8 +36,8 @@ ConEmu progress tracking and policy-controlled OSC 52 clipboard access.
   read/write protocol with explicit permissions, payload limits and a platform-neutral provider.
 - Backend-neutral terminal display lists with damage tracking and immutable
   frame publication.
-- SkiaSharp/HarfBuzz rendering and an Avalonia `TerminalView` with selection,
-  clipboard, keyboard, mouse, focus, scrolling and IME preedit support.
+- SkiaSharp/HarfBuzz rendering and Avalonia/Windows Forms `TerminalView` controls with selection,
+  clipboard, keyboard, mouse, focus, scrolling and text-input support.
 
 ## Usage
 
@@ -108,6 +108,29 @@ continue to own PTY/session wiring and the terminal lifetime. It automatically r
 Skia pictures on Avalonia's GPU-backed surface when one is available and falls back to software
 Skia otherwise. `ActiveRenderMode` and `IsGpuAccelerated` expose the mode used by the most recently
 presented frame; GPU API selection remains an Avalonia application-host responsibility.
+
+### Windows Forms control
+
+Reference `XtermSharp.WinForms` from a `net10.0-windows` application and assign an externally owned
+terminal:
+
+```csharp
+using XtermSharp;
+using XtermSharp.Options;
+using XtermSharp.WinForms.Controls;
+
+var terminal = new Terminal(new TerminalOptions { Columns = 80, Rows = 24 });
+var view = new TerminalView { Dock = DockStyle.Fill, Terminal = terminal };
+
+terminal.Data += (_, e) => pty.Write(e.Data);
+await terminal.WriteAsync("\x1b[32mhello from WinForms\x1b[0m\r\n");
+```
+
+The control uses the same retained Skia rows and worker-side frame preparation as the Avalonia
+adapter, then presents them through a DPI-aware software surface. It supports committed text/IME
+input, browser-compatible key coordinates, enhanced keyboard releases/repeats, terminal mouse
+protocols, local selection, clipboard shortcuts and cancellable link interaction. The control never
+owns or disposes its assigned `Terminal`.
 
 ### OSC 8 hyperlinks
 
@@ -199,16 +222,17 @@ var clipboard = new ClipboardAddon(provider, new ClipboardAddonOptions
 terminal.LoadAddon(clipboard);
 ```
 
-`XtermSharp.Avalonia` provides `AvaloniaClipboardProvider` for an Avalonia `IClipboard`. Clipboard
-reads can expose host secrets to remote applications, so write-only access is recommended unless
-query support is explicitly required. See [the addon and security guide](docs/clipboard-addon.md).
+`XtermSharp.Avalonia` provides `AvaloniaClipboardProvider`; `XtermSharp.WinForms` provides
+`WinFormsClipboardProvider`. Both dispatch system clipboard access through their UI thread.
+Clipboard reads can expose host secrets to remote applications, so write-only access is recommended
+unless query support is explicitly required. See [the addon and security guide](docs/clipboard-addon.md).
 
 Set `ShowRenderingDebugOverlay` to display the active GPU/software renderer, rolling FPS and
 average/maximum/minimum frame intervals.
 See the [rendering debug overlay change log](docs/rendering-debug-overlay-2026-07-17.md) for sampling
 semantics, SSH demo integration and verification details.
 
-### SSH demo
+### SSH demos
 
 `XtermSharp.Avalonia.Demo.SSH` is a separate sample application that connects
 the Avalonia control to a real SSH pseudo-terminal through SSH.NET. It supports
@@ -223,6 +247,15 @@ Connection values can be entered in the window or prefilled with environment
 variables. See the [SSH demo README](samples/XtermSharp.Avalonia.Demo.SSH/README.md)
 for the complete list and host-key verification workflow. The SSH dependency is
 sample-only; the XtermSharp library packages remain transport-agnostic.
+
+The Windows Forms sample provides the same SSH PTY and host-key verification workflow:
+
+```bash
+dotnet run --project samples/XtermSharp.WinForms.Demo.SSH/XtermSharp.WinForms.Demo.SSH.csproj
+```
+
+See the [Windows Forms SSH demo README](samples/XtermSharp.WinForms.Demo.SSH/README.md) for its
+connection fields and environment variables.
 
 The non-PTY `XtermSharp.Avalonia.Demo` loads both `WebLinksAddon` and `SearchAddon`. Its toolbar
 demonstrates regex, case-sensitive and whole-word buffer searches with highlighted results, while
@@ -242,7 +275,8 @@ The current verification results are:
 - 1,462/1,462 main xUnit tests passing, including all 1,307 upstream bindings,
   all 76 escape-sequence fixtures, two manifest audits and 77 local parser, Unicode,
   resize/reflow, option-plumbing, marker/link-lifetime, public OSC 8 and safety regressions.
-- Twenty-four rendering tests passing across the backend-neutral, Skia and Avalonia suites.
+- Thirty-one rendering tests passing across the backend-neutral, Skia, Avalonia and Windows Forms
+  suites.
 - Twelve `addon-web-links` compatibility and integration tests passing.
 - Fourteen `addon-search` compatibility, regression and rendering-integration tests passing.
 - Twelve `addon-progress` compatibility, programmatic-state and lifecycle tests passing.
@@ -268,6 +302,7 @@ dotnet test --project tests/XtermSharp.ReferenceTests/XtermSharp.ReferenceTests.
 dotnet test --project tests/XtermSharp.Rendering.Tests/XtermSharp.Rendering.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Rendering.Skia.Tests/XtermSharp.Rendering.Skia.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.WinForms.Tests/XtermSharp.WinForms.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Progress.Tests/XtermSharp.Addons.Progress.Tests.csproj --no-build
@@ -309,7 +344,7 @@ sample and test-support directory layout.
 
 The core package does not start processes and does not implement PTY or SSH
 transport, browser, DOM, canvas, WebGL or accessibility rendering. The SSH demo
-shows application-owned transport wiring through SSH.NET. Avalonia and Skia
+shows application-owned transport wiring through SSH.NET. Avalonia, Windows Forms and Skia
 live in separate optional packages; WPF, WinUI, GDI and Direct2D backends remain
 out of scope for the current release.
 
