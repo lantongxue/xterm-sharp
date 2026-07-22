@@ -2,7 +2,7 @@
 
 `XtermSharp.Addons.Clipboard` ports the pinned xterm.js 6.0.0 `addon-clipboard` OSC 52 behavior to
 .NET. The addon is platform-neutral: applications supply an `IClipboardProvider`, while the
-optional Avalonia and MAUI packages supply adapters for the system clipboard.
+optional Avalonia, MAUI, Windows Forms, WPF and WinUI packages supply system-clipboard adapters.
 
 ## Usage
 
@@ -70,6 +70,63 @@ terminal.LoadAddon(addon);
 
 Like the Avalonia adapter, it maps every OSC 52 selection to the one system clipboard exposed by
 the platform.
+
+## Windows Forms provider
+
+Create the provider with a live control whose handle belongs to the UI thread:
+
+```csharp
+using XtermSharp.Addons.Clipboard;
+using XtermSharp.WinForms.Clipboard;
+
+var provider = new WinFormsClipboardProvider(view);
+var addon = new ClipboardAddon(provider, new ClipboardAddonOptions
+{
+    AllowWrite = true
+});
+terminal.LoadAddon(addon);
+```
+
+`WinFormsClipboardProvider` marshals reads, writes and explicit clears through that control. Like
+the Avalonia provider, it maps every OSC 52 selection to the single Windows system clipboard.
+
+## WPF provider
+
+Create the provider with any dispatcher object owned by the WPF UI thread:
+
+```csharp
+using XtermSharp.Addons.Clipboard;
+using XtermSharp.Wpf.Clipboard;
+
+var provider = new WpfClipboardProvider(view);
+var addon = new ClipboardAddon(provider, new ClipboardAddonOptions
+{
+    AllowWrite = true
+});
+terminal.LoadAddon(addon);
+```
+
+`WpfClipboardProvider` marshals reads, writes and explicit clears through the object's dispatcher.
+It maps every OSC 52 selection to the single Windows system clipboard.
+
+## WinUI provider
+
+Create the provider with any dependency object owned by the WinUI thread:
+
+```csharp
+using XtermSharp.Addons.Clipboard;
+using XtermSharp.WinUI.Clipboard;
+
+var provider = new WinUIClipboardProvider(view);
+var addon = new ClipboardAddon(provider, new ClipboardAddonOptions
+{
+    AllowWrite = true
+});
+terminal.LoadAddon(addon);
+```
+
+`WinUIClipboardProvider` dispatches reads, writes and explicit clears through the object's
+`DispatcherQueue`. It maps every OSC 52 selection to the single Windows system clipboard.
 
 ## Security policy
 

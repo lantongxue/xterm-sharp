@@ -81,6 +81,22 @@ src/XtermSharp.Maui/
 ├── Controls/               SKCanvasView-based TerminalView
 ├── Hosting/                MAUI/SkiaSharp handler registration
 └── Input/                  Soft-keyboard commit/backspace translation
+
+src/XtermSharp.WinForms/
+├── Clipboard/              UI-dispatched Windows system-clipboard provider
+├── Controls/               Software-Skia TerminalView
+└── Input/                  Windows keyboard and committed-text mapping
+
+src/XtermSharp.Wpf/
+├── Clipboard/              Dispatcher-backed WPF system-clipboard provider
+├── Controls/               Dependency-property and software-Skia TerminalView
+└── Input/                  WPF keyboard and committed-text/IME mapping
+
+src/XtermSharp.WinUI/
+├── Clipboard/              DispatcherQueue-backed WinUI system-clipboard provider
+├── Controls/               Dependency-property and software-Skia TerminalView
+├── Input/                  WinUI browser-key coordinate mapping
+└── Themes/                 Default WinUI control template
 ```
 
 Samples separate application startup, views, models, services, events and exceptions. Test support
@@ -97,6 +113,12 @@ permissions, payload limits, invalid input, cancellation and handler lifecycle.
 clipboard mapping, terminal ownership and public key forwarding. The
 MAUI SSH Core sample links the existing Avalonia SSH transport sources and compiles in the default
 solution; its platform app project is built separately with the requested MAUI workload.
+`tests/XtermSharp.WinForms.Tests/` covers platform ownership, keyboard mapping, clipboard dispatch
+and OSC 8 interaction for the Windows Forms adapter.
+`tests/XtermSharp.Wpf.Tests/` covers dependency properties, platform ownership, keyboard mapping,
+clipboard dispatch, OSC 8 interaction and real WPF/Skia frame presentation.
+`tests/XtermSharp.WinUI.Tests/` covers the public binding surface, browser-compatible key mapping,
+AltGr/text routing and real WinUI `DispatcherQueue` clipboard dispatch.
 
 The pinned `xterm.js/` reference tree is intentionally excluded from this convention and must not
 be reorganized locally.

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import process from 'node:process';
 import { Terminal } from '../xterm.js/headless/lib-headless/xterm-headless.mjs';
@@ -27,7 +28,7 @@ for (const file of fixtures) {
     operations: [{ type: 'writeBytes', data: [...bytes] }]
   };
   const expected = await referenceSnapshot(bytes, request.options);
-  const candidate = spawnSync('dotnet', [candidateDll.pathname], {
+  const candidate = spawnSync('dotnet', [fileURLToPath(candidateDll)], {
     cwd: process.cwd(),
     input: JSON.stringify(request),
     encoding: 'utf8',

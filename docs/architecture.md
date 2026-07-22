@@ -45,5 +45,6 @@ context. Subscriber exceptions are logged and do not stop other subscribers.
 Optional UI rendering is implemented in separate packages. The rendering
 controller turns immutable viewport snapshots into backend-neutral display
 lists, the Skia package executes those lists with HarfBuzz shaping, and the
-Avalonia control owns platform dispatch, DPI, input, clipboard and IME. See
+Avalonia, Windows Forms, WPF and WinUI controls own platform dispatch, DPI, input, clipboard and
+IME. See
 [rendering-architecture.md](rendering-architecture.md) for the detailed contract.

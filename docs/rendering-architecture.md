@@ -17,12 +17,21 @@ XtermSharp.Rendering.Skia.Backends
   font metrics and fallback
   HarfBuzz shaping
   retained SKPicture rows
-         |                         |
-         v                         v
-XtermSharp.Avalonia         XtermSharp.Maui
-  GPU-aware presentation      SKCanvasView presentation
-  keyboard/mouse/IME          touch and soft keyboard
-  clipboard and resize        clipboard, links and resize
+                |
+                v
+Platform adapters
+  XtermSharp.Avalonia.Controls.TerminalView
+    dispatcher and GPU-aware presentation
+  XtermSharp.Maui.Controls.TerminalView
+    SKCanvasView presentation, touch and soft keyboard
+  XtermSharp.WinForms.Controls.TerminalView
+    dispatcher and software-surface presentation
+  XtermSharp.Wpf.Controls.TerminalView
+    dependency properties and WriteableBitmap presentation
+  XtermSharp.WinUI.Controls.TerminalView
+    dependency properties, CoreText and WriteableBitmap presentation
+  shared responsibilities
+    frame scheduling, DPI-aware resize, keyboard, mouse, clipboard and IME
 ```
 
 ## Threading and frames
@@ -32,9 +41,11 @@ handlers only merge dirty rows and raise `Invalidated`; they do not request snap
 The platform adapter schedules one `PrepareFrameAsync` operation at render priority, moves frame
 preparation to the worker pool, obtains an immutable viewport snapshot and atomically publishes a
 `TerminalRenderFrame`. Later revisions are coalesced, unchanged `TerminalLineSnapshot` objects
-reuse cached display rows, and frames with empty pixel damage do not invalidate the Avalonia
-visual. Scroll, column, row and extent properties are direct Avalonia properties whose bindings
-are notified only when their values actually change.
+reuse cached display rows, and frames with empty pixel damage do not invalidate the platform
+visual. The Avalonia adapter raises direct-property changes only when values change; the Windows
+Forms adapter publishes one `ViewportChanged` event for scroll, extent or grid-size changes; the
+WPF adapter updates read-only dependency properties; and the WinUI adapter publishes get-only
+dependency-property wrappers for those viewport values.
 
 ## GPU acceleration
 
@@ -50,6 +61,22 @@ Direct3D, Vulkan or OpenGL where supported. `TerminalView.ActiveRenderMode` repo
 `Software` or `Gpu` for the most recently presented frame, and `TerminalView.IsGpuAccelerated`
 provides a bindable boolean convenience property. Both reset when the control detaches or changes
 terminal sessions.
+
+The Windows Forms adapter deliberately presents through a software Skia surface backed by a
+32-bit premultiplied WinForms bitmap. It prepares and caches the same retained `SKPicture` rows on a
+worker, scales logical coordinates by the control's per-monitor DPI during paint and reports raw
+device pixels to terminal mouse protocols. This keeps the UI package independent from a separate
+OpenGL control or graphics-context lifetime while preserving the backend-neutral architecture.
+
+The WPF adapter uses the same software strategy with a per-monitor-DPI `WriteableBitmap`. Its
+locked premultiplied BGRA back buffer is exposed directly to an `SKSurface`, then invalidated as one
+WPF image without image encoding or an additional graphics package. WPF device-independent pointer
+coordinates and padding remain aligned with the controller's logical viewport.
+
+The WinUI adapter also uses a DPI-scaled premultiplied BGRA software surface. It renders retained
+Skia rows into a reusable bitmap, copies that contiguous buffer into one WinUI `WriteableBitmap`
+and invalidates the image source without encoding. `XamlRoot.RasterizationScale` keeps logical
+pointer coordinates, terminal padding and physical pixels aligned across monitor changes.
 
 `TerminalView.ShowRenderingDebugOverlay` enables a top-right retained Skia overlay with the active
 GPU/software renderer, rolling presentation FPS and average, maximum and minimum frame intervals.
@@ -77,9 +104,9 @@ semantics.
 The Skia backend uses the direct Skia text path for safe printable ASCII runs and HarfBuzz for text
 that requires shaping. It selects fallback typefaces per cluster, clips glyphs to their allocated
 cells and records each changed display row as an `SKPicture` during worker-side frame preparation.
-The Avalonia render thread normally only replays retained pictures. Font metrics, fonts, fill paints
+The platform paint path normally only replays retained pictures. Font metrics, fonts, fill paints
 and current row pictures are cached with bounded stale-picture eviction. Theme, font or DPI changes
-invalidate the relevant display rows; different backends are expected to preserve terminal
+invalidate the relevant display rows; different presenters are expected to preserve terminal
 semantics, not pixel-identical rasterization.
 
 The MAUI adapter uses the same `SkiaTerminalRenderBackend` and retained row pictures as Avalonia.
@@ -90,7 +117,7 @@ view handler.
 
 ## Platform ownership
 
-`TerminalView.Terminal` is externally assigned. The control subscribes, renders and forwards input
-but never disposes the terminal. Applications remain responsible for PTY/session wiring. When the
-control detaches or receives another terminal, it cancels pending frame work, releases backend
-resources and unsubscribes from the old instance.
+`TerminalView.Terminal` is externally assigned in all platform packages. Controls subscribe,
+render and forward input but never dispose the terminal. Applications remain responsible for
+PTY/session wiring. When a control detaches or receives another terminal, it cancels pending frame
+work and link queries, releases Skia resources and unsubscribes from the old instance.

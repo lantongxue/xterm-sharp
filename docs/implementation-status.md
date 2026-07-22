@@ -38,7 +38,8 @@
 - The optional `XtermSharp.Addons.Clipboard` port handles OSC 52 query, set and explicit clear
   operations through a platform-neutral provider. Read and write permissions default to denied,
   decoded UTF-8 payloads are bounded, malformed input is rejected without changing clipboard
-  state, and `XtermSharp.Avalonia` supplies a UI-dispatched system clipboard adapter.
+  state, and the Avalonia, Windows Forms, WPF and WinUI packages supply UI-dispatched system
+  clipboard adapters.
 - The pinned xterm.js 6.0.0 inventory contains 1,361 concrete upstream cases:
   54 front-end renderer cases are explicitly excluded, while all 1,307
   headless-applicable cases are covered by C# tests (1,306 direct ports and one
@@ -76,6 +77,18 @@
   backend through `SKCanvasView`. It supports device-pixel scaling, resize, touch selection,
   tracked mouse input, link activation, soft-keyboard text/backspace/enter input, scrolling and
   clipboard integration.
+- `XtermSharp.WinForms` provides an externally bound, DPI-aware software-Skia `TerminalView` with
+  worker-side frame preparation, browser-compatible keyboard coordinates, committed text/IME input,
+  terminal mouse protocols, local selection, clipboard and registered-link interaction.
+- `XtermSharp.Wpf` provides a dependency-property-based, DPI-aware software-Skia `TerminalView`
+  with worker-side frame preparation, committed text/IME input, browser-compatible key coordinates,
+  terminal mouse protocols, local selection, clipboard and registered-link interaction.
+- `XtermSharp.WinUI` provides a dependency-property-based, DPI-aware software-Skia `TerminalView`
+  with worker-side frame preparation, CoreText IME input, browser-compatible key coordinates,
+  terminal mouse protocols, local selection, clipboard and registered-link interaction.
+- The Avalonia, Windows Forms, WPF and WinUI SSH samples integrate SSH.NET without changing the
+  transport-neutral library boundary and demonstrate password/private-key authentication,
+  SHA-256 host-key verification and remote PTY resize updates.
 - The no-PTY Avalonia demo loads both optional addons and exposes interactive link activation plus
   case-sensitive, whole-word and regex search controls with previous/next result navigation.
 - The MAUI SSH demo targets Android, iOS and Mac Catalyst and compiles the same transport source as
@@ -91,7 +104,7 @@ The prioritized implementation and test acceptance criteria are maintained in th
 - Extend differential coverage beyond the current reference scenarios and
   complex-cell reflow, marker/metadata and escape-sequence fixture corpora.
 - Add fuzzing for parser chunk boundaries and benchmark-driven packed-cell storage.
-- Add WPF/WinUI controls, native Windows rendering backends, accessibility,
+- Add native Windows rendering backends, accessibility,
   mutable link-decoration notifications and renderer-specific differential fixtures.
 
 Any intentional behavioral difference from xterm.js must be recorded here before
