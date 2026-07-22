@@ -34,6 +34,7 @@ public sealed class TerminalView : Control
     private int _prepareAgain;
     private int _lastColumns;
     private int _lastRows;
+    private char _pendingHighSurrogate;
     private bool _cursorPhase = true;
     private bool _blinkPhase = true;
     private bool _selecting;
@@ -72,6 +73,7 @@ public sealed class TerminalView : Control
             {
                 return;
             }
+            _pendingHighSurrogate = default;
             _terminal = value;
             if (IsHandleCreated)
             {
@@ -266,6 +268,7 @@ public sealed class TerminalView : Control
     {
         _pressedKeys.Clear();
         _suppressedReleases.Clear();
+        _pendingHighSurrogate = default;
         if (_controller is not null)
         {
             _controller.IsFocused = false;
@@ -319,9 +322,12 @@ public sealed class TerminalView : Control
         base.OnKeyPress(e);
         if (Terminal is not null && !char.IsControl(e.KeyChar))
         {
-            _controller?.SetPreeditText(null);
-            SendWithoutThrow(Terminal.SendInputAsync(e.KeyChar.ToString()));
+            SendWithoutThrow(SendCommittedCharacterAsync(e.KeyChar));
             e.Handled = true;
+        }
+        else
+        {
+            _pendingHighSurrogate = default;
         }
     }
 
@@ -545,6 +551,40 @@ public sealed class TerminalView : Control
     internal static bool HasNonEmptySelection(TerminalSelection? selection) =>
         selection is { IsEmpty: false };
 
+    internal ValueTask SendCommittedCharacterAsync(
+        char character,
+        CancellationToken cancellationToken = default)
+    {
+        Terminal? terminal = Terminal;
+        if (terminal is null || char.IsControl(character))
+        {
+            _pendingHighSurrogate = default;
+            return ValueTask.CompletedTask;
+        }
+        if (char.IsHighSurrogate(character))
+        {
+            _pendingHighSurrogate = character;
+            return ValueTask.CompletedTask;
+        }
+
+        string text;
+        if (char.IsLowSurrogate(character))
+        {
+            if (_pendingHighSurrogate == default)
+            {
+                return ValueTask.CompletedTask;
+            }
+            text = char.ConvertFromUtf32(char.ConvertToUtf32(_pendingHighSurrogate, character));
+        }
+        else
+        {
+            text = character.ToString();
+        }
+        _pendingHighSurrogate = default;
+        _controller?.SetPreeditText(null);
+        return terminal.SendInputAsync(text, cancellationToken: cancellationToken);
+    }
+
     internal void SetHoveredLink(TerminalLink? link, TerminalLinkEvent terminalEvent)
     {
         if (LinksEqual(_hoveredLink, link))
@@ -632,6 +672,7 @@ public sealed class TerminalView : Control
     {
         _prepareCancellation?.Cancel();
         _linkCancellation?.Cancel();
+        _pendingHighSurrogate = default;
         _selecting = false;
         Capture = false;
         _pressedLink = null;

@@ -13,18 +13,17 @@
   task is explicitly an upstream-baseline upgrade.
 - `XtermSharp` remains a common/headless package. Optional `XtermSharp.Addons.WebLinks`,
   `XtermSharp.Addons.Search`, `XtermSharp.Addons.Progress`, `XtermSharp.Addons.Clipboard`,
-  `XtermSharp.Rendering`, `XtermSharp.Rendering.Skia`, `XtermSharp.Avalonia` and
-  `XtermSharp.WinForms` packages provide
+  `XtermSharp.Rendering`, `XtermSharp.Rendering.Skia`, `XtermSharp.Avalonia`,
+  `XtermSharp.WinForms`, `XtermSharp.Wpf` and `XtermSharp.WinUI` packages provide
   link detection, buffer search, progress tracking, policy-controlled OSC 52 clipboard access,
-  display-list, Skia, Avalonia and Windows Forms integration without adding UI dependencies to the
-  core package.
-  Browser, DOM, WebGL, accessibility rendering, built-in PTY/SSH transports, WPF and WinUI
-  integration remain outside the current scope; the SSH sample integrates SSH.NET without changing
-  the library boundary.
+  display-list, Skia, Avalonia, Windows Forms, WPF and WinUI integration without adding UI
+  dependencies to the core package. Browser, DOM, WebGL, accessibility rendering and built-in
+  PTY/SSH transports remain outside the current scope; the SSH sample integrates SSH.NET without
+  changing the library boundary.
 
 ## Current conformance status
 
-Last fully verified on 2026-07-21. Update this section whenever the pinned baseline or counts change.
+Last fully verified on 2026-07-22. Update this section whenever the pinned baseline or counts change.
 
 | Item | Current result |
 | --- | ---: |
@@ -39,7 +38,7 @@ Last fully verified on 2026-07-21. Update this section whenever the pinned basel
 | Marker and metadata differential scenarios | 7/7 matching |
 | Main xUnit suite | 1,462/1,462 passing |
 | Reference infrastructure suite | 1/1 passing |
-| Rendering suites | 31/31 passing |
+| Rendering suites | 43/43 passing |
 | Web links addon suite | 12/12 passing |
 | Search addon suite | 14/14 passing |
 | Progress addon suite | 12/12 passing |
@@ -84,12 +83,19 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
   `Input` and `Diagnostics`.
 - `src/XtermSharp.WinForms/`: interactive Windows Forms adapter grouped into `Clipboard`,
   `Controls` and `Input`.
+- `src/XtermSharp.Wpf/`: interactive WPF adapter grouped into `Clipboard`, `Controls` and `Input`.
+- `src/XtermSharp.WinUI/`: interactive WinUI 3 adapter grouped into `Clipboard`, `Controls`,
+  `Input` and `Themes`.
 - `samples/XtermSharp.Avalonia.Demo/`: no-PTY ANSI playback and local input-echo smoke test with
   interactive web-links and search-addon demonstrations.
 - `samples/XtermSharp.Avalonia.Demo.SSH/`: real SSH PTY integration sample with configurable
   password/private-key authentication and host-key verification.
 - `samples/XtermSharp.WinForms.Demo.SSH/`: Windows Forms SSH PTY integration sample with the same
   authentication, host-key verification and remote-resize behavior.
+- `samples/XtermSharp.Wpf.Demo.SSH/`: WPF SSH PTY integration sample with password/private-key
+  authentication, host-key verification and remote-resize behavior.
+- `samples/XtermSharp.WinUI.Demo.SSH/`: packaged WinUI 3 SSH PTY sample with responsive connection
+  controls, password/private-key authentication, host-key verification and remote resize.
 - `tests/XtermSharp.Tests/`: xUnit v3 behavior, upstream-port and fixture tests.
 - `tests/XtermSharp.Tests/InputHandler/ProductionParserIntegrationTests.cs`: production parser
   wiring, error recovery, payload-limit and identifier regressions.
@@ -98,8 +104,8 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
 - `tests/XtermSharp.TestSupport/`: upstream attributes, binding discovery and manifest validation.
 - `tests/XtermSharp.ReferenceTests/`: reference-test infrastructure checks.
 - `tests/XtermSharp.Rendering.Tests/`, `XtermSharp.Rendering.Skia.Tests/`,
-  `XtermSharp.Avalonia.Tests/` and `XtermSharp.WinForms.Tests/`: renderer and platform-adapter
-  verification.
+  `XtermSharp.Avalonia.Tests/`, `XtermSharp.WinForms.Tests/`, `XtermSharp.Wpf.Tests/` and
+  `XtermSharp.WinUI.Tests/`: renderer and platform-adapter verification.
 - `tests/XtermSharp.Addons.WebLinks.Tests/`: upstream addon behavior, provider lifecycle and hover
   decoration verification.
 - `tests/XtermSharp.Addons.Search.Tests/`: upstream search behavior, regression fixture, result
@@ -181,6 +187,15 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
 - The Windows Forms adapter renders in logical coordinates onto a DPI-scaled software Skia surface.
   Its `KeyPress` path carries committed printable/IME text, while non-text keys and enhanced
   keyboard press/repeat/release events use `SendKeyAsync`; AltGr text must not be double-sent.
+- The WPF adapter renders retained Skia rows into a per-monitor-DPI `WriteableBitmap` and exposes
+  viewport values as read-only dependency properties. Its preview text path carries committed
+  printable/IME text, while non-text keys and enhanced keyboard press/repeat/release events use
+  `SendKeyAsync`; unload, DPI change and terminal hot-swap must cancel or reschedule pending work.
+- The WinUI adapter rasterizes retained Skia rows into a DPI-scaled BGRA `WriteableBitmap`, exposes
+  viewport values through get-only dependency-property wrappers and uses `CoreTextEditContext` for
+  committed text and IME preedit. Non-text keys and enhanced keyboard press/repeat/release events
+  use `SendKeyAsync`; unload, rasterization-scale change and terminal hot-swap must cancel or
+  reschedule pending frame and link work.
 - Public terminals have an effective minimum width of two columns. `TerminalOptions.Columns == 1`
   remains visible as the raw requested option, while `Terminal.Columns`, buffers, snapshots and
   resize events report two. Keep zero and negative dimensions invalid. Low-level
@@ -255,6 +270,8 @@ dotnet test --project tests/XtermSharp.Rendering.Tests/XtermSharp.Rendering.Test
 dotnet test --project tests/XtermSharp.Rendering.Skia.Tests/XtermSharp.Rendering.Skia.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.WinForms.Tests/XtermSharp.WinForms.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Wpf.Tests/XtermSharp.Wpf.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.WinUI.Tests/XtermSharp.WinUI.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Progress.Tests/XtermSharp.Addons.Progress.Tests.csproj --no-build
@@ -266,7 +283,7 @@ node tools/compare-marker-scenarios.mjs
 node tools/compare-fixtures.mjs
 ```
 
-Expected final signals are zero build warnings/errors, 1,462 main tests passing, 31 rendering
+Expected final signals are zero build warnings/errors, 1,462 main tests passing, 43 rendering
 tests passing, 12 web-links addon tests passing, 14 search addon tests passing, 12 progress addon
 tests passing, 19 clipboard addon tests passing, one reference test passing, 1,307 verified
 bindings, `MATCH`, `MATCH 14/14 complex reflow scenarios`, `MATCH 7/7 marker and metadata

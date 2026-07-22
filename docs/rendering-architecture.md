@@ -24,6 +24,10 @@ Platform adapters
     dispatcher and GPU-aware presentation
   XtermSharp.WinForms.Controls.TerminalView
     dispatcher and software-surface presentation
+  XtermSharp.Wpf.Controls.TerminalView
+    dependency properties and WriteableBitmap presentation
+  XtermSharp.WinUI.Controls.TerminalView
+    dependency properties, CoreText and WriteableBitmap presentation
   shared responsibilities
     frame scheduling, DPI-aware resize, keyboard, mouse, clipboard and IME
 ```
@@ -37,7 +41,9 @@ preparation to the worker pool, obtains an immutable viewport snapshot and atomi
 `TerminalRenderFrame`. Later revisions are coalesced, unchanged `TerminalLineSnapshot` objects
 reuse cached display rows, and frames with empty pixel damage do not invalidate the platform
 visual. The Avalonia adapter raises direct-property changes only when values change; the Windows
-Forms adapter publishes one `ViewportChanged` event for scroll, extent or grid-size changes.
+Forms adapter publishes one `ViewportChanged` event for scroll, extent or grid-size changes; the
+WPF adapter updates read-only dependency properties; and the WinUI adapter publishes get-only
+dependency-property wrappers for those viewport values.
 
 ## GPU acceleration
 
@@ -59,6 +65,16 @@ The Windows Forms adapter deliberately presents through a software Skia surface 
 worker, scales logical coordinates by the control's per-monitor DPI during paint and reports raw
 device pixels to terminal mouse protocols. This keeps the UI package independent from a separate
 OpenGL control or graphics-context lifetime while preserving the backend-neutral architecture.
+
+The WPF adapter uses the same software strategy with a per-monitor-DPI `WriteableBitmap`. Its
+locked premultiplied BGRA back buffer is exposed directly to an `SKSurface`, then invalidated as one
+WPF image without image encoding or an additional graphics package. WPF device-independent pointer
+coordinates and padding remain aligned with the controller's logical viewport.
+
+The WinUI adapter also uses a DPI-scaled premultiplied BGRA software surface. It renders retained
+Skia rows into a reusable bitmap, copies that contiguous buffer into one WinUI `WriteableBitmap`
+and invalidates the image source without encoding. `XamlRoot.RasterizationScale` keeps logical
+pointer coordinates, terminal padding and physical pixels aligned across monitor changes.
 
 `TerminalView.ShowRenderingDebugOverlay` enables a top-right retained Skia overlay with the active
 GPU/software renderer, rolling presentation FPS and average, maximum and minimum frame intervals.
@@ -93,7 +109,7 @@ semantics, not pixel-identical rasterization.
 
 ## Platform ownership
 
-`TerminalView.Terminal` is externally assigned in both platform packages. Controls subscribe,
+`TerminalView.Terminal` is externally assigned in all platform packages. Controls subscribe,
 render and forward input but never dispose the terminal. Applications remain responsible for
 PTY/session wiring. When a control detaches or receives another terminal, it cancels pending frame
 work and link queries, releases Skia resources and unsubscribes from the old instance.

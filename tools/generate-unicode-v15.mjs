@@ -62,10 +62,10 @@ const options = parseArguments(process.argv.slice(2));
 verifyUpstreamBaseline();
 verifyUnicodeInputs();
 
-const upstreamSource = fs.readFileSync(upstreamPropertiesFile, 'utf8');
-const graphemeSource = fs.readFileSync(graphemePropertyFile, 'utf8');
-const graphemeTestSource = fs.readFileSync(graphemeTestFile, 'utf8');
-const emojiSource = fs.readFileSync(emojiDataFile, 'utf8');
+const upstreamSource = normalizeLineEndings(fs.readFileSync(upstreamPropertiesFile, 'utf8'));
+const graphemeSource = normalizeLineEndings(fs.readFileSync(graphemePropertyFile, 'utf8'));
+const graphemeTestSource = normalizeLineEndings(fs.readFileSync(graphemeTestFile, 'utf8'));
+const emojiSource = normalizeLineEndings(fs.readFileSync(emojiDataFile, 'utf8'));
 
 const trie = decodeUpstreamTrie(upstreamSource);
 const graphemeBreaks = parseGraphemeBreakProperties(graphemeSource);
@@ -88,7 +88,7 @@ if (options.check) {
   if (!fs.existsSync(options.output)) {
     fail(`Cannot check ${relativeToRoot(options.output)} because it does not exist.`);
   }
-  const current = fs.readFileSync(options.output, 'utf8');
+  const current = normalizeLineEndings(fs.readFileSync(options.output, 'utf8'));
   if (current !== generated) {
     fail(`${relativeToRoot(options.output)} is stale. Run node tools/generate-unicode-v15.mjs.`);
   }
@@ -474,6 +474,10 @@ ${renderIntField('RunStarts', runs.starts)}
 ${renderByteField('RunValues', runs.values)}
 }
 `;
+}
+
+function normalizeLineEndings(value) {
+  return value.replaceAll('\r\n', '\n');
 }
 
 function renderIntField(name, values) {

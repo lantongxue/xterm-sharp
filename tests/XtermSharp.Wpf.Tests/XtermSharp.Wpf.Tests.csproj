@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>XtermSharp.Wpf.Tests</RootNamespace>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);XTSR0001</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/XtermSharp.Wpf/XtermSharp.Wpf.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" Version="3.2.2" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="XtermSharp" />
+    <Using Include="XtermSharp.Input" />
+    <Using Include="XtermSharp.Links" />
+    <Using Include="XtermSharp.Options" />
+    <Using Include="XtermSharp.Rendering.Selection" />
+    <Using Include="XtermSharp.Wpf.Clipboard" />
+    <Using Include="XtermSharp.Wpf.Controls" />
+    <Using Include="XtermSharp.Wpf.Input" />
+  </ItemGroup>
+</Project>

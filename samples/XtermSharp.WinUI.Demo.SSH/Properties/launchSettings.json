@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "XtermSharp.WinUI.Demo.SSH (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "XtermSharp.WinUI.Demo.SSH (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -140,6 +140,23 @@ public sealed class TerminalViewTests
     }
 
     [Fact]
+    public async Task CommittedEmojiSurrogatesProduceOneTerminalDataEvent()
+    {
+        using var terminal = new Terminal();
+        using var view = new TerminalView { Terminal = terminal };
+        var data = new List<string>();
+        terminal.Data += (_, args) => data.Add(args.Data);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        await view.SendCommittedCharacterAsync('\ud83d', cancellationToken);
+        Assert.Empty(data);
+
+        await view.SendCommittedCharacterAsync('\ude00', cancellationToken);
+
+        Assert.Equal(["\ud83d\ude00"], data);
+    }
+
+    [Fact]
     public async Task ClipboardProviderUsesConfiguredDispatcherOperations()
     {
         using var dispatcher = new Control();

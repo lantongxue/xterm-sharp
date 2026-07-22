@@ -42,7 +42,8 @@ internal sealed class SshDemoForm : Form
             Rows = 30,
             Scrollback = 10_000,
             FontFamily = "Cascadia Mono, Consolas, DejaVu Sans Mono, monospace",
-            FontSize = 15
+            FontSize = 15,
+            UnicodeVersion = UnicodeV15Provider.GraphemeVersionName
         });
         _terminalView = new TerminalView
         {

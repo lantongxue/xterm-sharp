@@ -2,12 +2,12 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <RootNamespace>XtermSharp.WinForms.Demo.SSH</RootNamespace>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>XtermSharp.Wpf.Demo.SSH</RootNamespace>
     <NoWarn>$(NoWarn);XTSR0001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/XtermSharp.WinForms/XtermSharp.WinForms.csproj" />
+    <ProjectReference Include="../../src/XtermSharp.Wpf/XtermSharp.Wpf.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="SSH.NET" Version="2025.1.0" />
@@ -17,6 +17,6 @@
     <Using Include="XtermSharp.Events" />
     <Using Include="XtermSharp.Options" />
     <Using Include="XtermSharp.Unicode" />
-    <Using Include="XtermSharp.WinForms.Controls" />
+    <Using Include="XtermSharp.Wpf.Controls" />
   </ItemGroup>
 </Project>

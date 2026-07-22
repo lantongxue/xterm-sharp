@@ -23,7 +23,7 @@ from the inventory, or provided by upstream addons that have not been fully port
 - [x] 1,306 cases are direct ports and `XTJS-0799` is architecture-equivalent.
 - [x] The reference scenario reports `MATCH`.
 - [x] All 76 escape-sequence fixtures report `MATCH 76/76`.
-- [x] The solution test run passes 1,544/1,544 tests across all nine test projects.
+- [x] The solution test run passes 1,558/1,558 tests across all eleven test projects.
 
 ## Priority definitions
 
@@ -354,7 +354,8 @@ Acceptance result: _Pending._
   their consumers.
 - DOM, canvas and WebGL types must not enter the headless or backend-neutral public packages.
 - Built-in PTY, WebSocket, process and SSH transports remain application responsibilities.
-- WPF and WinUI controls are platform expansion work, not xterm.js common/headless parity blockers.
+- Native Windows rendering backends remain platform expansion work, not an xterm.js common/headless
+  parity blocker; the WinUI software-Skia control is implemented in a separate optional package.
 - Packed-cell storage and benchmark optimizations are important pre-1.0 engineering work but are not
   themselves missing upstream behavior.
 
@@ -381,6 +382,9 @@ dotnet test --project tests/XtermSharp.ReferenceTests/XtermSharp.ReferenceTests.
 dotnet test --project tests/XtermSharp.Rendering.Tests/XtermSharp.Rendering.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Rendering.Skia.Tests/XtermSharp.Rendering.Skia.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.WinForms.Tests/XtermSharp.WinForms.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Wpf.Tests/XtermSharp.Wpf.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.WinUI.Tests/XtermSharp.WinUI.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Progress.Tests/XtermSharp.Addons.Progress.Tests.csproj --no-build

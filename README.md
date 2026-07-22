@@ -3,8 +3,8 @@
 XtermSharp is an experimental pure C# terminal emulator for .NET 10, aligned
 with the common/headless behavior of xterm.js 6.0.0. The core package parses
 terminal output and exposes immutable snapshots; optional rendering packages
-provide a backend-neutral display list, a SkiaSharp/HarfBuzz backend and interactive Avalonia and
-Windows Forms controls, while optional addons provide web-link detection, buffer search,
+provide a backend-neutral display list, a SkiaSharp/HarfBuzz backend and interactive Avalonia,
+Windows Forms, WPF and WinUI controls, while optional addons provide web-link detection, buffer search,
 ConEmu progress tracking and policy-controlled OSC 52 clipboard access.
 
 > Current version: `0.1.0-alpha.1`. All 1,307 headless-applicable cases in the
@@ -36,8 +36,8 @@ ConEmu progress tracking and policy-controlled OSC 52 clipboard access.
   read/write protocol with explicit permissions, payload limits and a platform-neutral provider.
 - Backend-neutral terminal display lists with damage tracking and immutable
   frame publication.
-- SkiaSharp/HarfBuzz rendering and Avalonia/Windows Forms `TerminalView` controls with selection,
-  clipboard, keyboard, mouse, focus, scrolling and text-input support.
+- SkiaSharp/HarfBuzz rendering and Avalonia/Windows Forms/WPF/WinUI `TerminalView` controls with
+  selection, clipboard, keyboard, mouse, focus, scrolling and text-input support.
 
 ## Usage
 
@@ -132,6 +132,52 @@ input, browser-compatible key coordinates, enhanced keyboard releases/repeats, t
 protocols, local selection, clipboard shortcuts and cancellable link interaction. The control never
 owns or disposes its assigned `Terminal`.
 
+### WPF control
+
+Reference `XtermSharp.Wpf` from a `net10.0-windows` application and assign an externally owned
+terminal. `Terminal`, `TerminalTheme`, `RenderOptions`, `Columns`, `Rows`, `ScrollValue` and
+`ScrollMaximum` are dependency properties suitable for XAML binding.
+
+```xml
+<Window xmlns:xterm="clr-namespace:XtermSharp.Wpf.Controls;assembly=XtermSharp.Wpf">
+  <xterm:TerminalView x:Name="TerminalView" Padding="8" />
+</Window>
+```
+
+```csharp
+var terminal = new Terminal(new TerminalOptions { Columns = 80, Rows = 24 });
+TerminalView.Terminal = terminal;
+terminal.Data += (_, e) => pty.Write(e.Data);
+await terminal.WriteAsync("\x1b[32mhello from WPF\x1b[0m\r\n");
+```
+
+The WPF adapter replays retained Skia rows into a DPI-aware `WriteableBitmap`. It supports the same
+selection, clipboard, committed text/IME, browser-compatible key, enhanced-keyboard, mouse and link
+interaction paths as the other desktop controls, and never owns or disposes the assigned terminal.
+
+### WinUI control
+
+Reference `XtermSharp.WinUI` from a WinUI 3 application and assign an externally owned terminal.
+The bindable dependency-property surface matches the other Windows adapters.
+
+```xml
+<Page xmlns:xterm="using:XtermSharp.WinUI.Controls">
+  <xterm:TerminalView x:Name="TerminalView" Padding="8" />
+</Page>
+```
+
+```csharp
+var terminal = new Terminal(new TerminalOptions { Columns = 80, Rows = 24 });
+TerminalView.Terminal = terminal;
+terminal.Data += (_, e) => pty.Write(e.Data);
+await terminal.WriteAsync("\x1b[32mhello from WinUI\x1b[0m\r\n");
+```
+
+The WinUI adapter prepares retained Skia rows off the UI thread, rasterizes them into a
+DPI-scaled `WriteableBitmap`, and uses `CoreTextEditContext` for committed text and IME preedit.
+It supports selection, clipboard, browser-compatible key events, terminal mouse protocols and
+cancellable link interaction without owning or disposing the assigned terminal.
+
 ### OSC 8 hyperlinks
 
 OSC 8 URI, explicit ID and parameter metadata is available from the immutable
@@ -223,7 +269,9 @@ terminal.LoadAddon(clipboard);
 ```
 
 `XtermSharp.Avalonia` provides `AvaloniaClipboardProvider`; `XtermSharp.WinForms` provides
-`WinFormsClipboardProvider`. Both dispatch system clipboard access through their UI thread.
+`WinFormsClipboardProvider`; `XtermSharp.Wpf` provides `WpfClipboardProvider`; and
+`XtermSharp.WinUI` provides `WinUIClipboardProvider`. All dispatch system clipboard access through
+their UI thread.
 Clipboard reads can expose host secrets to remote applications, so write-only access is recommended
 unless query support is explicitly required. See [the addon and security guide](docs/clipboard-addon.md).
 
@@ -257,6 +305,24 @@ dotnet run --project samples/XtermSharp.WinForms.Demo.SSH/XtermSharp.WinForms.De
 See the [Windows Forms SSH demo README](samples/XtermSharp.WinForms.Demo.SSH/README.md) for its
 connection fields and environment variables.
 
+The WPF sample provides the same SSH PTY, private-key and host-key verification workflow:
+
+```bash
+dotnet run --project samples/XtermSharp.Wpf.Demo.SSH/XtermSharp.Wpf.Demo.SSH.csproj
+```
+
+See the [WPF SSH demo README](samples/XtermSharp.Wpf.Demo.SSH/README.md) for its connection fields,
+security behavior and environment variables.
+
+The packaged WinUI sample uses the same SSH workflow with a responsive Fluent connection surface:
+
+```bash
+dotnet run --project samples/XtermSharp.WinUI.Demo.SSH/XtermSharp.WinUI.Demo.SSH.csproj
+```
+
+See the [WinUI SSH demo README](samples/XtermSharp.WinUI.Demo.SSH/README.md) for packaging,
+connection fields, security behavior and environment variables.
+
 The non-PTY `XtermSharp.Avalonia.Demo` loads both `WebLinksAddon` and `SearchAddon`. Its toolbar
 demonstrates regex, case-sensitive and whole-word buffer searches with highlighted results, while
 the terminal content includes clickable web links.
@@ -275,8 +341,8 @@ The current verification results are:
 - 1,462/1,462 main xUnit tests passing, including all 1,307 upstream bindings,
   all 76 escape-sequence fixtures, two manifest audits and 77 local parser, Unicode,
   resize/reflow, option-plumbing, marker/link-lifetime, public OSC 8 and safety regressions.
-- Thirty-one rendering tests passing across the backend-neutral, Skia, Avalonia and Windows Forms
-  suites.
+- Forty-three rendering tests passing across the backend-neutral, Skia, Avalonia, Windows Forms,
+  WPF and WinUI suites.
 - Twelve `addon-web-links` compatibility and integration tests passing.
 - Fourteen `addon-search` compatibility, regression and rendering-integration tests passing.
 - Twelve `addon-progress` compatibility, programmatic-state and lifecycle tests passing.
@@ -303,6 +369,8 @@ dotnet test --project tests/XtermSharp.Rendering.Tests/XtermSharp.Rendering.Test
 dotnet test --project tests/XtermSharp.Rendering.Skia.Tests/XtermSharp.Rendering.Skia.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Avalonia.Tests/XtermSharp.Avalonia.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.WinForms.Tests/XtermSharp.WinForms.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.Wpf.Tests/XtermSharp.Wpf.Tests.csproj --no-build
+dotnet test --project tests/XtermSharp.WinUI.Tests/XtermSharp.WinUI.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.WebLinks.Tests/XtermSharp.Addons.WebLinks.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Search.Tests/XtermSharp.Addons.Search.Tests.csproj --no-build
 dotnet test --project tests/XtermSharp.Addons.Progress.Tests/XtermSharp.Addons.Progress.Tests.csproj --no-build
@@ -344,8 +412,8 @@ sample and test-support directory layout.
 
 The core package does not start processes and does not implement PTY or SSH
 transport, browser, DOM, canvas, WebGL or accessibility rendering. The SSH demo
-shows application-owned transport wiring through SSH.NET. Avalonia, Windows Forms and Skia
-live in separate optional packages; WPF, WinUI, GDI and Direct2D backends remain
+shows application-owned transport wiring through SSH.NET. Avalonia, Windows Forms, WPF, WinUI and
+Skia live in separate optional packages; GDI and Direct2D backends remain
 out of scope for the current release.
 
 Before a stable 1.0 release, the project still needs broader differential and

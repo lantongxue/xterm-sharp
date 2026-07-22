@@ -19,7 +19,7 @@ const defaultOutput = path.join(repositoryRoot, 'src', 'XtermSharp', 'Unicode', 
 const options = parseArguments(process.argv.slice(2));
 verifyUpstreamBaseline();
 
-const source = fs.readFileSync(sourceFile, 'utf8');
+const source = normalizeLineEndings(fs.readFileSync(sourceFile, 'utf8'));
 const ranges = Object.fromEntries(RANGE_NAMES.map(name => [name, parseRanges(source, name)]));
 validateRanges(ranges);
 
@@ -32,7 +32,7 @@ if (options.check) {
   if (!fs.existsSync(options.output)) {
     fail(`Cannot check ${relativeToRoot(options.output)} because it does not exist.`);
   }
-  const current = fs.readFileSync(options.output, 'utf8');
+  const current = normalizeLineEndings(fs.readFileSync(options.output, 'utf8'));
   if (current !== generated) {
     fail(`${relativeToRoot(options.output)} is stale. Run node tools/generate-unicode-v11.mjs.`);
   }
@@ -243,6 +243,10 @@ ${renderRangeField('BmpWideRanges', ranges.BMP_WIDE)}
 ${renderRangeField('HighWideRanges', ranges.HIGH_WIDE)}
 }
 `;
+}
+
+function normalizeLineEndings(value) {
+  return value.replaceAll('\r\n', '\n');
 }
 
 function renderRangeField(fieldName, ranges) {
