@@ -91,7 +91,7 @@ public sealed partial class TerminalView
     private void OnCharacterReceived(UIElement sender, CharacterReceivedRoutedEventArgs args)
     {
         _ = sender;
-        if (_editContext is not null || Terminal is null || args.Character == '\0')
+        if (Terminal is null || !WinUIKeyMapper.ShouldForwardCommittedCharacter(args.Character, _composing))
         {
             return;
         }

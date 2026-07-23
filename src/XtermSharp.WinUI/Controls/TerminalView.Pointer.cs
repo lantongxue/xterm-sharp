@@ -8,14 +8,19 @@ namespace XtermSharp.WinUI.Controls;
 
 public sealed partial class TerminalView
 {
+    private const int LinkResolutionDebounceMilliseconds = 50;
+
     private long _lastClickTime;
     private TerminalPoint _lastClickCell;
     private int _clickCount;
+    private Terminal? _lastMouseEventTerminal;
+    private TerminalMouseEvent? _lastMouseEvent;
 
     private void OnPointerEntered(object sender, PointerRoutedEventArgs args)
     {
         _ = sender;
         _pointerInside = true;
+        ResetMouseMoveDeduplication();
         PointerPoint point = args.GetCurrentPoint(this);
         _lastPointerPosition = point.Position;
         QueueLinkUpdate(point.Position, WinUIKeyMapper.GetModifiers());
@@ -27,6 +32,7 @@ public sealed partial class TerminalView
         _ = args;
         _pointerInside = false;
         _pressedLink = null;
+        ResetMouseMoveDeduplication();
         ClearHoveredLink(_lastLinkEvent);
     }
 
@@ -279,6 +285,9 @@ public sealed partial class TerminalView
     {
         try
         {
+            // Link providers may need a full immutable snapshot. Coalesce pointer and frame churn
+            // before issuing that work to the terminal's serialized command queue.
+            await Task.Delay(LinkResolutionDebounceMilliseconds, cancellation.Token).ConfigureAwait(false);
             TerminalLink? link = await terminal.GetLinkAtAsync(
                 terminalEvent.Column,
                 terminalEvent.BufferLine,
@@ -339,7 +348,41 @@ public sealed partial class TerminalView
             button,
             action,
             modifiers);
+        bool pixelCoordinates = frame.Modes?.MouseEncoding == TerminalMouseEncodingMode.SgrPixels;
+        if (action == TerminalMouseAction.Move &&
+            ReferenceEquals(_lastMouseEventTerminal, terminal) &&
+            _lastMouseEvent is TerminalMouseEvent previous &&
+            IsDuplicateMouseMove(previous, value, pixelCoordinates))
+        {
+            return;
+        }
+        _lastMouseEventTerminal = terminal;
+        _lastMouseEvent = value;
         SendWithoutThrow(terminal.SendMouseAsync(value));
+    }
+
+    internal static bool IsDuplicateMouseMove(
+        TerminalMouseEvent previous,
+        TerminalMouseEvent current,
+        bool pixelCoordinates)
+    {
+        if (previous.Action != TerminalMouseAction.Move ||
+            current.Action != TerminalMouseAction.Move ||
+            previous.Button != current.Button ||
+            previous.Modifiers != current.Modifiers)
+        {
+            return false;
+        }
+
+        return pixelCoordinates
+            ? previous.PixelX == current.PixelX && previous.PixelY == current.PixelY
+            : previous.Column == current.Column && previous.Row == current.Row;
+    }
+
+    private void ResetMouseMoveDeduplication()
+    {
+        _lastMouseEventTerminal = null;
+        _lastMouseEvent = null;
     }
 
     private void InvokeLinkCallback(

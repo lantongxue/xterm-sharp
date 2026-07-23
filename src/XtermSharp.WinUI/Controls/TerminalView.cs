@@ -67,6 +67,7 @@ public sealed partial class TerminalView : Control, IDisposable
     private SkiaTerminalRenderBackend? _backend;
     private TerminalRenderController? _controller;
     private TerminalRenderFrame? _frame;
+    private TerminalRenderFrame? _presentedFrame;
     private Image? _image;
     private WriteableBitmap? _bitmap;
     private SKBitmap? _skiaBitmap;
@@ -294,7 +295,6 @@ public sealed partial class TerminalView : Control, IDisposable
         {
             view._controller.Theme = (TerminalTheme)args.NewValue;
         }
-        view.RenderCurrentFrame();
     }
 
     private static void OnRenderOptionsPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
@@ -378,6 +378,7 @@ public sealed partial class TerminalView : Control, IDisposable
         _selecting = false;
         ReleasePointerCaptures();
         _pressedLink = null;
+        ResetMouseMoveDeduplication();
         ClearHoveredLink(_lastLinkEvent);
         Terminal? terminal = _controller?.Terminal;
         if (terminal is not null)
@@ -414,43 +415,44 @@ public sealed partial class TerminalView : Control, IDisposable
 
     private void SchedulePrepareFrame()
     {
-        if (!_attached || _disposed || _controller is null || ActualWidth <= 0 || ActualHeight <= 0)
+        if (_disposed)
         {
             return;
         }
-        if (!DispatcherQueue.HasThreadAccess)
-        {
-            PostToUiThread(SchedulePrepareFrame);
-            return;
-        }
-        if (Volatile.Read(ref _preparing) != 0)
-        {
-            Interlocked.Exchange(ref _prepareAgain, 1);
-            return;
-        }
+
+        // Terminal invalidations arrive on its processor task. Keep one dispatcher item in
+        // flight for a burst instead of adding one UI work item per output event.
+        Interlocked.Exchange(ref _prepareAgain, 1);
         if (Interlocked.Exchange(ref _prepareScheduled, 1) != 0)
         {
             return;
         }
-        if (!DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, PrepareFrameAsync))
+
+        if (DispatcherQueue.HasThreadAccess)
+        {
+            PrepareFrameAsync();
+            return;
+        }
+
+        if (!DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, PrepareFrameAsync))
         {
             Interlocked.Exchange(ref _prepareScheduled, 0);
+            Interlocked.Exchange(ref _prepareAgain, 0);
         }
     }
 
     private async void PrepareFrameAsync()
     {
-        Interlocked.Exchange(ref _prepareScheduled, 0);
         if (Interlocked.Exchange(ref _preparing, 1) != 0)
         {
-            Interlocked.Exchange(ref _prepareAgain, 1);
             return;
         }
+        Interlocked.Exchange(ref _prepareAgain, 0);
         TerminalRenderController? controller = _controller;
         Terminal? terminal = Terminal;
-        if (controller is null || terminal is null || ActualWidth <= 0 || ActualHeight <= 0)
+        if (!_attached || controller is null || terminal is null || ActualWidth <= 0 || ActualHeight <= 0)
         {
-            Interlocked.Exchange(ref _preparing, 0);
+            CompletePrepareFrame();
             return;
         }
 
@@ -509,11 +511,17 @@ public sealed partial class TerminalView : Control, IDisposable
                 _prepareCancellation = null;
             }
             cancellation.Dispose();
-            Interlocked.Exchange(ref _preparing, 0);
-            if (Interlocked.Exchange(ref _prepareAgain, 0) != 0)
-            {
-                SchedulePrepareFrame();
-            }
+            CompletePrepareFrame();
+        }
+    }
+
+    private void CompletePrepareFrame()
+    {
+        Interlocked.Exchange(ref _preparing, 0);
+        Interlocked.Exchange(ref _prepareScheduled, 0);
+        if (Interlocked.Exchange(ref _prepareAgain, 0) != 0)
+        {
+            SchedulePrepareFrame();
         }
     }
 
@@ -527,22 +535,46 @@ public sealed partial class TerminalView : Control, IDisposable
         }
         try
         {
-            EnsureBitmaps();
+            bool bitmapCreated = EnsureBitmaps();
             SKBitmap skiaBitmap = _skiaBitmap!;
-            using var canvas = new SKCanvas(skiaBitmap);
-            TerminalRgbaColor background = TerminalTheme.Background;
-            canvas.Clear(new SKColor(background.Red, background.Green, background.Blue, background.Alpha));
-            canvas.Scale((float)frame.Viewport.RenderScale);
-            backend.Render(canvas, frame);
-            canvas.Flush();
-            using Stream pixelStream = _bitmap!.PixelBuffer.AsStream();
-            pixelStream.Position = 0;
-            pixelStream.Write(skiaBitmap.GetPixelSpan());
-            _bitmap.Invalidate();
-            if (_image is not null && !ReferenceEquals(_image.Source, _bitmap))
+            WriteableBitmap bitmap = _bitmap!;
+            bool fullRedraw = bitmapCreated || IsFullDamage(frame.Damage, frame.Rows) ||
+                !CanApplyDamage(_presentedFrame, frame);
+            (int startRow, int endRow) = GetDamagePixelRows(frame, bitmap.PixelHeight, fullRedraw);
+            if (startRow == endRow)
             {
-                _image.Source = _bitmap;
+                _presentedFrame = frame;
+                return;
             }
+            using var canvas = new SKCanvas(skiaBitmap);
+            if (fullRedraw)
+            {
+                TerminalRgbaColor background = TerminalTheme.Background;
+                canvas.Clear(new SKColor(background.Red, background.Green, background.Blue, background.Alpha));
+                canvas.Scale((float)frame.Viewport.RenderScale);
+                backend.Render(canvas, frame);
+            }
+            else
+            {
+                canvas.Save();
+                canvas.Scale((float)frame.Viewport.RenderScale);
+                double scale = frame.Viewport.RenderScale;
+                canvas.ClipRect(new SKRect(
+                    0,
+                    (float)(startRow / scale),
+                    (float)frame.Viewport.Width,
+                    (float)(endRow / scale)));
+                backend.Render(canvas, frame);
+                canvas.Restore();
+            }
+            canvas.Flush();
+            CopyBitmapRows(skiaBitmap, bitmap, startRow, endRow);
+            bitmap.Invalidate();
+            if (_image is not null && !ReferenceEquals(_image.Source, bitmap))
+            {
+                _image.Source = bitmap;
+            }
+            _presentedFrame = frame;
         }
         catch (Exception exception)
         {
@@ -553,7 +585,7 @@ public sealed partial class TerminalView : Control, IDisposable
         }
     }
 
-    private void EnsureBitmaps()
+    private bool EnsureBitmaps()
     {
         double scale = Math.Max(0.01, XamlRoot?.RasterizationScale ?? 1);
         int width = Math.Max(1, (int)Math.Ceiling(ActualWidth * scale));
@@ -561,7 +593,7 @@ public sealed partial class TerminalView : Control, IDisposable
         if (_bitmap?.PixelWidth == width && _bitmap.PixelHeight == height &&
             _skiaBitmap?.Width == width && _skiaBitmap.Height == height)
         {
-            return;
+            return false;
         }
         DisposeBitmaps();
         _bitmap = new WriteableBitmap(width, height);
@@ -574,10 +606,76 @@ public sealed partial class TerminalView : Control, IDisposable
         {
             _image.Source = _bitmap;
         }
+        return true;
+    }
+
+    private static bool IsFullDamage(TerminalDamage damage, int rows) =>
+        !damage.IsEmpty && damage.StartRow <= 0 && damage.EndRow >= rows - 1;
+
+    private static bool CanApplyDamage(TerminalRenderFrame? previous, TerminalRenderFrame current)
+    {
+        if (previous is null || previous.Viewport != current.Viewport ||
+            previous.Columns != current.Columns || previous.Rows != current.Rows ||
+            previous.ViewportY != current.ViewportY || previous.BaseY != current.BaseY ||
+            previous.DisplayList.Rows.Length != current.DisplayList.Rows.Length)
+        {
+            return false;
+        }
+
+        for (int row = 0; row < current.DisplayList.Rows.Length; row++)
+        {
+            if (row >= current.Damage.StartRow && row <= current.Damage.EndRow)
+            {
+                continue;
+            }
+            if (!ReferenceEquals(previous.DisplayList.Rows[row], current.DisplayList.Rows[row]))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    internal static (int Start, int End) GetDamagePixelRows(
+        TerminalRenderFrame frame,
+        int pixelHeight,
+        bool fullRedraw)
+    {
+        if (pixelHeight <= 0 || !fullRedraw && frame.Damage.IsEmpty)
+        {
+            return (0, 0);
+        }
+        if (fullRedraw)
+        {
+            return (0, pixelHeight);
+        }
+
+        double scale = frame.Viewport.RenderScale;
+        int firstRow = Math.Max(0, frame.Damage.StartRow - 1);
+        int lastRow = Math.Min(frame.Rows - 1, frame.Damage.EndRow + 1);
+        double top = frame.Viewport.Padding.Top + firstRow * frame.Metrics.CellHeight;
+        double bottom = frame.Viewport.Padding.Top + (lastRow + 1) * frame.Metrics.CellHeight;
+        int start = Math.Clamp((int)Math.Floor(top * scale), 0, pixelHeight);
+        int end = Math.Clamp((int)Math.Ceiling(bottom * scale), start, pixelHeight);
+        return (start, end);
+    }
+
+    private static void CopyBitmapRows(SKBitmap source, WriteableBitmap destination, int startRow, int endRow)
+    {
+        int destinationStride = destination.PixelWidth * sizeof(uint);
+        int sourceStride = source.RowBytes;
+        ReadOnlySpan<byte> pixels = source.GetPixelSpan();
+        using Stream pixelStream = destination.PixelBuffer.AsStream();
+        for (int row = startRow; row < endRow; row++)
+        {
+            pixelStream.Position = (long)row * destinationStride;
+            pixelStream.Write(pixels.Slice(row * sourceStride, destinationStride));
+        }
     }
 
     private void DisposeBitmaps()
     {
+        _presentedFrame = null;
         if (_image is not null)
         {
             _image.Source = null;
@@ -646,6 +744,13 @@ public sealed partial class TerminalView : Control, IDisposable
             previousFrame.Revision != frame.Revision ||
             previousFrame.Columns != frame.Columns ||
             previousFrame.ViewportY != frame.ViewportY;
+        bool mouseProtocolChanged = frame is null || previousFrame is null ||
+            previousFrame.Modes?.MouseTracking != frame.Modes?.MouseTracking ||
+            previousFrame.Modes?.MouseEncoding != frame.Modes?.MouseEncoding;
+        if (mouseProtocolChanged)
+        {
+            ResetMouseMoveDeduplication();
+        }
         if (linkCoordinatesChanged)
         {
             ClearHoveredLink(_lastLinkEvent);

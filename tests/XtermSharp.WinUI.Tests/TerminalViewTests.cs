@@ -1,4 +1,6 @@
 using Windows.System;
+using XtermSharp.Rendering.Display;
+using XtermSharp.Rendering.Geometry;
 
 namespace XtermSharp.WinUI.Tests;
 
@@ -78,6 +80,58 @@ public sealed class TerminalViewTests
         Assert.True(WinUIKeyMapper.ShouldPaste(VirtualKey.V, TerminalModifiers.Control));
         Assert.True(WinUIKeyMapper.ShouldPaste(VirtualKey.Insert, TerminalModifiers.Shift));
         Assert.True(WinUIKeyMapper.ShouldSelectAll(VirtualKey.A, TerminalModifiers.Control));
+    }
+
+    [Fact]
+    public void KeyMapperForwardsCommittedCharactersOutsideImeComposition()
+    {
+        Assert.True(WinUIKeyMapper.ShouldForwardCommittedCharacter('a', isComposing: false));
+        Assert.False(WinUIKeyMapper.ShouldForwardCommittedCharacter('\0', isComposing: false));
+        Assert.False(WinUIKeyMapper.ShouldForwardCommittedCharacter('a', isComposing: true));
+    }
+
+    [Fact]
+    public void DamagePixelRowsCoverAdjacentRowsForRasterSafety()
+    {
+        var frame = new TerminalRenderFrame(
+            1,
+            new TerminalViewport(100, 100, 2, new TerminalThickness(0, 5, 0, 0)),
+            new TerminalFontMetrics(8, 10, 8, 9, 1, 5),
+            12,
+            8,
+            0,
+            0,
+            TerminalDisplayList.Empty,
+            new TerminalDamage(3, 3));
+
+        Assert.Equal((50, 110), TerminalView.GetDamagePixelRows(frame, 200, fullRedraw: false));
+        Assert.Equal((0, 200), TerminalView.GetDamagePixelRows(frame, 200, fullRedraw: true));
+    }
+
+    [Fact]
+    public void PointerMoveDeduplicationUsesTheActiveMouseProtocolCoordinates()
+    {
+        var first = new TerminalMouseEvent(
+            Column: 4,
+            Row: 3,
+            PixelX: 40,
+            PixelY: 48,
+            Button: TerminalMouseButton.None,
+            Action: TerminalMouseAction.Move,
+            Modifiers: TerminalModifiers.Shift);
+        TerminalMouseEvent sameCell = first with { PixelX = 47, PixelY = 55 };
+
+        Assert.True(TerminalView.IsDuplicateMouseMove(first, sameCell, pixelCoordinates: false));
+        Assert.False(TerminalView.IsDuplicateMouseMove(first, sameCell, pixelCoordinates: true));
+        Assert.True(TerminalView.IsDuplicateMouseMove(first, first, pixelCoordinates: true));
+        Assert.False(TerminalView.IsDuplicateMouseMove(
+            first,
+            first with { Modifiers = TerminalModifiers.None },
+            pixelCoordinates: false));
+        Assert.False(TerminalView.IsDuplicateMouseMove(
+            first,
+            first with { Action = TerminalMouseAction.Down },
+            pixelCoordinates: false));
     }
 
     [Fact]

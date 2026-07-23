@@ -61,6 +61,9 @@ internal static class WinUIKeyMapper
             "ArrowLeft" or "ArrowRight" or "ArrowUp" or "ArrowDown");
     }
 
+    public static bool ShouldForwardCommittedCharacter(char character, bool isComposing) =>
+        character != '\0' && !isComposing;
+
     public static bool ShouldCopy(VirtualKey key, TerminalModifiers modifiers, bool hasSelection) =>
         hasSelection &&
         ((int)key == 0x43 && HasShortcut(modifiers, TerminalModifiers.Control) ||
