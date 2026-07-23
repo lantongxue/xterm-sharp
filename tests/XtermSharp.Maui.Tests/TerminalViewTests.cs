@@ -11,6 +11,12 @@ public sealed class TerminalViewTests
         view.Terminal = null;
 
         Assert.False(terminal.IsDisposed);
+        Assert.False(view.ShowRenderingDebugOverlay);
+        Assert.Equal(SkiaRenderMode.Unknown, view.ActiveRenderMode);
+        Assert.False(view.IsGpuAccelerated);
+        view.ShowRenderingDebugOverlay = true;
+        Assert.True(view.ShowRenderingDebugOverlay);
+        Assert.True((bool)view.GetValue(TerminalView.ShowRenderingDebugOverlayProperty));
     }
 
     [Fact]

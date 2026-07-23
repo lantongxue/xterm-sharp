@@ -50,7 +50,9 @@ internal sealed class SshDemoForm : Form
             Dock = DockStyle.Fill,
             Padding = new Padding(8),
             Terminal = _terminal,
-            AccessibleName = "SSH terminal session"
+            AccessibleName = "SSH terminal session",
+            ShowRenderingDebugOverlay = true,
+            EnableGpuRendering = true
         };
 
         _hostText = CreateTextBox(GetEnvironmentValue("SSH_HOST", "localhost"));

@@ -204,6 +204,7 @@
         <terminal:TerminalView x:Name="TerminalView"
                                Grid.Row="2"
                                Padding="12"
+                               ShowRenderingDebugOverlay="True"
                                AutomationProperties.Name="SSH terminal session"
                                SelectionChanged="TerminalView_SelectionChanged" />
 

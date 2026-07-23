@@ -18,6 +18,14 @@ public sealed class TerminalViewTests
         Assert.False(terminal.IsDisposed);
         Assert.False(TerminalView.HasNonEmptySelection(null));
         Assert.True(TerminalView.HasNonEmptySelection(new TerminalSelection(1, 1, 2, 1)));
+        Assert.False(view.ShowRenderingDebugOverlay);
+        Assert.Equal(SkiaRenderMode.Unknown, view.ActiveRenderMode);
+        Assert.False(view.IsGpuAccelerated);
+        Assert.False(view.EnableGpuRendering);
+        view.EnableGpuRendering = true;
+        Assert.True(view.EnableGpuRendering);
+        view.ShowRenderingDebugOverlay = true;
+        Assert.True(view.ShowRenderingDebugOverlay);
     }
 
     [Fact]

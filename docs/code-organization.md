@@ -52,7 +52,8 @@ src/XtermSharp.Rendering/
 └── Themes/                 Terminal themes and palettes
 
 src/XtermSharp.Rendering.Skia/
-└── Backends/               SkiaSharp/HarfBuzz implementation
+├── Backends/               SkiaSharp/HarfBuzz implementation
+└── Diagnostics/            Shared rendering metrics and overlay
 
 src/XtermSharp.Addons.WebLinks/
 └── WebLinksAddon           Upstream-compatible URL detection and link provider
@@ -73,28 +74,27 @@ src/XtermSharp.Addons.Clipboard/
 src/XtermSharp.Avalonia/
 ├── Clipboard/              Avalonia system-clipboard provider
 ├── Controls/               TerminalView
-├── Diagnostics/            Rendering metrics and overlay
 └── Input/                  Avalonia keyboard and IME adapters
 
 src/XtermSharp.Maui/
 ├── Clipboard/              MAUI system-clipboard provider
-├── Controls/               SKCanvasView-based TerminalView
+├── Controls/               SKGLView/SKCanvasView TerminalView
 ├── Hosting/                MAUI/SkiaSharp handler registration
 └── Input/                  Soft-keyboard commit/backspace translation
 
 src/XtermSharp.WinForms/
 ├── Clipboard/              UI-dispatched Windows system-clipboard provider
-├── Controls/               Software-Skia TerminalView
+├── Controls/               OpenTK GPU/Software-Skia TerminalView
 └── Input/                  Windows keyboard and committed-text mapping
 
 src/XtermSharp.Wpf/
 ├── Clipboard/              Dispatcher-backed WPF system-clipboard provider
-├── Controls/               Dependency-property and software-Skia TerminalView
+├── Controls/               Dependency-property and OpenTK/Software-Skia TerminalView
 └── Input/                  WPF keyboard and committed-text/IME mapping
 
 src/XtermSharp.WinUI/
 ├── Clipboard/              DispatcherQueue-backed WinUI system-clipboard provider
-├── Controls/               Dependency-property and software-Skia TerminalView
+├── Controls/               Dependency-property and SKSwapChainPanel/bitmap TerminalView
 ├── Input/                  WinUI browser-key coordinate mapping
 └── Themes/                 Default WinUI control template
 ```

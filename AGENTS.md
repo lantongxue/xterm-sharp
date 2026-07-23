@@ -79,17 +79,21 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
 - `src/XtermSharp/Internal/Services/`: charset, hyperlink, mouse, option and buffer services.
 - `src/XtermSharp.Rendering/`: backend-neutral configuration, display lists, geometry, themes,
   selection and controller code grouped by responsibility.
-- `src/XtermSharp.Rendering.Skia/Backends/`: SkiaSharp/HarfBuzz backend and retained row pictures.
-- `src/XtermSharp.Avalonia/`: interactive Avalonia adapter grouped into `Clipboard`, `Controls`,
-  `Input` and `Diagnostics`, with GPU-aware presentation through Avalonia's current Skia lease and
+- `src/XtermSharp.Rendering.Skia/`: SkiaSharp/HarfBuzz backend, retained row pictures and the
+  shared rendering telemetry overlay.
+- `src/XtermSharp.Avalonia/`: interactive Avalonia adapter grouped into `Clipboard`, `Controls`
+  and `Input`, with GPU-aware presentation through Avalonia's current Skia lease and
   automatic software fallback.
 - `src/XtermSharp.Maui/`: interactive .NET MAUI adapter using the shared SkiaSharp/HarfBuzz backend
-  through `SKCanvasView`, with soft-keyboard/touch input and system clipboard integration.
+  through `SKGLView` with `SKCanvasView` fallback, with soft-keyboard/touch input and system
+  clipboard integration.
 - `src/XtermSharp.WinForms/`: interactive Windows Forms adapter grouped into `Clipboard`,
-  `Controls` and `Input`.
+  `Controls` and `Input`; `EnableGpuRendering` opts into its modern OpenTK surface with software
+  fallback.
 - `src/XtermSharp.Wpf/`: interactive WPF adapter grouped into `Clipboard`, `Controls` and `Input`.
+  Its OpenTK/WPF surface falls back to the existing `WriteableBitmap` path.
 - `src/XtermSharp.WinUI/`: interactive WinUI 3 adapter grouped into `Clipboard`, `Controls`,
-  `Input` and `Themes`.
+  `Input` and `Themes`; its ANGLE-backed `SKSwapChainPanel` falls back to `WriteableBitmap`.
 - `samples/XtermSharp.Avalonia.Demo/`: no-PTY ANSI playback and local input-echo smoke test with
   interactive web-links and search-addon demonstrations.
 - `samples/XtermSharp.Avalonia.Demo.SSH/`: real SSH PTY integration sample with configurable
@@ -183,9 +187,10 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
 - Avalonia `TerminalView.ActiveRenderMode` and `IsGpuAccelerated` describe the most recently
   presented frame, not a requested capability. Keep their notifications on the UI thread and reset
   them to `Unknown` when the control detaches or changes terminal sessions.
-- `XtermSharp.Maui` reuses `SkiaTerminalRenderBackend` through `SKCanvasView`; preserve logical-to-
-  surface pixel scaling, register the handler through `UseXtermSharpMaui()` and keep touch hit
-  testing in MAUI logical coordinates.
+- Every platform adapter reports the actual most recently presented `SkiaRenderMode` and resets it
+  to `Unknown` on detach. `XtermSharp.Maui` reuses `SkiaTerminalRenderBackend` through `SKGLView`
+  with `SKCanvasView` fallback; preserve logical-to-surface pixel scaling, register the handler
+  through `UseXtermSharpMaui()` and keep touch hit testing in MAUI logical coordinates.
 - Skia font-family lists must skip unavailable candidates before selecting the primary grid font.
   Use that resolved family for metrics and normal glyph lookup, then apply per-glyph fallback; a
   missing first family must not silently force proportional metrics when a later monospace family

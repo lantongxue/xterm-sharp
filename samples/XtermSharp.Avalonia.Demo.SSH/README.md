@@ -38,7 +38,7 @@ The form can be prefilled with these environment variables:
 | `SSH_TERM` | Remote `TERM` value, default `xterm-256color` |
 | `SSH_HOST_KEY_SHA256` | Trusted `SHA256:...` server fingerprint |
 | `SSH_ACCEPT_ANY_HOST_KEY` | Set to `1` or `true` to skip verification |
-| `XTERMSHARP_RENDERING_DEBUG` | Set to `1` or `true` to show the rendering FPS/frame-time overlay |
+| `XTERMSHARP_RENDERING_DEBUG` | Rendering overlay is shown by default; set to another value to hide it |
 
 The **Show rendering debug overlay** checkbox remains available while connected, so telemetry can be
 toggled while running an interactive shell or a full-screen application.

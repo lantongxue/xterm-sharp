@@ -56,6 +56,30 @@ public sealed class SkiaTerminalRenderBackendTests
 
         Assert.Equal(new SKColor(1, 2, 3), bitmap.GetPixel(39, 19));
         Assert.Contains(Enumerable.Range(0, bitmap.Width), x => bitmap.GetPixel(x, 10) != new SKColor(1, 2, 3));
+
+        var debugMetrics = new RenderingDebugMetrics();
+        RenderingDebugSnapshot snapshot = debugMetrics.RecordFrameTime(10);
+        snapshot = debugMetrics.RecordFrameTime(20);
+        snapshot = debugMetrics.RecordFrameTime(30);
+        Assert.Equal(3, snapshot.SampleCount);
+        Assert.Equal(50, snapshot.FramesPerSecond, 3);
+        Assert.Equal(20, snapshot.AverageFrameTimeMilliseconds, 3);
+        Assert.Equal(30, snapshot.MaximumFrameTimeMilliseconds, 3);
+        Assert.Equal(10, snapshot.MinimumFrameTimeMilliseconds, 3);
+
+        var debugFrame = frame with { Viewport = new TerminalViewport(300, 150) };
+        using var debugBitmap = new SKBitmap(300, 150);
+        using var debugCanvas = new SKCanvas(debugBitmap);
+        debugCanvas.Clear(SKColors.Transparent);
+        Assert.False(backend.ShowRenderingDebugOverlay);
+        backend.ShowRenderingDebugOverlay = true;
+        backend.Render(debugCanvas, debugFrame, SkiaRenderMode.Gpu);
+        debugCanvas.Flush();
+
+        Assert.True(debugBitmap.GetPixel(290, 10).Alpha > 0);
+        Assert.Equal(0, debugBitmap.GetPixel(10, 140).Alpha);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            backend.Render(debugCanvas, debugFrame, (SkiaRenderMode)int.MaxValue));
     }
 
     [Fact]

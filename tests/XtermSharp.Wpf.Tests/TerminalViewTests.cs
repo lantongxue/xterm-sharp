@@ -37,6 +37,11 @@ public sealed class TerminalViewTests
             Assert.Same(terminal, view.GetValue(TerminalView.TerminalProperty));
             Assert.Equal(90, view.GetValue(TerminalView.ColumnsProperty));
             Assert.Equal(30, view.GetValue(TerminalView.RowsProperty));
+            Assert.False(view.ShowRenderingDebugOverlay);
+            Assert.Equal(SkiaRenderMode.Unknown, view.ActiveRenderMode);
+            Assert.False(view.IsGpuAccelerated);
+            view.ShowRenderingDebugOverlay = true;
+            Assert.True((bool)view.GetValue(TerminalView.ShowRenderingDebugOverlayProperty));
         });
     }
 

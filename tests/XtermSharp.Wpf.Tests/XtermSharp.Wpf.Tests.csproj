@@ -21,6 +21,7 @@
     <Using Include="XtermSharp.Links" />
     <Using Include="XtermSharp.Options" />
     <Using Include="XtermSharp.Rendering.Selection" />
+    <Using Include="XtermSharp.Rendering.Skia.Backends" />
     <Using Include="XtermSharp.Wpf.Clipboard" />
     <Using Include="XtermSharp.Wpf.Controls" />
     <Using Include="XtermSharp.Wpf.Input" />

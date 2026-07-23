@@ -141,6 +141,7 @@
         <wpf:TerminalView x:Name="TerminalView"
                           Grid.Row="1"
                           Padding="12"
+                          ShowRenderingDebugOverlay="True"
                           AutomationProperties.Name="SSH terminal session" />
 
         <Border Grid.Row="2"

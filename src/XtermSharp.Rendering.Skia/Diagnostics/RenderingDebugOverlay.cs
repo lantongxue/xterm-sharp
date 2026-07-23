@@ -1,7 +1,7 @@
-using SkiaSharp;
 using System.Globalization;
+using SkiaSharp;
 
-namespace XtermSharp.Avalonia.Diagnostics;
+namespace XtermSharp.Rendering.Skia.Diagnostics;
 
 internal static class RenderingDebugOverlay
 {
@@ -9,12 +9,12 @@ internal static class RenderingDebugOverlay
         SKCanvas canvas,
         SKRect bounds,
         RenderingDebugSnapshot snapshot,
-        TerminalRenderMode renderMode)
+        SkiaRenderMode renderMode)
     {
         string mode = renderMode switch
         {
-            TerminalRenderMode.Gpu => "RENDER GPU",
-            TerminalRenderMode.Software => "RENDER CPU",
+            SkiaRenderMode.Gpu => "RENDER GPU",
+            SkiaRenderMode.Software => "RENDER CPU",
             _ => "RENDER --"
         };
         string[] lines = snapshot.SampleCount == 0

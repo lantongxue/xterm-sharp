@@ -21,6 +21,7 @@
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="XtermSharp.Input" />
+    <Using Include="XtermSharp.Rendering.Skia.Backends" />
     <Using Include="XtermSharp.WinUI.Clipboard" />
     <Using Include="XtermSharp.WinUI.Controls" />
     <Using Include="XtermSharp.WinUI.Input" />

@@ -1,6 +1,7 @@
 using System.Text;
 using SkiaSharp;
 using SkiaSharp.HarfBuzz;
+using XtermSharp.Rendering.Skia.Diagnostics;
 
 namespace XtermSharp.Rendering.Skia.Backends;
 
@@ -14,8 +15,10 @@ public sealed class SkiaTerminalRenderBackend : ITerminalRenderBackend<SKCanvas>
     private readonly Dictionary<string, string> _resolvedFamilies = new(StringComparer.Ordinal);
     private readonly Dictionary<TerminalDisplayRow, SKPicture> _rowPictures =
         new(ReferenceEqualityComparer<TerminalDisplayRow>.Instance);
+    private readonly RenderingDebugMetrics _renderingDebugMetrics = new();
     private TerminalRenderConfiguration? _lastConfiguration;
     private TerminalFontMetrics? _lastMetrics;
+    private bool _showRenderingDebugOverlay;
     private int _disposed;
 
     internal int CachedRowPictureCount
@@ -25,6 +28,33 @@ public sealed class SkiaTerminalRenderBackend : ITerminalRenderBackend<SKCanvas>
             lock (_gate)
             {
                 return _rowPictures.Count;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets whether rendering telemetry is drawn over the top-right of each frame.
+    /// </summary>
+    public bool ShowRenderingDebugOverlay
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _showRenderingDebugOverlay;
+            }
+        }
+        set
+        {
+            lock (_gate)
+            {
+                ThrowIfDisposed();
+                if (_showRenderingDebugOverlay == value)
+                {
+                    return;
+                }
+                _showRenderingDebugOverlay = value;
+                _renderingDebugMetrics.Reset();
             }
         }
     }
@@ -74,11 +104,19 @@ public sealed class SkiaTerminalRenderBackend : ITerminalRenderBackend<SKCanvas>
         }
     }
 
-    public void Render(SKCanvas surface, TerminalRenderFrame frame)
+    public void Render(SKCanvas surface, TerminalRenderFrame frame) =>
+        Render(surface, frame, SkiaRenderMode.Software);
+
+    /// <summary>Renders a frame and identifies the presentation mode used by the surface.</summary>
+    public void Render(SKCanvas surface, TerminalRenderFrame frame, SkiaRenderMode renderMode)
     {
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(surface);
         ArgumentNullException.ThrowIfNull(frame);
+        if (!Enum.IsDefined(renderMode))
+        {
+            throw new ArgumentOutOfRangeException(nameof(renderMode));
+        }
         lock (_gate)
         {
             ThrowIfDisposed();
@@ -88,6 +126,14 @@ public sealed class SkiaTerminalRenderBackend : ITerminalRenderBackend<SKCanvas>
             {
                 SKPicture picture = _rowPictures[row];
                 surface.DrawPicture(picture);
+            }
+            if (_showRenderingDebugOverlay)
+            {
+                RenderingDebugOverlay.Draw(
+                    surface,
+                    new SKRect(0, 0, (float)frame.Viewport.Width, (float)frame.Viewport.Height),
+                    _renderingDebugMetrics.RecordFrame(),
+                    renderMode);
             }
         }
     }

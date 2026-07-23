@@ -17,19 +17,20 @@ XtermSharp.Rendering.Skia.Backends
   font metrics and fallback
   HarfBuzz shaping
   retained SKPicture rows
+  shared rendering telemetry overlay
                 |
                 v
 Platform adapters
   XtermSharp.Avalonia.Controls.TerminalView
     dispatcher and GPU-aware presentation
   XtermSharp.Maui.Controls.TerminalView
-    SKCanvasView presentation, touch and soft keyboard
+    SKGLView with SKCanvasView fallback, touch and soft keyboard
   XtermSharp.WinForms.Controls.TerminalView
-    dispatcher and software-surface presentation
+    dispatcher and optional OpenTK GPU surface with software fallback
   XtermSharp.Wpf.Controls.TerminalView
-    dependency properties and WriteableBitmap presentation
+    dependency properties and OpenTK/WPF GPU surface with bitmap fallback
   XtermSharp.WinUI.Controls.TerminalView
-    dependency properties, CoreText and WriteableBitmap presentation
+    dependency properties, CoreText and SKSwapChainPanel with bitmap fallback
   shared responsibilities
     frame scheduling, DPI-aware resize, keyboard, mouse, clipboard and IME
 ```
@@ -62,26 +63,32 @@ Direct3D, Vulkan or OpenGL where supported. `TerminalView.ActiveRenderMode` repo
 provides a bindable boolean convenience property. Both reset when the control detaches or changes
 terminal sessions.
 
-The Windows Forms adapter deliberately presents through a software Skia surface backed by a
-32-bit premultiplied WinForms bitmap. It prepares and caches the same retained `SKPicture` rows on a
-worker, scales logical coordinates by the control's per-monitor DPI during paint and reports raw
-device pixels to terminal mouse protocols. This keeps the UI package independent from a separate
-OpenGL control or graphics-context lifetime while preserving the backend-neutral architecture.
+The MAUI adapter presents through `SKGLView` and replays the retained pictures on the platform GPU
+surface. It keeps the existing `SKCanvasView` as a software fallback and switches to it when the
+GPU handler or frame callback reports an error.
 
-The WPF adapter uses the same software strategy with a per-monitor-DPI `WriteableBitmap`. Its
-locked premultiplied BGRA back buffer is exposed directly to an `SKSurface`, then invalidated as one
-WPF image without image encoding or an additional graphics package. WPF device-independent pointer
-coordinates and padding remain aligned with the controller's logical viewport.
+The Windows Forms adapter can present through a modern OpenTK `GLControl` when
+`EnableGpuRendering` is enabled. This opt-in avoids blocking hosts that cannot create a GLFW
+context during control construction. The normal path wraps the current framebuffer in an Skia
+`GRBackendRenderTarget`; a 32-bit premultiplied WinForms bitmap remains the fallback.
 
-The WinUI adapter also uses a DPI-scaled premultiplied BGRA software surface. It renders retained
-Skia rows into a reusable bitmap, copies that contiguous buffer into one WinUI `WriteableBitmap`
-and invalidates the image source without encoding. `XamlRoot.RasterizationScale` keeps logical
-pointer coordinates, terminal padding and physical pixels aligned across monitor changes.
+The WPF adapter uses `OpenTK.GLWpfControl` as a child visual and wraps its current framebuffer in
+the same Skia GPU surface. Its per-monitor-DPI `WriteableBitmap` remains available when WPF cannot
+create or retain the OpenGL context. WPF device-independent pointer coordinates and padding remain
+aligned with the controller's logical viewport.
 
-`TerminalView.ShowRenderingDebugOverlay` enables a top-right retained Skia overlay with the active
-GPU/software renderer, rolling presentation FPS and average, maximum and minimum frame intervals.
-Sampling resets after a long idle gap so terminal inactivity is not reported as a single slow
-frame. The overlay is disabled by default and can be enabled from XAML:
+The WinUI adapter uses SkiaSharp's `SKSwapChainPanel` (ANGLE-backed) and keeps the existing
+DPI-scaled premultiplied BGRA `WriteableBitmap` path as a fallback. `XamlRoot.RasterizationScale`
+keeps logical pointer coordinates, terminal padding and physical pixels aligned across monitor
+changes. All four adapters report the mode of the most recently presented frame through
+`ActiveRenderMode` and `IsGpuAccelerated`.
+
+Every platform `TerminalView.ShowRenderingDebugOverlay` enables a top-right Skia overlay with the
+active GPU/software renderer, rolling presentation FPS and average, maximum and minimum frame
+intervals. Sampling and drawing live in `XtermSharp.Rendering.Skia`, while each adapter only maps
+the switch into its native property system and requests a repaint. Sampling resets after a long
+idle gap so terminal inactivity is not reported as a single slow frame. The overlay is disabled by
+default and can be enabled from XAML, for example in Avalonia:
 
 ```xml
 <Window xmlns:xterm="clr-namespace:XtermSharp.Avalonia.Controls;assembly=XtermSharp.Avalonia">
@@ -107,10 +114,13 @@ cells and records each changed display row as an `SKPicture` during worker-side 
 The platform paint path normally only replays retained pictures. Font metrics, fonts, fill paints
 and current row pictures are cached with bounded stale-picture eviction. Theme, font or DPI changes
 invalidate the relevant display rows; different presenters are expected to preserve terminal
-semantics, not pixel-identical rasterization.
+semantics, not pixel-identical rasterization. Its optional debug overlay is drawn after retained
+terminal rows and therefore remains outside terminal snapshots, selection and damage state. The
+WinUI adapter performs a full bitmap presentation while telemetry is enabled so every updated
+overlay pixel reaches its `WriteableBitmap` despite row-based terminal damage tracking.
 
 The MAUI adapter uses the same `SkiaTerminalRenderBackend` and retained row pictures as Avalonia.
-It presents them through `SkiaSharp.Views.Maui.Controls.SKCanvasView`, scales logical terminal
+It presents them through `SKGLView` first and `SKCanvasView` on fallback, scales logical terminal
 coordinates to the platform surface and maps Skia touch coordinates back to MAUI logical units.
 Applications call `UseXtermSharpMaui()` while building their `MauiApp` to register the SkiaSharp
 view handler.

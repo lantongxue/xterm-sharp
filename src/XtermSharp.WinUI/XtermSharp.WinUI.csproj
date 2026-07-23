@@ -26,6 +26,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" PrivateAssets="all" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.3.1" />
+    <PackageReference Include="SkiaSharp.Views.WinUI" Version="$(SkiaSharpVersion)" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="XtermSharp" />

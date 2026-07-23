@@ -50,7 +50,8 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
             Terminal = _terminal,
             Padding = new Thickness(8),
             HorizontalOptions = LayoutOptions.Fill,
-            VerticalOptions = LayoutOptions.Fill
+            VerticalOptions = LayoutOptions.Fill,
+            ShowRenderingDebugOverlay = true
         };
 
         _hostText = EntryValue(GetEnvironmentValue("SSH_HOST", "localhost"));

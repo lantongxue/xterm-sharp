@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Rendering.SceneGraph;
 using Avalonia.Skia;
-using SkiaSharp;
 using XtermSharp.Rendering;
 using XtermSharp.Rendering.Skia;
 
@@ -13,12 +12,12 @@ internal sealed class SkiaDrawOperation(
     SkiaTerminalRenderBackend backend,
     TerminalRenderFrame frame,
     RenderingBackendState renderingBackendState,
-    RenderingDebugMetrics? debugMetrics) : ICustomDrawOperation
+    bool showRenderingDebugOverlay) : ICustomDrawOperation
 {
     private SkiaTerminalRenderBackend Backend { get; } = backend;
     private TerminalRenderFrame Frame { get; } = frame;
     private RenderingBackendState RenderingBackendState { get; } = renderingBackendState;
-    private RenderingDebugMetrics? DebugMetrics { get; } = debugMetrics;
+    private bool ShowRenderingDebugOverlay { get; } = showRenderingDebugOverlay;
 
     public Rect Bounds { get; } = bounds;
 
@@ -36,26 +35,18 @@ internal sealed class SkiaDrawOperation(
             ? TerminalRenderMode.Software
             : TerminalRenderMode.Gpu;
         RenderingBackendState.Record(mode);
-        Backend.Render(lease.SkCanvas, Frame);
-        if (DebugMetrics is not null)
-        {
-            RenderingDebugOverlay.Draw(
-                lease.SkCanvas,
-                new SKRect(
-                    (float)Bounds.Left,
-                    (float)Bounds.Top,
-                    (float)Bounds.Right,
-                    (float)Bounds.Bottom),
-                DebugMetrics.RecordFrame(),
-                mode);
-        }
+        Backend.ShowRenderingDebugOverlay = ShowRenderingDebugOverlay;
+        Backend.Render(
+            lease.SkCanvas,
+            Frame,
+            mode == TerminalRenderMode.Gpu ? SkiaRenderMode.Gpu : SkiaRenderMode.Software);
     }
 
     public bool Equals(ICustomDrawOperation? other) =>
         other is SkiaDrawOperation operation && Bounds == operation.Bounds &&
         ReferenceEquals(Backend, operation.Backend) && ReferenceEquals(Frame, operation.Frame) &&
         ReferenceEquals(RenderingBackendState, operation.RenderingBackendState) &&
-        ReferenceEquals(DebugMetrics, operation.DebugMetrics);
+        ShowRenderingDebugOverlay == operation.ShowRenderingDebugOverlay;
 
     public void Dispose()
     {

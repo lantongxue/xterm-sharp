@@ -59,7 +59,6 @@ public sealed class TerminalView : TemplatedControl
     private readonly DispatcherTimer _blinkTimer;
     private readonly TerminalTextInputMethodClient _textInputClient;
     private readonly AvaloniaKeyStateTracker _keyState = new();
-    private readonly RenderingDebugMetrics _renderingDebugMetrics = new();
     private SkiaTerminalRenderBackend? _backend;
     private RenderingBackendState? _renderingBackendState;
     private TerminalRenderController? _controller;
@@ -157,7 +156,7 @@ public sealed class TerminalView : TemplatedControl
                 _backend,
                 _frame,
                 _renderingBackendState,
-                ShowRenderingDebugOverlay ? _renderingDebugMetrics : null));
+                ShowRenderingDebugOverlay));
         }
     }
 
@@ -274,7 +273,6 @@ public sealed class TerminalView : TemplatedControl
         }
         else if (change.Property == ShowRenderingDebugOverlayProperty)
         {
-            _renderingDebugMetrics.Reset();
             InvalidateVisual();
         }
     }
@@ -579,7 +577,6 @@ public sealed class TerminalView : TemplatedControl
         }
         _backend?.Dispose();
         _backend = null;
-        _renderingDebugMetrics.Reset();
         PublishFrame(null);
         _lastColumns = 0;
         _lastRows = 0;

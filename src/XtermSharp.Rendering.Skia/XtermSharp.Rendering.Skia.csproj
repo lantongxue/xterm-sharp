@@ -23,6 +23,7 @@
     <Using Include="XtermSharp.Rendering.Display" />
     <Using Include="XtermSharp.Rendering.Geometry" />
     <Using Include="XtermSharp.Rendering.Skia.Backends" />
+    <Using Include="XtermSharp.Rendering.Skia.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="$(SkiaSharpVersion)" />

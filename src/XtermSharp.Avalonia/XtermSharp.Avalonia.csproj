@@ -38,7 +38,6 @@
     <Using Include="XtermSharp.Rendering.Skia.Backends" />
     <Using Include="XtermSharp.Avalonia.Controls" />
     <Using Include="XtermSharp.Avalonia.Clipboard" />
-    <Using Include="XtermSharp.Avalonia.Diagnostics" />
     <Using Include="XtermSharp.Avalonia.Input" />
   </ItemGroup>
   <ItemGroup>

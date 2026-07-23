@@ -68,23 +68,23 @@
   selection extraction, layered addon decorations, synchronized-output throttling, damage tracking
   and batched text/background display-list runs.
 - `XtermSharp.Rendering.Skia` provides SkiaSharp 3.119.4 and HarfBuzz shaping,
-  font fallback, cached fonts/paints and worker-prepared retained row pictures.
+  font fallback, cached fonts/paints, worker-prepared retained row pictures and the shared
+  rendering telemetry overlay used by every platform adapter.
 - `XtermSharp.Avalonia` provides an externally bound `TerminalView` with DPI-aware
   resizing, worker-side frame preparation, change-only binding notifications, keyboard/mouse
-  protocols, local selection, clipboard, focus, IME preedit, registered-link interaction and an
-  optional rendering telemetry overlay.
+  protocols, local selection, clipboard, focus, IME preedit and registered-link interaction.
 - `XtermSharp.Maui` provides an externally bound `TerminalView` that reuses the SkiaSharp/HarfBuzz
-  backend through `SKCanvasView`. It supports device-pixel scaling, resize, touch selection,
+  backend through `SKGLView` with `SKCanvasView` fallback. It supports device-pixel scaling, resize, touch selection,
   tracked mouse input, link activation, soft-keyboard text/backspace/enter input, scrolling and
   clipboard integration.
-- `XtermSharp.WinForms` provides an externally bound, DPI-aware software-Skia `TerminalView` with
-  worker-side frame preparation, browser-compatible keyboard coordinates, committed text/IME input,
+- `XtermSharp.WinForms` provides an externally bound, DPI-aware OpenTK GPU/Software-Skia
+  `TerminalView` with worker-side frame preparation, browser-compatible keyboard coordinates, committed text/IME input,
   terminal mouse protocols, local selection, clipboard and registered-link interaction.
-- `XtermSharp.Wpf` provides a dependency-property-based, DPI-aware software-Skia `TerminalView`
-  with worker-side frame preparation, committed text/IME input, browser-compatible key coordinates,
+- `XtermSharp.Wpf` provides a dependency-property-based, DPI-aware OpenTK GPU/Software-Skia
+  `TerminalView` with worker-side frame preparation, committed text/IME input, browser-compatible key coordinates,
   terminal mouse protocols, local selection, clipboard and registered-link interaction.
-- `XtermSharp.WinUI` provides a dependency-property-based, DPI-aware software-Skia `TerminalView`
-  with worker-side frame preparation, CoreText IME input, browser-compatible key coordinates,
+- `XtermSharp.WinUI` provides a dependency-property-based, DPI-aware `SKSwapChainPanel`/bitmap
+  `TerminalView` with worker-side frame preparation, CoreText IME input, browser-compatible key coordinates,
   terminal mouse protocols, local selection, clipboard and registered-link interaction.
 - The Avalonia, Windows Forms, WPF and WinUI SSH samples integrate SSH.NET without changing the
   transport-neutral library boundary and demonstrate password/private-key authentication,

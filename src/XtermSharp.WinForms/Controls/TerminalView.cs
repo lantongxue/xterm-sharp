@@ -14,6 +14,7 @@ public sealed class TerminalView : Control
     private readonly HashSet<Keys> _pressedKeys = [];
     private readonly HashSet<Keys> _suppressedReleases = [];
     private SkiaTerminalRenderBackend? _backend;
+    private SkiaGpuControl? _gpuControl;
     private TerminalRenderController? _controller;
     private TerminalRenderFrame? _frame;
     private Bitmap? _bitmap;
@@ -22,6 +23,9 @@ public sealed class TerminalView : Control
     private Terminal? _terminal;
     private TerminalTheme _terminalTheme = TerminalTheme.Default;
     private TerminalRenderOptions _renderOptions = new();
+    private bool _showRenderingDebugOverlay;
+    private bool _enableGpuRendering;
+    private bool _gpuFailed;
     private TerminalLink? _hoveredLink;
     private TerminalLink? _pressedLink;
     private TerminalLinkEvent? _lastLinkEvent;
@@ -41,6 +45,7 @@ public sealed class TerminalView : Control
     private bool _pointerInside;
     private bool _linkCursorApplied;
     private TerminalPoint _selectionAnchor;
+    private SkiaRenderMode _activeRenderMode = SkiaRenderMode.Unknown;
 
     public TerminalView()
     {
@@ -124,6 +129,60 @@ public sealed class TerminalView : Control
         }
     }
 
+    /// <summary>Gets or sets whether rendering telemetry is drawn over the terminal.</summary>
+    [DefaultValue(false)]
+    public bool ShowRenderingDebugOverlay
+    {
+        get => _showRenderingDebugOverlay;
+        set
+        {
+            if (_showRenderingDebugOverlay == value)
+            {
+                return;
+            }
+            _showRenderingDebugOverlay = value;
+            if (_backend is not null)
+            {
+                _backend.ShowRenderingDebugOverlay = value;
+            }
+            Invalidate();
+            _gpuControl?.Invalidate();
+        }
+    }
+
+    /// <summary>Gets or sets whether this control should create an OpenTK GPU surface.</summary>
+    [DefaultValue(false)]
+    public bool EnableGpuRendering
+    {
+        get => _enableGpuRendering;
+        set
+        {
+            if (_enableGpuRendering == value)
+            {
+                return;
+            }
+            _enableGpuRendering = value;
+            if (!value)
+            {
+                DisableGpuRendering();
+            }
+            else if (IsHandleCreated)
+            {
+                _gpuFailed = false;
+                BeginInvoke(TryEnableGpuRendering);
+            }
+            Invalidate();
+        }
+    }
+
+    /// <summary>Gets how the most recently presented frame was rendered.</summary>
+    [Browsable(false)]
+    public SkiaRenderMode ActiveRenderMode => _activeRenderMode;
+
+    /// <summary>Gets whether the most recently presented frame used a GPU-backed Skia surface.</summary>
+    [Browsable(false)]
+    public bool IsGpuAccelerated => ActiveRenderMode == SkiaRenderMode.Gpu;
+
     [Browsable(false)]
     public TerminalSelection? Selection => _controller?.Selection;
 
@@ -145,6 +204,8 @@ public sealed class TerminalView : Control
     public event EventHandler? SelectionChanged;
 
     public event EventHandler? ViewportChanged;
+
+    public event EventHandler? RenderModeChanged;
 
     public void ClearSelection() => Terminal?.ClearSelection();
 
@@ -231,6 +292,7 @@ public sealed class TerminalView : Control
         _pressedKeys.Clear();
         _suppressedReleases.Clear();
         DetachTerminal();
+        DisableGpuRendering();
         base.OnHandleDestroyed(e);
     }
 
@@ -238,6 +300,7 @@ public sealed class TerminalView : Control
     {
         DisposeBitmap();
         SchedulePrepareFrame();
+        _gpuControl?.Invalidate();
         base.OnResize(e);
     }
 
@@ -251,6 +314,7 @@ public sealed class TerminalView : Control
     {
         DisposeBitmap();
         SchedulePrepareFrame();
+        _gpuControl?.Invalidate();
         base.OnDpiChangedAfterParent(e);
     }
 
@@ -525,14 +589,109 @@ public sealed class TerminalView : Control
             TerminalRgbaColor background = TerminalTheme.Background;
             canvas.Clear(new SKColor(background.Red, background.Green, background.Blue, background.Alpha));
             canvas.Scale((float)frame.Viewport.RenderScale);
-            backend.Render(canvas, frame);
+            backend.Render(canvas, frame, SkiaRenderMode.Software);
             canvas.Flush();
+            if (_gpuControl?.IsGpuActive != true)
+            {
+                SetActiveRenderMode(SkiaRenderMode.Software);
+            }
         }
         finally
         {
             bitmap.UnlockBits(data);
         }
         e.Graphics.DrawImageUnscaled(bitmap, 0, 0);
+    }
+
+    private void TryEnableGpuRendering()
+    {
+        if (_gpuControl is not null || _gpuFailed || IsDisposed || Disposing)
+        {
+            return;
+        }
+        try
+        {
+            var gpuControl = new SkiaGpuControl();
+            gpuControl.PaintSurface += OnGpuPaintSurface;
+            gpuControl.RenderingFailed += OnGpuRenderingFailed;
+            _gpuControl = gpuControl;
+            Controls.Add(gpuControl);
+            gpuControl.BringToFront();
+            gpuControl.Invalidate();
+        }
+        catch (Exception exception)
+        {
+            DisableGpuRendering(exception);
+        }
+    }
+
+    private void OnGpuPaintSurface(SKCanvas canvas)
+    {
+        TerminalRenderFrame? frame = _frame;
+        SkiaTerminalRenderBackend? backend = _backend;
+        if (frame is null || backend is null)
+        {
+            canvas.Clear(SKColors.Transparent);
+            return;
+        }
+
+        TerminalRgbaColor background = TerminalTheme.Background;
+        canvas.Clear(new SKColor(background.Red, background.Green, background.Blue, background.Alpha));
+        canvas.Scale((float)frame.Viewport.RenderScale);
+        backend.Render(canvas, frame, SkiaRenderMode.Gpu);
+        SetActiveRenderMode(SkiaRenderMode.Gpu);
+    }
+
+    private void OnGpuRenderingFailed(Exception exception)
+    {
+        if (IsDisposed || Disposing)
+        {
+            return;
+        }
+        if (IsHandleCreated)
+        {
+            BeginInvoke(() => DisableGpuRendering(exception));
+        }
+        else
+        {
+            DisableGpuRendering(exception);
+        }
+    }
+
+    private void DisableGpuRendering(Exception? exception = null)
+    {
+        SkiaGpuControl? gpuControl = _gpuControl;
+        _gpuControl = null;
+        if (gpuControl is not null)
+        {
+            gpuControl.PaintSurface -= OnGpuPaintSurface;
+            gpuControl.RenderingFailed -= OnGpuRenderingFailed;
+            Controls.Remove(gpuControl);
+            gpuControl.Dispose();
+        }
+        if (exception is not null)
+        {
+            _gpuFailed = true;
+            Terminal?.Options.Logger?.Log(
+                TerminalLogLevel.Warning,
+                "GPU presentation failed; falling back to the software Skia surface.",
+                exception);
+        }
+        SetActiveRenderMode(SkiaRenderMode.Unknown);
+        if (!IsDisposed)
+        {
+            Invalidate();
+        }
+    }
+
+    private void SetActiveRenderMode(SkiaRenderMode mode)
+    {
+        if (_activeRenderMode == mode)
+        {
+            return;
+        }
+        _activeRenderMode = mode;
+        RenderModeChanged?.Invoke(this, EventArgs.Empty);
     }
 
     protected override void Dispose(bool disposing)
@@ -543,6 +702,7 @@ public sealed class TerminalView : Control
             _blinkTimer.Tick -= OnBlinkTick;
             _blinkTimer.Dispose();
             DetachTerminal();
+            DisableGpuRendering();
             DisposeBitmap();
         }
         base.Dispose(disposing);
@@ -660,7 +820,10 @@ public sealed class TerminalView : Control
         {
             return;
         }
-        _backend = new SkiaTerminalRenderBackend();
+        _backend = new SkiaTerminalRenderBackend
+        {
+            ShowRenderingDebugOverlay = ShowRenderingDebugOverlay
+        };
         _controller = new TerminalRenderController(terminal, _backend, RenderOptions, TerminalTheme);
         _controller.Invalidated += OnControllerInvalidated;
         terminal.SelectionChanged += OnTerminalSelectionChanged;
@@ -693,6 +856,7 @@ public sealed class TerminalView : Control
         PublishFrame(null);
         _lastColumns = 0;
         _lastRows = 0;
+        SetActiveRenderMode(SkiaRenderMode.Unknown);
         DisposeBitmap();
         if (!IsDisposed)
         {
@@ -781,9 +945,14 @@ public sealed class TerminalView : Control
                 _lastRows = rows;
                 await terminal.ResizeAsync(columns, rows, cancellation.Token);
             }
+            if (EnableGpuRendering && !_gpuFailed && _gpuControl is null && IsHandleCreated)
+            {
+                BeginInvoke(TryEnableGpuRendering);
+            }
             if (!ReferenceEquals(previousFrame, frame) && !frame.Damage.IsEmpty)
             {
                 Invalidate();
+                _gpuControl?.Invalidate();
             }
         }
         catch (OperationCanceledException)

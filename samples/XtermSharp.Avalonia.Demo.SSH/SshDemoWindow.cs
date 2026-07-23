@@ -41,7 +41,8 @@ internal sealed class SshDemoWindow : Window
         Height = 760;
         MinWidth = 900;
         MinHeight = 600;
-        bool showRenderingDebug = IsTrue(Environment.GetEnvironmentVariable("XTERMSHARP_RENDERING_DEBUG"));
+        string? renderingDebugValue = Environment.GetEnvironmentVariable("XTERMSHARP_RENDERING_DEBUG");
+        bool showRenderingDebug = renderingDebugValue is null || IsTrue(renderingDebugValue);
 
         _terminal = new Terminal(new TerminalOptions
         {

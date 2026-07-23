@@ -14,6 +14,7 @@
     <NoWarn>$(NoWarn);1591;XTSR0001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="OpenTK.GLWpfControl" Version="4.3.6" />
     <ProjectReference Include="../XtermSharp.Addons.Clipboard/XtermSharp.Addons.Clipboard.csproj" />
     <ProjectReference Include="../XtermSharp.Rendering/XtermSharp.Rendering.csproj" />
     <ProjectReference Include="../XtermSharp.Rendering.Skia/XtermSharp.Rendering.Skia.csproj" />

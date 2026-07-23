@@ -1,6 +1,4 @@
-using System.Diagnostics;
-
-namespace XtermSharp.Avalonia.Diagnostics;
+namespace XtermSharp.Rendering.Skia.Diagnostics;
 
 internal readonly record struct RenderingDebugSnapshot(
     int SampleCount,

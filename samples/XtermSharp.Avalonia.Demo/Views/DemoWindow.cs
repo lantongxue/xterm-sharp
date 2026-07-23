@@ -47,7 +47,8 @@ internal sealed class DemoWindow : Window
             Terminal = _terminal,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch,
-            Padding = new Thickness(8)
+            Padding = new Thickness(8),
+            ShowRenderingDebugOverlay = true
         };
         _searchBox = new TextBox
         {

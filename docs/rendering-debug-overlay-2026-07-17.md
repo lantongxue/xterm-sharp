@@ -1,10 +1,12 @@
-# Rendering debug overlay change log — 2026-07-17
+# Rendering debug overlay change log - 2026-07-17, shared backend update 2026-07-23
 
 ## Summary
 
-`TerminalView` now has an optional rendering telemetry overlay for diagnosing real application
-presentation behavior. The overlay is disabled by default and appears in the top-right corner of
-the terminal control when `ShowRenderingDebugOverlay` is enabled.
+Every platform `TerminalView` has an optional rendering telemetry overlay for diagnosing real
+application presentation behavior. The overlay is disabled by default and appears in the
+top-right corner of the terminal control when `ShowRenderingDebugOverlay` is enabled. Metrics and
+drawing are implemented once by `XtermSharp.Rendering.Skia` and reused by Avalonia, MAUI, Windows
+Forms, WPF and WinUI.
 
 It reports four rolling values:
 
@@ -18,13 +20,13 @@ default.
 
 ## Public API
 
-The Avalonia control exposes a bindable styled property:
+Each control exposes the same public property through its native property system:
 
 ```csharp
 public bool ShowRenderingDebugOverlay { get; set; }
 ```
 
-It can be enabled from XAML:
+It can be enabled from XAML, for example in Avalonia:
 
 ```xml
 <Window xmlns:xterm="clr-namespace:XtermSharp.Avalonia.Controls;assembly=XtermSharp.Avalonia">
@@ -38,14 +40,16 @@ or changed at runtime:
 terminalView.ShowRenderingDebugOverlay = true;
 ```
 
-Changing the property resets existing samples and invalidates the visual immediately. Disabling it
-removes the overlay without changing the terminal, render controller or externally owned session.
+Avalonia uses a styled property, MAUI a bindable property, WPF and WinUI dependency properties, and
+Windows Forms a regular designer property. Changing it resets existing samples and invalidates the
+visual immediately. Disabling it removes the overlay without changing the terminal, render
+controller or externally owned session.
 
 ## Sampling behavior
 
-Sampling happens when Avalonia actually executes the terminal's custom Skia draw operation. This
-means the values describe visible component presentation intervals rather than terminal parser
-throughput or only the CPU duration of `SKCanvas` calls.
+Sampling happens when the shared Skia backend actually renders onto a platform surface. This means
+the values describe component presentation intervals rather than terminal parser throughput or
+only the CPU duration of `SKCanvas` calls.
 
 The collector uses:
 
@@ -60,9 +64,13 @@ an interval. This prevents an inactive terminal from reporting one very large fa
 
 ## Rendering behavior
 
-The terminal frame is replayed first. The debug panel is then drawn directly onto the same leased
-Skia canvas so it always remains above terminal content and never becomes part of the terminal
-buffer, snapshot or selection model.
+The terminal frame is replayed first. The debug panel is then drawn directly onto the same Skia
+canvas so it always remains above terminal content and never becomes part of the terminal buffer,
+snapshot or selection model. Every adapter passes its actual presentation mode into the shared
+backend. MAUI uses `SKGLView`, WinUI uses ANGLE-backed `SKSwapChainPanel`, WPF uses
+`OpenTK.GLWpfControl`, and WinForms can use `OpenTK.GLControl` when `EnableGpuRendering` is enabled.
+Each retains the existing software path as a fallback and reports `Unknown` until a frame has
+actually been presented.
 
 The panel uses:
 
@@ -71,8 +79,9 @@ The panel uses:
 - compact monospace text;
 - clipping to the `TerminalView` bounds.
 
-The custom draw operation equality check includes whether the shared metrics collector is present,
-so turning the overlay on or off invalidates an otherwise unchanged retained terminal frame.
+The Avalonia custom draw operation equality check includes the option value. The software adapters
+invalidate their surfaces when it changes; WinUI also presents the full bitmap while telemetry is
+enabled so its row-damage optimization cannot leave stale panel pixels.
 
 ## SSH demo integration
 
@@ -80,14 +89,15 @@ The SSH demo connection panel includes a **Show rendering debug overlay** checkb
 enabled while an SSH session is connected, allowing live comparison of normal shell output and
 full-screen applications such as `btop` without reconnecting.
 
-The initial checkbox value can be configured with:
+The overlay is enabled by default in every demo. The Avalonia SSH demo checkbox can be initialized
+as disabled with:
 
 ```bash
-XTERMSHARP_RENDERING_DEBUG=1 dotnet run \
+XTERMSHARP_RENDERING_DEBUG=0 dotnet run \
   --project samples/XtermSharp.Avalonia.Demo.SSH/XtermSharp.Avalonia.Demo.SSH.csproj
 ```
 
-Accepted enabled values are `1` and `true`, matching the other boolean demo environment settings.
+Values `1` and `true` keep it enabled, matching the other boolean demo environment settings.
 
 ## Verification
 
@@ -95,16 +105,16 @@ Regression coverage verifies both the metrics and the rendered placement:
 
 - frame intervals of 10, 20 and 30 ms produce 50 FPS, 20 ms average, 30 ms maximum and 10 ms
   minimum;
-- the option defaults to disabled and can be changed through the Avalonia property system;
+- the option defaults to disabled and is exposed through all five platform property systems;
 - a Skia bitmap assertion confirms that the panel paints the top-right region while leaving the
   bottom-left region untouched.
 
 The final tree was verified with:
 
 - zero build warnings and errors;
-- 1,425/1,425 main tests passing;
+- 1,462/1,462 main tests passing;
 - 1/1 reference infrastructure test passing;
-- 22/22 rendering, Skia and Avalonia tests passing;
+- 43/43 rendering and platform-adapter tests passing;
 - 1,307 unique upstream bindings verified;
 - the reference scenario reporting `MATCH`;
 - all 76 escape-sequence fixtures matching the pinned xterm.js headless oracle;

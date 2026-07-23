@@ -37,7 +37,31 @@ public sealed class TerminalView : ContentView
         propertyChanged: static (bindable, _, newValue) =>
             ((TerminalView)bindable).SetRenderOptions((TerminalRenderOptions)newValue));
 
+    public static readonly BindableProperty ShowRenderingDebugOverlayProperty = BindableProperty.Create(
+        nameof(ShowRenderingDebugOverlay),
+        typeof(bool),
+        typeof(TerminalView),
+        false,
+        propertyChanged: static (bindable, _, newValue) =>
+            ((TerminalView)bindable).SetShowRenderingDebugOverlay((bool)newValue));
+
+    private static readonly BindablePropertyKey ActiveRenderModePropertyKey = BindableProperty.CreateReadOnly(
+        nameof(ActiveRenderMode),
+        typeof(SkiaRenderMode),
+        typeof(TerminalView),
+        SkiaRenderMode.Unknown);
+
+    private static readonly BindablePropertyKey IsGpuAcceleratedPropertyKey = BindableProperty.CreateReadOnly(
+        nameof(IsGpuAccelerated),
+        typeof(bool),
+        typeof(TerminalView),
+        false);
+
+    public static readonly BindableProperty ActiveRenderModeProperty = ActiveRenderModePropertyKey.BindableProperty;
+    public static readonly BindableProperty IsGpuAcceleratedProperty = IsGpuAcceleratedPropertyKey.BindableProperty;
+
     private readonly SKCanvasView _canvasView;
+    private readonly SKGLView _gpuView;
     private readonly Entry _inputEntry;
     private SkiaTerminalRenderBackend? _backend;
     private TerminalRenderController? _controller;
@@ -59,12 +83,21 @@ public sealed class TerminalView : ContentView
     private int _prepareAgain;
     private float _surfaceScaleX = 1;
     private float _surfaceScaleY = 1;
+    private bool _gpuFailed;
 
     public TerminalView()
     {
         _canvasView = new SKCanvasView
         {
             EnableTouchEvents = true,
+            HorizontalOptions = LayoutOptions.Fill,
+            VerticalOptions = LayoutOptions.Fill
+        };
+        _gpuView = new SKGLView
+        {
+            EnableTouchEvents = true,
+            HasRenderLoop = false,
+            Opacity = 0,
             HorizontalOptions = LayoutOptions.Fill,
             VerticalOptions = LayoutOptions.Fill
         };
@@ -85,6 +118,7 @@ public sealed class TerminalView : ContentView
 
         var layout = new Grid();
         layout.Add(_canvasView);
+        layout.Add(_gpuView);
         layout.Add(_inputEntry);
         Content = layout;
 
@@ -93,6 +127,8 @@ public sealed class TerminalView : ContentView
         SizeChanged += (_, _) => SchedulePrepareFrame();
         _canvasView.PaintSurface += OnPaintSurface;
         _canvasView.Touch += OnTouch;
+        _gpuView.PaintSurface += OnGpuPaintSurface;
+        _gpuView.Touch += OnTouch;
         _inputEntry.TextChanged += OnInputTextChanged;
         _inputEntry.Completed += OnInputCompleted;
         _inputEntry.Focused += OnInputFocused;
@@ -117,6 +153,19 @@ public sealed class TerminalView : ContentView
         set => SetValue(RenderOptionsProperty, value);
     }
 
+    /// <summary>Gets or sets whether rendering telemetry is drawn over the terminal.</summary>
+    public bool ShowRenderingDebugOverlay
+    {
+        get => (bool)GetValue(ShowRenderingDebugOverlayProperty);
+        set => SetValue(ShowRenderingDebugOverlayProperty, value);
+    }
+
+    /// <summary>Gets how the most recently presented frame was rendered.</summary>
+    public SkiaRenderMode ActiveRenderMode => (SkiaRenderMode)GetValue(ActiveRenderModeProperty);
+
+    /// <summary>Gets whether the most recently presented frame used a GPU-backed Skia surface.</summary>
+    public bool IsGpuAccelerated => (bool)GetValue(IsGpuAcceleratedProperty);
+
     public TerminalSelection? Selection => _controller?.Selection;
     public bool HasSelection => Selection is { IsEmpty: false };
     public int ScrollValue => _frame?.ViewportY ?? 0;
@@ -132,18 +181,9 @@ public sealed class TerminalView : ContentView
         SKCanvas canvas = args.Surface.Canvas;
         canvas.Clear(SKColors.Transparent);
 
-        float scaleX = _canvasView.Width > 0
-            ? args.Info.Width / (float)_canvasView.Width
-            : 1;
-        float scaleY = _canvasView.Height > 0
-            ? args.Info.Height / (float)_canvasView.Height
-            : 1;
-        scaleX = float.IsFinite(scaleX) && scaleX > 0 ? scaleX : 1;
-        scaleY = float.IsFinite(scaleY) && scaleY > 0 ? scaleY : 1;
-        float previousScaleX = Volatile.Read(ref _surfaceScaleX);
-        float previousScaleY = Volatile.Read(ref _surfaceScaleY);
-        Volatile.Write(ref _surfaceScaleX, scaleX);
-        Volatile.Write(ref _surfaceScaleY, scaleY);
+        UpdateSurfaceScale(args.Info.Width, args.Info.Height, _canvasView);
+        float scaleX = Volatile.Read(ref _surfaceScaleX);
+        float scaleY = Volatile.Read(ref _surfaceScaleY);
 
         SkiaTerminalRenderBackend? backend = _backend;
         TerminalRenderFrame? frame = _frame;
@@ -153,7 +193,8 @@ public sealed class TerminalView : ContentView
             try
             {
                 canvas.Scale(scaleX, scaleY);
-                backend.Render(canvas, frame);
+                backend.Render(canvas, frame, SkiaRenderMode.Software);
+                SetActiveRenderMode(SkiaRenderMode.Software);
             }
             finally
             {
@@ -161,11 +202,87 @@ public sealed class TerminalView : ContentView
             }
         }
 
-        if (Math.Abs(previousScaleX - scaleX) > 0.01f ||
-            Math.Abs(previousScaleY - scaleY) > 0.01f)
+    }
+
+    private void OnGpuPaintSurface(object? sender, SKPaintGLSurfaceEventArgs args)
+    {
+        _ = sender;
+        if (_gpuFailed)
+        {
+            return;
+        }
+
+        SKCanvas canvas = args.Surface.Canvas;
+        canvas.Clear(SKColors.Transparent);
+        UpdateSurfaceScale(args.BackendRenderTarget.Width, args.BackendRenderTarget.Height, _gpuView);
+
+        SkiaTerminalRenderBackend? backend = _backend;
+        TerminalRenderFrame? frame = _frame;
+        if (backend is null || frame is null)
+        {
+            return;
+        }
+
+        try
+        {
+            canvas.Save();
+            try
+            {
+                canvas.Scale(
+                    Math.Max(0.01f, Volatile.Read(ref _surfaceScaleX)),
+                    Math.Max(0.01f, Volatile.Read(ref _surfaceScaleY)));
+                backend.Render(canvas, frame, SkiaRenderMode.Gpu);
+            }
+            finally
+            {
+                canvas.Restore();
+            }
+            _gpuView.Opacity = 1;
+            _canvasView.IsVisible = false;
+            SetActiveRenderMode(SkiaRenderMode.Gpu);
+        }
+        catch (Exception exception)
+        {
+            DisableGpuRendering(exception);
+        }
+    }
+
+    private void UpdateSurfaceScale(int pixelWidth, int pixelHeight, VisualElement view)
+    {
+        float scaleX = view.Width > 0 ? pixelWidth / (float)view.Width : 1;
+        float scaleY = view.Height > 0 ? pixelHeight / (float)view.Height : 1;
+        scaleX = float.IsFinite(scaleX) && scaleX > 0 ? scaleX : 1;
+        scaleY = float.IsFinite(scaleY) && scaleY > 0 ? scaleY : 1;
+        float previousScaleX = Volatile.Read(ref _surfaceScaleX);
+        float previousScaleY = Volatile.Read(ref _surfaceScaleY);
+        Volatile.Write(ref _surfaceScaleX, scaleX);
+        Volatile.Write(ref _surfaceScaleY, scaleY);
+        if (Math.Abs(previousScaleX - scaleX) > 0.01f || Math.Abs(previousScaleY - scaleY) > 0.01f)
         {
             SchedulePrepareFrame();
         }
+    }
+
+    private void DisableGpuRendering(Exception exception)
+    {
+        _gpuFailed = true;
+        Terminal?.Options.Logger?.Log(
+            TerminalLogLevel.Warning,
+            "GPU presentation failed; falling back to the software Skia surface.",
+            exception);
+        _gpuView.IsVisible = false;
+        _canvasView.IsVisible = true;
+        _canvasView.InvalidateSurface();
+    }
+
+    private void SetActiveRenderMode(SkiaRenderMode mode)
+    {
+        if (ActiveRenderMode == mode)
+        {
+            return;
+        }
+        SetValue(ActiveRenderModePropertyKey, mode);
+        SetValue(IsGpuAcceleratedPropertyKey, mode == SkiaRenderMode.Gpu);
     }
 
     private void OnTouch(object? sender, SKTouchEventArgs args)
@@ -270,6 +387,10 @@ public sealed class TerminalView : ContentView
             return;
         }
         _attached = true;
+        _gpuFailed = false;
+        _gpuView.IsVisible = true;
+        _gpuView.Opacity = 0;
+        _canvasView.IsVisible = true;
         AttachTerminal(Terminal);
         _blinkTimer = Dispatcher.CreateTimer();
         _blinkTimer.Interval = TimeSpan.FromMilliseconds(500);
@@ -310,7 +431,10 @@ public sealed class TerminalView : ContentView
         {
             return;
         }
-        _backend = new SkiaTerminalRenderBackend();
+        _backend = new SkiaTerminalRenderBackend
+        {
+            ShowRenderingDebugOverlay = ShowRenderingDebugOverlay
+        };
         _controller = new TerminalRenderController(terminal, _backend, RenderOptions, TerminalTheme)
         {
             IsFocused = _inputEntry.IsFocused
@@ -343,7 +467,14 @@ public sealed class TerminalView : ContentView
         PublishFrame(null);
         _lastColumns = 0;
         _lastRows = 0;
+        SetActiveRenderMode(SkiaRenderMode.Unknown);
+        _canvasView.IsVisible = true;
+        _gpuView.Opacity = 0;
         _canvasView.InvalidateSurface();
+        if (!_gpuFailed)
+        {
+            _gpuView.InvalidateSurface();
+        }
     }
 
     private void SetTheme(TerminalTheme theme)
@@ -362,6 +493,15 @@ public sealed class TerminalView : ContentView
         {
             _controller.Options = options;
         }
+    }
+
+    private void SetShowRenderingDebugOverlay(bool value)
+    {
+        if (_backend is not null)
+        {
+            _backend.ShowRenderingDebugOverlay = value;
+        }
+        InvalidatePresentation();
     }
 
     private void OnControllerInvalidated(object? sender, EventArgs args) => SchedulePrepareFrame();
@@ -442,7 +582,7 @@ public sealed class TerminalView : ContentView
             }
             if (!ReferenceEquals(previousFrame, frame) && !frame.Damage.IsEmpty)
             {
-                Dispatch(_canvasView.InvalidateSurface);
+                Dispatch(InvalidatePresentation);
             }
         }
         catch (OperationCanceledException)
@@ -484,6 +624,15 @@ public sealed class TerminalView : ContentView
         if (previousScrollMaximum != ScrollMaximum) OnPropertyChanged(nameof(ScrollMaximum));
         if (previousColumns != Columns) OnPropertyChanged(nameof(Columns));
         if (previousRows != Rows) OnPropertyChanged(nameof(Rows));
+    }
+
+    private void InvalidatePresentation()
+    {
+        if (!_gpuFailed)
+        {
+            _gpuView.InvalidateSurface();
+        }
+        _canvasView.InvalidateSurface();
     }
 
     private void OnStartInteraction(PointF position)

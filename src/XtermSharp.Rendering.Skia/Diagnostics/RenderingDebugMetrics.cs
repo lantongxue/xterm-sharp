@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace XtermSharp.Avalonia.Diagnostics;
+namespace XtermSharp.Rendering.Skia.Diagnostics;
 
 internal sealed class RenderingDebugMetrics
 {

@@ -37,8 +37,9 @@ ConEmu progress tracking and policy-controlled OSC 52 clipboard access.
   read/write protocol with explicit permissions, payload limits and a platform-neutral provider.
 - Backend-neutral terminal display lists with damage tracking and immutable
   frame publication.
-- SkiaSharp/HarfBuzz rendering and Avalonia/Windows Forms/WPF/WinUI `TerminalView` controls with
-  selection, clipboard, keyboard, mouse, focus, scrolling and text-input support.
+- SkiaSharp/HarfBuzz rendering and GPU-aware Avalonia/Windows Forms/WPF/WinUI `TerminalView`
+  controls with software fallbacks plus selection, clipboard, keyboard, mouse, focus, scrolling
+  and text-input support.
 - SkiaSharp/HarfBuzz rendering in a MAUI `TerminalView` with touch selection, link activation,
   soft-keyboard input, clipboard, focus and scrolling support.
 
@@ -136,8 +137,8 @@ await terminal.WriteAsync("\x1b[32mhello from MAUI Skia\x1b[0m\r\n");
 ```
 
 The MAUI control reuses `XtermSharp.Rendering.Skia` for font measurement, HarfBuzz shaping and
-retained row pictures, then presents them through `SKCanvasView`. `UseXtermSharpMaui()` registers
-the required SkiaSharp MAUI handler. The view handles device-pixel scaling, resize, soft-keyboard
+retained row pictures, then presents them through GPU-backed `SKGLView` with `SKCanvasView`
+fallback. `UseXtermSharpMaui()` registers the required SkiaSharp MAUI handler. The view handles device-pixel scaling, resize, soft-keyboard
 input, touch selection, mouse-protocol forwarding, link activation and clipboard operations while
 leaving terminal and transport ownership with the application.
 
@@ -159,7 +160,8 @@ await terminal.WriteAsync("\x1b[32mhello from WinForms\x1b[0m\r\n");
 ```
 
 The control uses the same retained Skia rows and worker-side frame preparation as the Avalonia
-adapter, then presents them through a DPI-aware software surface. It supports committed text/IME
+adapter. Set `EnableGpuRendering = true` to present through the modern OpenTK GPU surface; when it
+is disabled or unavailable, the control uses its DPI-aware software surface. It supports committed text/IME
 input, browser-compatible key coordinates, enhanced keyboard releases/repeats, terminal mouse
 protocols, local selection, clipboard shortcuts and cancellable link interaction. The control never
 owns or disposes its assigned `Terminal`.
@@ -183,9 +185,10 @@ terminal.Data += (_, e) => pty.Write(e.Data);
 await terminal.WriteAsync("\x1b[32mhello from WPF\x1b[0m\r\n");
 ```
 
-The WPF adapter replays retained Skia rows into a DPI-aware `WriteableBitmap`. It supports the same
-selection, clipboard, committed text/IME, browser-compatible key, enhanced-keyboard, mouse and link
-interaction paths as the other desktop controls, and never owns or disposes the assigned terminal.
+The WPF adapter replays retained Skia rows through an OpenTK/WPF GPU surface and falls back to a
+DPI-aware `WriteableBitmap` when the context is unavailable. It supports the same selection,
+clipboard, committed text/IME, browser-compatible key, enhanced-keyboard, mouse and link interaction
+paths as the other desktop controls, and never owns or disposes the assigned terminal.
 
 ### WinUI control
 
@@ -205,8 +208,9 @@ terminal.Data += (_, e) => pty.Write(e.Data);
 await terminal.WriteAsync("\x1b[32mhello from WinUI\x1b[0m\r\n");
 ```
 
-The WinUI adapter prepares retained Skia rows off the UI thread, rasterizes them into a
-DPI-scaled `WriteableBitmap`, and uses `CoreTextEditContext` for committed text and IME preedit.
+The WinUI adapter prepares retained Skia rows off the UI thread and presents them through the
+ANGLE-backed `SKSwapChainPanel`, with a DPI-scaled `WriteableBitmap` fallback. It uses
+`CoreTextEditContext` for committed text and IME preedit.
 It supports selection, clipboard, browser-compatible key events, terminal mouse protocols and
 cancellable link interaction without owning or disposing the assigned terminal.
 
@@ -308,8 +312,13 @@ their UI thread.
 Clipboard reads can expose host secrets to remote applications, so write-only access is recommended
 unless query support is explicitly required. See [the addon and security guide](docs/clipboard-addon.md).
 
-Set `ShowRenderingDebugOverlay` to display the active GPU/software renderer, rolling FPS and
-average/maximum/minimum frame intervals.
+Every Avalonia, MAUI, Windows Forms, WPF and WinUI `TerminalView` exposes
+`ShowRenderingDebugOverlay` plus active GPU/software render status. Set the overlay to display the
+active renderer, rolling FPS and average/maximum/minimum frame intervals through the shared Skia
+backend. WinForms GPU presentation is enabled explicitly with `EnableGpuRendering = true`; the
+other adapters automatically use their platform GPU surface when available and retain the software
+fallback.
+All included demos enable the overlay by default.
 See the [rendering debug overlay change log](docs/rendering-debug-overlay-2026-07-17.md) for sampling
 semantics, SSH demo integration and verification details.
 
