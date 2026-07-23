@@ -16,6 +16,7 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
     private readonly Entry _portText;
     private readonly Entry _usernameText;
     private readonly Picker _authenticationPicker;
+    private readonly Picker _renderingModePicker;
     private readonly Entry _passwordText;
     private readonly Entry _privateKeyText;
     private readonly Button _browsePrivateKeyButton;
@@ -61,6 +62,12 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         {
             ItemsSource = new[] { PasswordAuthentication, PrivateKeyAuthentication },
             SelectedIndex = string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SSH_PRIVATE_KEY")) ? 0 : 1
+        };
+        _renderingModePicker = new Picker
+        {
+            ItemsSource = Enum.GetValues<SkiaRenderModePreference>(),
+            SelectedItem = SkiaRenderModePreference.Auto,
+            Title = "Rendering mode"
         };
         _passwordText = EntryValue(Environment.GetEnvironmentVariable("SSH_PASSWORD") ?? string.Empty);
         _passwordText.IsPassword = true;
@@ -146,6 +153,13 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         Content = root;
 
         _authenticationPicker.SelectedIndexChanged += (_, _) => UpdateAuthenticationControls();
+        _renderingModePicker.SelectedIndexChanged += (_, _) =>
+        {
+            if (_renderingModePicker.SelectedItem is SkiaRenderModePreference mode)
+            {
+                _terminalView.RequestedRenderMode = mode;
+            }
+        };
         _browsePrivateKeyButton.Clicked += async (_, _) => await BrowsePrivateKeyAsync();
         _connectButton.Clicked += async (_, _) => await ToggleConnectionAsync();
         _settingsButton.Clicked += (_, _) =>
@@ -189,6 +203,7 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         fields.Add(CreateField("Port", _portText, 90));
         fields.Add(CreateField("Username", _usernameText, 180));
         fields.Add(CreateField("Authentication", _authenticationPicker, 160));
+        fields.Add(CreateField("Rendering", _renderingModePicker, 150));
         fields.Add(CreateField("Password", _passwordText, 210));
         fields.Add(CreateField("Private key", _privateKeyText, 330));
         fields.Add(CreateField(string.Empty, _browsePrivateKeyButton, 100));

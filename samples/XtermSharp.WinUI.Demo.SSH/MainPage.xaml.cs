@@ -30,6 +30,8 @@ public sealed partial class MainPage : Page
         });
         TerminalView.Terminal = _terminal;
         _terminal.TitleChanged += OnTerminalTitleChanged;
+        RenderingModeComboBox.ItemsSource = Enum.GetValues<SkiaRenderModePreference>();
+        RenderingModeComboBox.SelectedItem = SkiaRenderModePreference.Auto;
 
         HostTextBox.Text = GetEnvironmentValue("SSH_HOST", "localhost");
         PortNumberBox.Value = GetEnvironmentPort();
@@ -245,6 +247,16 @@ public sealed partial class MainPage : Page
         _ = sender;
         _ = args;
         UpdateAuthenticationPanels();
+    }
+
+    private void RenderingModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs args)
+    {
+        _ = sender;
+        _ = args;
+        if (RenderingModeComboBox.SelectedItem is SkiaRenderModePreference mode)
+        {
+            TerminalView.RequestedRenderMode = mode;
+        }
     }
 
     private void UpdateAuthenticationPanels()

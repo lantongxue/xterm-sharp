@@ -11,6 +11,7 @@ internal sealed class SshDemoForm : Form
     private readonly TextBox _portText;
     private readonly TextBox _usernameText;
     private readonly ComboBox _authenticationCombo;
+    private readonly ComboBox _renderingModeCombo;
     private readonly TextBox _passwordText;
     private readonly TextBox _privateKeyText;
     private readonly Button _browsePrivateKeyButton;
@@ -52,7 +53,7 @@ internal sealed class SshDemoForm : Form
             Terminal = _terminal,
             AccessibleName = "SSH terminal session",
             ShowRenderingDebugOverlay = true,
-            EnableGpuRendering = true
+            RequestedRenderMode = SkiaRenderModePreference.Gpu
         };
 
         _hostText = CreateTextBox(GetEnvironmentValue("SSH_HOST", "localhost"));
@@ -66,6 +67,16 @@ internal sealed class SshDemoForm : Form
         _authenticationCombo.Items.AddRange([PasswordAuthentication, PrivateKeyAuthentication]);
         _authenticationCombo.SelectedIndex = string.IsNullOrWhiteSpace(
             Environment.GetEnvironmentVariable("SSH_PRIVATE_KEY")) ? 0 : 1;
+        _renderingModeCombo = new ComboBox
+        {
+            DropDownStyle = ComboBoxStyle.DropDownList,
+            IntegralHeight = true
+        };
+        foreach (SkiaRenderModePreference mode in Enum.GetValues<SkiaRenderModePreference>())
+        {
+            _renderingModeCombo.Items.Add(mode);
+        }
+        _renderingModeCombo.SelectedItem = SkiaRenderModePreference.Gpu;
         _passwordText = CreateTextBox(Environment.GetEnvironmentVariable("SSH_PASSWORD") ?? string.Empty);
         _passwordText.UseSystemPasswordChar = true;
         _privateKeyText = CreateTextBox(Environment.GetEnvironmentVariable("SSH_PRIVATE_KEY") ?? string.Empty);
@@ -120,6 +131,13 @@ internal sealed class SshDemoForm : Form
         Controls.Add(CreateLayout());
         _errors.ContainerControl = this;
         _authenticationCombo.SelectedIndexChanged += (_, _) => UpdateAuthenticationControls();
+        _renderingModeCombo.SelectedIndexChanged += (_, _) =>
+        {
+            if (_renderingModeCombo.SelectedItem is SkiaRenderModePreference mode)
+            {
+                _terminalView.RequestedRenderMode = mode;
+            }
+        };
         _browsePrivateKeyButton.Click += (_, _) => BrowsePrivateKey();
         _connectButton.Click += async (_, _) => await ToggleConnectionAsync();
         _terminal.TitleChanged += OnTerminalTitleChanged;
@@ -172,6 +190,7 @@ internal sealed class SshDemoForm : Form
         rows.Controls.Add(CreateField("Port", _portText, 72));
         rows.Controls.Add(CreateField("Username", _usernameText, 160));
         rows.Controls.Add(CreateField("Authentication", _authenticationCombo, 140));
+        rows.Controls.Add(CreateField("Rendering", _renderingModeCombo, 130));
         rows.Controls.Add(CreateField("Terminal type", _terminalTypeText, 150));
         rows.Controls.Add(CreateField("Password", _passwordText, 190));
 

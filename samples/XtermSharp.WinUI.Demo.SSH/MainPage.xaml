@@ -82,6 +82,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBox x:Name="HostTextBox"
@@ -197,6 +198,13 @@
                                   Content="Trust any key"
                                   ToolTipService.ToolTip="Unsafe. Use only with disposable local test servers." />
                     </Grid>
+                    <ComboBox x:Name="RenderingModeComboBox"
+                              Grid.Row="5"
+                              Grid.Column="0"
+                              Grid.ColumnSpan="4"
+                              AutomationProperties.Name="Rendering mode"
+                              Header="Rendering mode"
+                              SelectionChanged="RenderingModeComboBox_SelectionChanged" />
                 </Grid>
             </ScrollViewer>
         </Expander>

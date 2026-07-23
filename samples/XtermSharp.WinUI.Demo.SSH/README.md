@@ -14,6 +14,9 @@ The responsive connection form supports password and private-key authentication,
 private keys, a configurable remote terminal type, remote window-size updates and SHA-256 host-key
 verification.
 
+Use the **Rendering mode** selector in the connection panel to switch live between `Auto`, `Software`
+and `Gpu`; the terminal remains connected while the requested surface changes.
+
 On a first connection, leave the trusted-host-key field empty and keep **Skip verification**
 disabled. The attempt stops before authentication and fills in the fingerprint reported by the
 server. Verify it through a trusted channel, then connect again. Skipping verification is intended

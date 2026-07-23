@@ -12,6 +12,10 @@ configurable remote terminal type, remote window-size updates and SHA-256 host-k
 It enables the Unicode 15 grapheme provider so modern emoji and joined emoji sequences use their
 correct terminal-cell width.
 
+Use the **Rendering** selector in the connection panel to switch live between `Auto`, `Software` and
+`Gpu`. This demo starts at `Gpu` to preserve its existing GPU-enabled behavior, and the debug overlay
+shows the actual mode after fallback.
+
 On a first connection, leave the host-key field empty and keep **Skip host key verification**
 disabled. The attempt stops before authentication and fills in the fingerprint reported by the
 server. Verify it through a trusted channel, then connect again. Skipping verification is intended

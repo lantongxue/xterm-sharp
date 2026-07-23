@@ -19,11 +19,17 @@ public sealed class TerminalViewTests
         Assert.False(TerminalView.HasNonEmptySelection(null));
         Assert.True(TerminalView.HasNonEmptySelection(new TerminalSelection(1, 1, 2, 1)));
         Assert.False(view.ShowRenderingDebugOverlay);
+        Assert.Equal(SkiaRenderModePreference.Software, view.RequestedRenderMode);
         Assert.Equal(SkiaRenderMode.Unknown, view.ActiveRenderMode);
         Assert.False(view.IsGpuAccelerated);
         Assert.False(view.EnableGpuRendering);
         view.EnableGpuRendering = true;
         Assert.True(view.EnableGpuRendering);
+        Assert.Equal(SkiaRenderModePreference.Gpu, view.RequestedRenderMode);
+        view.RequestedRenderMode = SkiaRenderModePreference.Auto;
+        Assert.False(view.EnableGpuRendering);
+        view.EnableGpuRendering = false;
+        Assert.Equal(SkiaRenderModePreference.Software, view.RequestedRenderMode);
         view.ShowRenderingDebugOverlay = true;
         Assert.True(view.ShowRenderingDebugOverlay);
     }

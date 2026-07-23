@@ -69,7 +69,8 @@
   and batched text/background display-list runs.
 - `XtermSharp.Rendering.Skia` provides SkiaSharp 3.119.4 and HarfBuzz shaping,
   font fallback, cached fonts/paints, worker-prepared retained row pictures and the shared
-  rendering telemetry overlay used by every platform adapter.
+  rendering telemetry overlay and `Auto`/`Software`/`Gpu` request model used by every platform
+  adapter.
 - `XtermSharp.Avalonia` provides an externally bound `TerminalView` with DPI-aware
   resizing, worker-side frame preparation, change-only binding notifications, keyboard/mouse
   protocols, local selection, clipboard, focus, IME preedit and registered-link interaction.
@@ -86,6 +87,9 @@
 - `XtermSharp.WinUI` provides a dependency-property-based, DPI-aware `SKSwapChainPanel`/bitmap
   `TerminalView` with worker-side frame preparation, CoreText IME input, browser-compatible key coordinates,
   terminal mouse protocols, local selection, clipboard and registered-link interaction.
+- Every UI adapter supports live `RequestedRenderMode` changes without replacing the assigned
+  terminal and reports the actual most recently presented mode separately through
+  `ActiveRenderMode` and `IsGpuAccelerated`.
 - The Avalonia, Windows Forms, WPF and WinUI SSH samples integrate SSH.NET without changing the
   transport-neutral library boundary and demonstrate password/private-key authentication,
   SHA-256 host-key verification and remote PTY resize updates.

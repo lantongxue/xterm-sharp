@@ -61,15 +61,19 @@ GPU selection belongs to the Avalonia application host. Desktop applications usi
 Direct3D, Vulkan or OpenGL where supported. `TerminalView.ActiveRenderMode` reports `Unknown`,
 `Software` or `Gpu` for the most recently presented frame, and `TerminalView.IsGpuAccelerated`
 provides a bindable boolean convenience property. Both reset when the control detaches or changes
-terminal sessions.
+terminal sessions. Setting `RequestedRenderMode` to `Software` rasterizes the retained display list
+into a CPU-backed Skia surface before compositing it through the current Avalonia lease. `Gpu`
+requests direct replay but falls back to software when the host does not supply a `GRContext`.
 
 The MAUI adapter presents through `SKGLView` and replays the retained pictures on the platform GPU
 surface. It keeps the existing `SKCanvasView` as a software fallback and switches to it when the
-GPU handler or frame callback reports an error.
+GPU handler or frame callback reports an error. Runtime mode changes swap the visible surface while
+keeping the previous software frame visible until the first requested GPU frame succeeds.
 
 The Windows Forms adapter can present through a modern OpenTK `GLControl` when
-`EnableGpuRendering` is enabled. This opt-in avoids blocking hosts that cannot create a GLFW
-context during control construction. The normal path wraps the current framebuffer in an Skia
+`RequestedRenderMode` is `Gpu` or `Auto`. The default remains `Software`, and the compatibility
+property `EnableGpuRendering` maps `true` to `Gpu` and `false` to `Software`. This opt-in avoids
+blocking hosts that cannot create a GLFW context during control construction. The normal path wraps the current framebuffer in an Skia
 `GRBackendRenderTarget`; a 32-bit premultiplied WinForms bitmap remains the fallback.
 
 The WPF adapter uses `OpenTK.GLWpfControl` as a child visual and wraps its current framebuffer in
@@ -80,8 +84,14 @@ aligned with the controller's logical viewport.
 The WinUI adapter uses SkiaSharp's `SKSwapChainPanel` (ANGLE-backed) and keeps the existing
 DPI-scaled premultiplied BGRA `WriteableBitmap` path as a fallback. `XamlRoot.RasterizationScale`
 keeps logical pointer coordinates, terminal padding and physical pixels aligned across monitor
-changes. All four adapters report the mode of the most recently presented frame through
+changes. All five adapters report the mode of the most recently presented frame through
 `ActiveRenderMode` and `IsGpuAccelerated`.
+
+All five adapters expose the same `SkiaRenderModePreference` through `RequestedRenderMode`.
+`Auto` and `Gpu` attempt the platform GPU surface and preserve software fallback, while `Software`
+immediately disables or hides the GPU surface and redraws the current retained frame on the CPU.
+Switching back to `Auto` or `Gpu` clears a previous GPU-failure latch and retries without replacing
+the assigned `Terminal` or rebuilding its parser/buffer state.
 
 Every platform `TerminalView.ShowRenderingDebugOverlay` enables a top-right Skia overlay with the
 active GPU/software renderer, rolling presentation FPS and average, maximum and minimum frame

@@ -11,6 +11,9 @@ The connection form supports password and private-key authentication, encrypted 
 configurable remote terminal type, remote window-size updates and SHA-256 host-key verification.
 It enables the Unicode 15 grapheme provider so modern emoji use their correct terminal cell width.
 
+Use the **Rendering mode** selector in the connection panel to switch live between `Auto`, `Software`
+and `Gpu`; the debug overlay shows the actual mode after fallback.
+
 On a first connection, leave the host-key field empty and keep **Skip verification** disabled. The
 attempt stops before authentication and fills in the fingerprint reported by the server. Verify it
 through a trusted channel, then connect again. Skipping verification is intended only for

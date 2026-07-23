@@ -24,7 +24,7 @@ public sealed class TerminalView : Control
     private TerminalTheme _terminalTheme = TerminalTheme.Default;
     private TerminalRenderOptions _renderOptions = new();
     private bool _showRenderingDebugOverlay;
-    private bool _enableGpuRendering;
+    private SkiaRenderModePreference _requestedRenderMode = SkiaRenderModePreference.Software;
     private bool _gpuFailed;
     private TerminalLink? _hoveredLink;
     private TerminalLink? _pressedLink;
@@ -150,29 +150,46 @@ public sealed class TerminalView : Control
         }
     }
 
+    /// <summary>Gets or sets the preferred CPU/GPU presentation path.</summary>
+    [DefaultValue(SkiaRenderModePreference.Software)]
+    public SkiaRenderModePreference RequestedRenderMode
+    {
+        get => _requestedRenderMode;
+        set
+        {
+            if (!Enum.IsDefined(value))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value));
+            }
+            if (_requestedRenderMode == value)
+            {
+                return;
+            }
+            _requestedRenderMode = value;
+            if (value == SkiaRenderModePreference.Software)
+            {
+                DisableGpuRendering();
+            }
+            else
+            {
+                _gpuFailed = false;
+                if (IsHandleCreated)
+                {
+                    BeginInvoke(TryEnableGpuRendering);
+                }
+            }
+            Invalidate();
+        }
+    }
+
     /// <summary>Gets or sets whether this control should create an OpenTK GPU surface.</summary>
     [DefaultValue(false)]
     public bool EnableGpuRendering
     {
-        get => _enableGpuRendering;
-        set
-        {
-            if (_enableGpuRendering == value)
-            {
-                return;
-            }
-            _enableGpuRendering = value;
-            if (!value)
-            {
-                DisableGpuRendering();
-            }
-            else if (IsHandleCreated)
-            {
-                _gpuFailed = false;
-                BeginInvoke(TryEnableGpuRendering);
-            }
-            Invalidate();
-        }
+        get => RequestedRenderMode == SkiaRenderModePreference.Gpu;
+        set => RequestedRenderMode = value
+            ? SkiaRenderModePreference.Gpu
+            : SkiaRenderModePreference.Software;
     }
 
     /// <summary>Gets how the most recently presented frame was rendered.</summary>
@@ -605,7 +622,8 @@ public sealed class TerminalView : Control
 
     private void TryEnableGpuRendering()
     {
-        if (_gpuControl is not null || _gpuFailed || IsDisposed || Disposing)
+        if (_gpuControl is not null || _gpuFailed || IsDisposed || Disposing ||
+            RequestedRenderMode == SkiaRenderModePreference.Software)
         {
             return;
         }
@@ -627,6 +645,10 @@ public sealed class TerminalView : Control
 
     private void OnGpuPaintSurface(SKCanvas canvas)
     {
+        if (RequestedRenderMode == SkiaRenderModePreference.Software)
+        {
+            return;
+        }
         TerminalRenderFrame? frame = _frame;
         SkiaTerminalRenderBackend? backend = _backend;
         if (frame is null || backend is null)
@@ -945,7 +967,8 @@ public sealed class TerminalView : Control
                 _lastRows = rows;
                 await terminal.ResizeAsync(columns, rows, cancellation.Token);
             }
-            if (EnableGpuRendering && !_gpuFailed && _gpuControl is null && IsHandleCreated)
+            if (RequestedRenderMode != SkiaRenderModePreference.Software &&
+                !_gpuFailed && _gpuControl is null && IsHandleCreated)
             {
                 BeginInvoke(TryEnableGpuRendering);
             }

@@ -28,6 +28,7 @@ internal sealed class DemoWindow : Window
     private readonly SemaphoreSlim _echoGate = new(1, 1);
     private readonly TerminalView _terminalView;
     private readonly TextBox _searchBox;
+    private readonly ComboBox _renderingModeCombo;
     private readonly CheckBox _caseSensitive;
     private readonly CheckBox _wholeWord;
     private readonly CheckBox _regex;
@@ -54,6 +55,19 @@ internal sealed class DemoWindow : Window
         {
             MinWidth = 240,
             PlaceholderText = "Search terminal buffer"
+        };
+        _renderingModeCombo = new ComboBox
+        {
+            ItemsSource = Enum.GetValues<SkiaRenderModePreference>(),
+            SelectedItem = SkiaRenderModePreference.Auto,
+            MinWidth = 110
+        };
+        _renderingModeCombo.SelectionChanged += (_, _) =>
+        {
+            if (_renderingModeCombo.SelectedItem is SkiaRenderModePreference mode)
+            {
+                _terminalView.RequestedRenderMode = mode;
+            }
         };
         _caseSensitive = new CheckBox { Content = "Case" };
         _wholeWord = new CheckBox { Content = "Whole word" };
@@ -89,6 +103,12 @@ internal sealed class DemoWindow : Window
                     VerticalAlignment = VerticalAlignment.Center
                 },
                 _searchBox,
+                new TextBlock
+                {
+                    Text = "Rendering",
+                    VerticalAlignment = VerticalAlignment.Center
+                },
+                _renderingModeCombo,
                 _caseSensitive,
                 _wholeWord,
                 _regex,

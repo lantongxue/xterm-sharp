@@ -24,6 +24,7 @@
     <Using Include="XtermSharp.Snapshots" />
     <Using Include="XtermSharp.Rendering.Configuration" />
     <Using Include="XtermSharp.Rendering.Geometry" />
+    <Using Include="XtermSharp.Rendering.Skia.Backends" />
     <Using Include="XtermSharp.Rendering.Selection" />
     <Using Include="XtermSharp.Avalonia.Controls" />
     <Using Include="XtermSharp.Avalonia.Clipboard" />

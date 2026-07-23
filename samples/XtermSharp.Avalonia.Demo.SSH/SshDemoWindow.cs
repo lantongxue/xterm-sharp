@@ -27,6 +27,7 @@ internal sealed class SshDemoWindow : Window
     private readonly TextBox _hostKeyFingerprintText;
     private readonly CheckBox _acceptAnyHostKeyCheck;
     private readonly CheckBox _showRenderingDebugCheck;
+    private readonly ComboBox _renderingModeCombo;
     private readonly Button _connectButton;
     private readonly TextBlock _statusText;
     private readonly List<Control> _configurationControls;
@@ -106,6 +107,12 @@ internal sealed class SshDemoWindow : Window
             IsChecked = showRenderingDebug,
             VerticalAlignment = VerticalAlignment.Center
         };
+        _renderingModeCombo = new ComboBox
+        {
+            ItemsSource = Enum.GetValues<SkiaRenderModePreference>(),
+            SelectedItem = SkiaRenderModePreference.Auto,
+            MinWidth = 130
+        };
         _connectButton = new Button
         {
             Content = "Connect",
@@ -154,6 +161,13 @@ internal sealed class SshDemoWindow : Window
                 _terminalView.ShowRenderingDebugOverlay = _showRenderingDebugCheck.IsChecked == true;
             }
         };
+        _renderingModeCombo.SelectionChanged += (_, _) =>
+        {
+            if (_renderingModeCombo.SelectedItem is SkiaRenderModePreference mode)
+            {
+                _terminalView.RequestedRenderMode = mode;
+            }
+        };
         _terminal.TitleChanged += OnTerminalTitleChanged;
         Opened += (_, _) => _terminalView.Focus();
         Closed += async (_, _) => await CloseAsync();
@@ -168,6 +182,7 @@ internal sealed class SshDemoWindow : Window
         primaryFields.Children.Add(CreateField("Username", _usernameText, 180));
         primaryFields.Children.Add(CreateField("Authentication", _authenticationCombo, 160));
         primaryFields.Children.Add(CreateField("Terminal type", _terminalTypeText, 180));
+        primaryFields.Children.Add(CreateField("Rendering", _renderingModeCombo, 130));
 
         var keyPicker = new Grid
         {

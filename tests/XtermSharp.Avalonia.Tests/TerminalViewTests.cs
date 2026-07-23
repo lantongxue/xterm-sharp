@@ -63,6 +63,7 @@ public sealed class TerminalViewTests
         backendState.Changed += (_, mode) => modeChanges.Add(mode);
 
         Assert.False(view.ShowRenderingDebugOverlay);
+        Assert.Equal(SkiaRenderModePreference.Auto, view.RequestedRenderMode);
         Assert.Equal(TerminalRenderMode.Unknown, view.ActiveRenderMode);
         Assert.False(view.IsGpuAccelerated);
         Assert.Equal(TerminalRenderMode.Unknown, backendState.ActiveMode);
@@ -73,9 +74,14 @@ public sealed class TerminalViewTests
         Assert.Equal([TerminalRenderMode.Software, TerminalRenderMode.Gpu], modeChanges);
         Assert.Throws<ArgumentOutOfRangeException>(() => backendState.Record(TerminalRenderMode.Unknown));
         view.ShowRenderingDebugOverlay = true;
+        view.RequestedRenderMode = SkiaRenderModePreference.Software;
 
         Assert.True(view.ShowRenderingDebugOverlay);
+        Assert.Equal(SkiaRenderModePreference.Software, view.RequestedRenderMode);
         Assert.True((bool)view.GetValue(TerminalView.ShowRenderingDebugOverlayProperty)!);
+        Assert.Equal(
+            SkiaRenderModePreference.Software,
+            (SkiaRenderModePreference)view.GetValue(TerminalView.RequestedRenderModeProperty)!);
     }
 
     [Fact]

@@ -43,6 +43,10 @@ The form can be prefilled with these environment variables:
 The **Show rendering debug overlay** checkbox remains available while connected, so telemetry can be
 toggled while running an interactive shell or a full-screen application.
 
+Use the **Rendering** selector in the connection panel to switch live between `Auto`, `Software`
+and `Gpu`. The selector remains available while connected, and the overlay reports the actual mode
+after any GPU fallback.
+
 The demo does not persist connection values or credentials. Terminal input,
 remote output and resize notifications are bridged only while the SSH session
 is connected.

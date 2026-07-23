@@ -12,11 +12,17 @@ public sealed class TerminalViewTests
 
         Assert.False(terminal.IsDisposed);
         Assert.False(view.ShowRenderingDebugOverlay);
+        Assert.Equal(SkiaRenderModePreference.Auto, view.RequestedRenderMode);
         Assert.Equal(SkiaRenderMode.Unknown, view.ActiveRenderMode);
         Assert.False(view.IsGpuAccelerated);
         view.ShowRenderingDebugOverlay = true;
+        view.RequestedRenderMode = SkiaRenderModePreference.Software;
         Assert.True(view.ShowRenderingDebugOverlay);
+        Assert.Equal(SkiaRenderModePreference.Software, view.RequestedRenderMode);
         Assert.True((bool)view.GetValue(TerminalView.ShowRenderingDebugOverlayProperty));
+        Assert.Equal(
+            SkiaRenderModePreference.Software,
+            (SkiaRenderModePreference)view.GetValue(TerminalView.RequestedRenderModeProperty));
     }
 
     [Fact]

@@ -134,6 +134,10 @@
                                   Content="Skip verification"
                                   AutomationProperties.HelpText="Unsafe. Use only with disposable local test servers." />
                     </Grid>
+                    <Label Target="{Binding ElementName=RenderingModeComboBox}" Content="Rendering mode" />
+                    <ComboBox x:Name="RenderingModeComboBox"
+                              AutomationProperties.Name="Rendering mode"
+                              SelectionChanged="RenderingModeComboBox_SelectionChanged" />
                 </StackPanel>
             </Grid>
         </Border>

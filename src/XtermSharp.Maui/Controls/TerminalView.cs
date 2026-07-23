@@ -45,6 +45,14 @@ public sealed class TerminalView : ContentView
         propertyChanged: static (bindable, _, newValue) =>
             ((TerminalView)bindable).SetShowRenderingDebugOverlay((bool)newValue));
 
+    public static readonly BindableProperty RequestedRenderModeProperty = BindableProperty.Create(
+        nameof(RequestedRenderMode),
+        typeof(SkiaRenderModePreference),
+        typeof(TerminalView),
+        SkiaRenderModePreference.Auto,
+        propertyChanged: static (bindable, _, newValue) =>
+            ((TerminalView)bindable).SetRequestedRenderMode((SkiaRenderModePreference)newValue));
+
     private static readonly BindablePropertyKey ActiveRenderModePropertyKey = BindableProperty.CreateReadOnly(
         nameof(ActiveRenderMode),
         typeof(SkiaRenderMode),
@@ -160,6 +168,13 @@ public sealed class TerminalView : ContentView
         set => SetValue(ShowRenderingDebugOverlayProperty, value);
     }
 
+    /// <summary>Gets or sets the preferred CPU/GPU presentation path.</summary>
+    public SkiaRenderModePreference RequestedRenderMode
+    {
+        get => (SkiaRenderModePreference)GetValue(RequestedRenderModeProperty);
+        set => SetValue(RequestedRenderModeProperty, value);
+    }
+
     /// <summary>Gets how the most recently presented frame was rendered.</summary>
     public SkiaRenderMode ActiveRenderMode => (SkiaRenderMode)GetValue(ActiveRenderModeProperty);
 
@@ -207,7 +222,7 @@ public sealed class TerminalView : ContentView
     private void OnGpuPaintSurface(object? sender, SKPaintGLSurfaceEventArgs args)
     {
         _ = sender;
-        if (_gpuFailed)
+        if (_gpuFailed || RequestedRenderMode == SkiaRenderModePreference.Software)
         {
             return;
         }
@@ -273,6 +288,31 @@ public sealed class TerminalView : ContentView
         _gpuView.IsVisible = false;
         _canvasView.IsVisible = true;
         _canvasView.InvalidateSurface();
+    }
+
+    private void SetRequestedRenderMode(SkiaRenderModePreference mode)
+    {
+        if (!Enum.IsDefined(mode))
+        {
+            throw new ArgumentOutOfRangeException(nameof(mode));
+        }
+
+        if (mode == SkiaRenderModePreference.Software)
+        {
+            _gpuView.Opacity = 0;
+            _gpuView.IsVisible = false;
+            _canvasView.IsVisible = true;
+            SetActiveRenderMode(SkiaRenderMode.Unknown);
+            _canvasView.InvalidateSurface();
+            return;
+        }
+
+        _gpuFailed = false;
+        _gpuView.Opacity = 0;
+        _gpuView.IsVisible = true;
+        _canvasView.IsVisible = true;
+        _canvasView.InvalidateSurface();
+        _gpuView.InvalidateSurface();
     }
 
     private void SetActiveRenderMode(SkiaRenderMode mode)
@@ -388,7 +428,7 @@ public sealed class TerminalView : ContentView
         }
         _attached = true;
         _gpuFailed = false;
-        _gpuView.IsVisible = true;
+        _gpuView.IsVisible = RequestedRenderMode != SkiaRenderModePreference.Software;
         _gpuView.Opacity = 0;
         _canvasView.IsVisible = true;
         AttachTerminal(Terminal);
@@ -470,8 +510,9 @@ public sealed class TerminalView : ContentView
         SetActiveRenderMode(SkiaRenderMode.Unknown);
         _canvasView.IsVisible = true;
         _gpuView.Opacity = 0;
+        _gpuView.IsVisible = RequestedRenderMode != SkiaRenderModePreference.Software;
         _canvasView.InvalidateSurface();
-        if (!_gpuFailed)
+        if (!_gpuFailed && RequestedRenderMode != SkiaRenderModePreference.Software)
         {
             _gpuView.InvalidateSurface();
         }
@@ -628,7 +669,7 @@ public sealed class TerminalView : ContentView
 
     private void InvalidatePresentation()
     {
-        if (!_gpuFailed)
+        if (!_gpuFailed && RequestedRenderMode != SkiaRenderModePreference.Software)
         {
             _gpuView.InvalidateSurface();
         }

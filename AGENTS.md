@@ -183,12 +183,17 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
 - `XtermSharp.Avalonia` must replay retained pictures through Avalonia's current
   `ISkiaSharpApiLeaseFeature`; do not create or select a separate graphics context in the control.
   The application host owns GPU API selection, `GRContext` presence determines the reported render
-  mode, and unavailable GPU state falls back to the same software Skia display-list path.
+  mode, and unavailable GPU state falls back to the same software Skia display-list path. A forced
+  software request may rasterize to a CPU-backed surface before compositing through the lease, but
+  must not create a second graphics context.
 - Avalonia `TerminalView.ActiveRenderMode` and `IsGpuAccelerated` describe the most recently
   presented frame, not a requested capability. Keep their notifications on the UI thread and reset
   them to `Unknown` when the control detaches or changes terminal sessions.
 - Every platform adapter reports the actual most recently presented `SkiaRenderMode` and resets it
-  to `Unknown` on detach. `XtermSharp.Maui` reuses `SkiaTerminalRenderBackend` through `SKGLView`
+  to `Unknown` on detach. `RequestedRenderMode` is a preference, not a capability report: live
+  changes must preserve the current terminal/frame, GPU failure must retain software fallback, and
+  switching back to `Auto` or `Gpu` must permit a fresh GPU attempt. `XtermSharp.Maui` reuses
+  `SkiaTerminalRenderBackend` through `SKGLView`
   with `SKCanvasView` fallback; preserve logical-to-surface pixel scaling, register the handler
   through `UseXtermSharpMaui()` and keep touch hit testing in MAUI logical coordinates.
 - Skia font-family lists must skip unavailable candidates before selecting the primary grid font.

@@ -19,6 +19,9 @@ configurable terminal type, SHA-256 host-key verification and a test-only verifi
 On a first connection, leave the fingerprint empty. The connection stops before authentication and
 fills in the server fingerprint; verify it through a trusted channel, then connect again.
 
+Use the **Rendering** selector in the settings panel to switch live between `Auto`, `Software` and
+`Gpu`; the terminal keeps the current session while the requested surface changes.
+
 The same environment variables supported by the Avalonia SSH demo can prefill the form:
 
 | Variable | Meaning |

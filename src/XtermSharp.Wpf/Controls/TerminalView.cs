@@ -40,6 +40,12 @@ public sealed partial class TerminalView : Control, IDisposable
         typeof(TerminalView),
         new FrameworkPropertyMetadata(false, OnShowRenderingDebugOverlayPropertyChanged));
 
+    public static readonly DependencyProperty RequestedRenderModeProperty = DependencyProperty.Register(
+        nameof(RequestedRenderMode),
+        typeof(SkiaRenderModePreference),
+        typeof(TerminalView),
+        new FrameworkPropertyMetadata(SkiaRenderModePreference.Auto, OnRequestedRenderModePropertyChanged));
+
     private static readonly DependencyPropertyKey ActiveRenderModePropertyKey =
         DependencyProperty.RegisterReadOnly(
             nameof(ActiveRenderMode),
@@ -119,6 +125,7 @@ public sealed partial class TerminalView : Control, IDisposable
     private bool _linkCursorApplied;
     private bool _attached;
     private bool _disposed;
+    private bool _gpuFailed;
     private TerminalPoint _selectionAnchor;
     private SkiaRenderMode _activeRenderMode = SkiaRenderMode.Unknown;
 
@@ -153,7 +160,6 @@ public sealed partial class TerminalView : Control, IDisposable
             Interval = TimeSpan.FromMilliseconds(500)
         };
         _blinkTimer.Tick += OnBlinkTick;
-        TryEnableGpuRendering();
     }
 
     /// <summary>Gets or sets the externally owned terminal displayed by this control.</summary>
@@ -182,6 +188,13 @@ public sealed partial class TerminalView : Control, IDisposable
     {
         get => (bool)GetValue(ShowRenderingDebugOverlayProperty);
         set => SetValue(ShowRenderingDebugOverlayProperty, value);
+    }
+
+    /// <summary>Gets or sets the preferred CPU/GPU presentation path.</summary>
+    public SkiaRenderModePreference RequestedRenderMode
+    {
+        get => (SkiaRenderModePreference)GetValue(RequestedRenderModeProperty);
+        set => SetValue(RequestedRenderModeProperty, value);
     }
 
     /// <summary>Gets how the most recently presented frame was rendered.</summary>
@@ -352,7 +365,8 @@ public sealed partial class TerminalView : Control, IDisposable
 
     private void TryEnableGpuRendering()
     {
-        if (_gpuElement is not null || _disposed)
+        if (_gpuElement is not null || _gpuFailed || _disposed || !_attached ||
+            RequestedRenderMode == SkiaRenderModePreference.Software)
         {
             return;
         }
@@ -375,6 +389,10 @@ public sealed partial class TerminalView : Control, IDisposable
 
     private void OnGpuPaintSurface(SKCanvas canvas)
     {
+        if (RequestedRenderMode == SkiaRenderModePreference.Software)
+        {
+            return;
+        }
         TerminalRenderFrame? frame = _frame;
         SkiaTerminalRenderBackend? backend = _backend;
         if (frame is null || backend is null)
@@ -415,6 +433,7 @@ public sealed partial class TerminalView : Control, IDisposable
         }
         if (exception is not null)
         {
+            _gpuFailed = true;
             Terminal?.Options.Logger?.Log(
                 TerminalLogLevel.Warning,
                 "GPU presentation failed; falling back to the software Skia surface.",
@@ -554,6 +573,28 @@ public sealed partial class TerminalView : Control, IDisposable
         view.InvalidatePresentation();
     }
 
+    private static void OnRequestedRenderModePropertyChanged(
+        DependencyObject sender,
+        DependencyPropertyChangedEventArgs args)
+    {
+        var view = (TerminalView)sender;
+        var mode = (SkiaRenderModePreference)args.NewValue;
+        if (!Enum.IsDefined(mode))
+        {
+            throw new ArgumentOutOfRangeException(nameof(args));
+        }
+        if (mode == SkiaRenderModePreference.Software)
+        {
+            view.DisableGpuRendering();
+        }
+        else
+        {
+            view._gpuFailed = false;
+            view.TryEnableGpuRendering();
+            view.InvalidatePresentation();
+        }
+    }
+
     private static void OnPaddingPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
     {
         _ = args;
@@ -569,6 +610,7 @@ public sealed partial class TerminalView : Control, IDisposable
             return;
         }
         _attached = true;
+        _gpuFailed = false;
         TryEnableGpuRendering();
         AttachTerminal(Terminal);
         _blinkTimer.Start();

@@ -111,7 +111,8 @@ The control subscribes to the terminal but never disposes it. Applications
 continue to own PTY/session wiring and the terminal lifetime. It automatically renders retained
 Skia pictures on Avalonia's GPU-backed surface when one is available and falls back to software
 Skia otherwise. `ActiveRenderMode` and `IsGpuAccelerated` expose the mode used by the most recently
-presented frame; GPU API selection remains an Avalonia application-host responsibility.
+presented frame. `RequestedRenderMode` can switch live between `Auto`, `Software` and `Gpu`; a GPU
+request still depends on the Avalonia application host supplying a GPU-backed Skia lease.
 
 ### .NET MAUI control
 
@@ -140,7 +141,8 @@ The MAUI control reuses `XtermSharp.Rendering.Skia` for font measurement, HarfBu
 retained row pictures, then presents them through GPU-backed `SKGLView` with `SKCanvasView`
 fallback. `UseXtermSharpMaui()` registers the required SkiaSharp MAUI handler. The view handles device-pixel scaling, resize, soft-keyboard
 input, touch selection, mouse-protocol forwarding, link activation and clipboard operations while
-leaving terminal and transport ownership with the application.
+leaving terminal and transport ownership with the application. Changing `RequestedRenderMode`
+switches between the `SKGLView` and `SKCanvasView` without recreating the terminal session.
 
 ### Windows Forms control
 
@@ -160,8 +162,9 @@ await terminal.WriteAsync("\x1b[32mhello from WinForms\x1b[0m\r\n");
 ```
 
 The control uses the same retained Skia rows and worker-side frame preparation as the Avalonia
-adapter. Set `EnableGpuRendering = true` to present through the modern OpenTK GPU surface; when it
-is disabled or unavailable, the control uses its DPI-aware software surface. It supports committed text/IME
+adapter. Set `RequestedRenderMode` to `Gpu` to present through the modern OpenTK GPU surface, or use
+the compatibility alias `EnableGpuRendering = true`; when it is disabled or unavailable, the
+control uses its DPI-aware software surface. It supports committed text/IME
 input, browser-compatible key coordinates, enhanced keyboard releases/repeats, terminal mouse
 protocols, local selection, clipboard shortcuts and cancellable link interaction. The control never
 owns or disposes its assigned `Terminal`.
@@ -188,7 +191,8 @@ await terminal.WriteAsync("\x1b[32mhello from WPF\x1b[0m\r\n");
 The WPF adapter replays retained Skia rows through an OpenTK/WPF GPU surface and falls back to a
 DPI-aware `WriteableBitmap` when the context is unavailable. It supports the same selection,
 clipboard, committed text/IME, browser-compatible key, enhanced-keyboard, mouse and link interaction
-paths as the other desktop controls, and never owns or disposes the assigned terminal.
+paths as the other desktop controls, supports live `RequestedRenderMode` changes, and never owns or
+disposes the assigned terminal.
 
 ### WinUI control
 
@@ -212,7 +216,8 @@ The WinUI adapter prepares retained Skia rows off the UI thread and presents the
 ANGLE-backed `SKSwapChainPanel`, with a DPI-scaled `WriteableBitmap` fallback. It uses
 `CoreTextEditContext` for committed text and IME preedit.
 It supports selection, clipboard, browser-compatible key events, terminal mouse protocols and
-cancellable link interaction without owning or disposing the assigned terminal.
+cancellable link interaction without owning or disposing the assigned terminal. Changing
+`RequestedRenderMode` swaps the swap-chain and bitmap presentation paths at runtime.
 
 ### OSC 8 hyperlinks
 
@@ -315,10 +320,15 @@ unless query support is explicitly required. See [the addon and security guide](
 Every Avalonia, MAUI, Windows Forms, WPF and WinUI `TerminalView` exposes
 `ShowRenderingDebugOverlay` plus active GPU/software render status. Set the overlay to display the
 active renderer, rolling FPS and average/maximum/minimum frame intervals through the shared Skia
-backend. WinForms GPU presentation is enabled explicitly with `EnableGpuRendering = true`; the
-other adapters automatically use their platform GPU surface when available and retain the software
-fallback.
-All included demos enable the overlay by default.
+backend. Each control also exposes `RequestedRenderMode`: `Auto` selects the available platform
+surface, `Software` forces CPU rasterization and `Gpu` requests GPU presentation with software
+fallback. `ActiveRenderMode` remains the actual mode used by the most recently presented frame.
+WinForms defaults to `Software` for compatibility with hosts that cannot create an OpenGL context;
+the other adapters default to `Auto`.
+All included demos enable the overlay by default and expose a `Rendering`/`Rendering mode`
+selector with the same three values. Changing it updates the active terminal surface immediately;
+the overlay reports the actual mode after GPU fallback. The WinForms SSH demo starts at `Gpu` to
+preserve its existing GPU-enabled behavior, while the other demos start at `Auto`.
 See the [rendering debug overlay change log](docs/rendering-debug-overlay-2026-07-17.md) for sampling
 semantics, SSH demo integration and verification details.
 

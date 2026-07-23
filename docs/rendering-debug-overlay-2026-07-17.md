@@ -15,8 +15,9 @@ It reports four rolling values:
 - `MAX`: maximum frame interval in milliseconds;
 - `MIN`: minimum frame interval in milliseconds.
 
-The feature is also exposed in the SSH demo through a live checkbox and an environment-variable
-default.
+The feature is also exposed in the demos through a live checkbox (where applicable) and an
+environment-variable default. Every demo additionally exposes a live `Auto`/`Software`/`Gpu`
+rendering-mode selector.
 
 ## Public API
 
@@ -72,6 +73,10 @@ backend. MAUI uses `SKGLView`, WinUI uses ANGLE-backed `SKSwapChainPanel`, WPF u
 Each retains the existing software path as a fallback and reports `Unknown` until a frame has
 actually been presented.
 
+Every adapter also exposes `RequestedRenderMode` with `Auto`, `Software` and `Gpu` values. Mode
+changes redraw the current retained frame immediately; the overlay continues to report the actual
+surface through `ActiveRenderMode`, including software fallback after an unsuccessful GPU request.
+
 The panel uses:
 
 - an eight-pixel top/right margin;
@@ -85,9 +90,11 @@ enabled so its row-damage optimization cannot leave stale panel pixels.
 
 ## SSH demo integration
 
-The SSH demo connection panel includes a **Show rendering debug overlay** checkbox. It remains
-enabled while an SSH session is connected, allowing live comparison of normal shell output and
-full-screen applications such as `btop` without reconnecting.
+The SSH demo connection panel includes a **Show rendering debug overlay** checkbox and a
+**Rendering mode** selector. Both remain available while an SSH session is connected, allowing
+live comparison of normal shell output and full-screen applications such as `btop` without
+reconnecting. The selector changes `RequestedRenderMode` immediately; `ActiveRenderMode` in the
+overlay confirms whether the platform honored the GPU request or fell back to software.
 
 The overlay is enabled by default in every demo. The Avalonia SSH demo checkbox can be initialized
 as disabled with:

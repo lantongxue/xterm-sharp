@@ -34,6 +34,11 @@ public sealed class TerminalView : TemplatedControl
     public static readonly StyledProperty<bool> ShowRenderingDebugOverlayProperty =
         AvaloniaProperty.Register<TerminalView, bool>(nameof(ShowRenderingDebugOverlay));
 
+    public static readonly StyledProperty<SkiaRenderModePreference> RequestedRenderModeProperty =
+        AvaloniaProperty.Register<TerminalView, SkiaRenderModePreference>(
+            nameof(RequestedRenderMode),
+            SkiaRenderModePreference.Auto);
+
     public static readonly DirectProperty<TerminalView, int> ScrollValueProperty =
         AvaloniaProperty.RegisterDirect<TerminalView, int>(nameof(ScrollValue), view => view.ScrollValue);
 
@@ -127,6 +132,13 @@ public sealed class TerminalView : TemplatedControl
         set => SetValue(ShowRenderingDebugOverlayProperty, value);
     }
 
+    /// <summary>Gets or sets the preferred CPU/GPU presentation path.</summary>
+    public SkiaRenderModePreference RequestedRenderMode
+    {
+        get => GetValue(RequestedRenderModeProperty);
+        set => SetValue(RequestedRenderModeProperty, value);
+    }
+
     public TerminalSelection? Selection => _controller?.Selection;
     public bool HasSelection => HasNonEmptySelection(Selection);
     public int ScrollValue => _frame?.ViewportY ?? 0;
@@ -156,7 +168,8 @@ public sealed class TerminalView : TemplatedControl
                 _backend,
                 _frame,
                 _renderingBackendState,
-                ShowRenderingDebugOverlay));
+                ShowRenderingDebugOverlay,
+                RequestedRenderMode));
         }
     }
 
@@ -271,8 +284,14 @@ public sealed class TerminalView : TemplatedControl
         {
             _controller.Options = change.GetNewValue<TerminalRenderOptions>();
         }
-        else if (change.Property == ShowRenderingDebugOverlayProperty)
+        else if (change.Property == ShowRenderingDebugOverlayProperty ||
+                 change.Property == RequestedRenderModeProperty)
         {
+            if (change.Property == RequestedRenderModeProperty &&
+                !Enum.IsDefined(change.GetNewValue<SkiaRenderModePreference>()))
+            {
+                throw new ArgumentOutOfRangeException(nameof(change));
+            }
             InvalidateVisual();
         }
     }

@@ -43,6 +43,12 @@ public sealed partial class TerminalView : Control, IDisposable
         typeof(TerminalView),
         new PropertyMetadata(false, OnShowRenderingDebugOverlayPropertyChanged));
 
+    public static readonly DependencyProperty RequestedRenderModeProperty = DependencyProperty.Register(
+        nameof(RequestedRenderMode),
+        typeof(SkiaRenderModePreference),
+        typeof(TerminalView),
+        new PropertyMetadata(SkiaRenderModePreference.Auto, OnRequestedRenderModePropertyChanged));
+
     public static readonly DependencyProperty ActiveRenderModeProperty = DependencyProperty.Register(
         nameof(ActiveRenderMode),
         typeof(SkiaRenderMode),
@@ -173,6 +179,13 @@ public sealed partial class TerminalView : Control, IDisposable
         set => SetValue(ShowRenderingDebugOverlayProperty, value);
     }
 
+    /// <summary>Gets or sets the preferred CPU/GPU presentation path.</summary>
+    public SkiaRenderModePreference RequestedRenderMode
+    {
+        get => (SkiaRenderModePreference)GetValue(RequestedRenderModeProperty);
+        set => SetValue(RequestedRenderModeProperty, value);
+    }
+
     /// <summary>Gets how the most recently presented frame was rendered.</summary>
     public SkiaRenderMode ActiveRenderMode => (SkiaRenderMode)GetValue(ActiveRenderModeProperty);
 
@@ -276,7 +289,9 @@ public sealed partial class TerminalView : Control, IDisposable
             _gpuPanel.EnableRenderLoop = false;
             _gpuPanel.PaintSurface += OnGpuPaintSurface;
             _gpuPanel.Opacity = 0;
-            _gpuPanel.Visibility = _gpuFailed ? Visibility.Collapsed : Visibility.Visible;
+            _gpuPanel.Visibility = _gpuFailed || RequestedRenderMode == SkiaRenderModePreference.Software
+                ? Visibility.Collapsed
+                : Visibility.Visible;
         }
         if (_image is not null && _bitmap is not null)
         {
@@ -375,6 +390,46 @@ public sealed partial class TerminalView : Control, IDisposable
         view.RenderCurrentFrame();
     }
 
+    private static void OnRequestedRenderModePropertyChanged(
+        DependencyObject sender,
+        DependencyPropertyChangedEventArgs args)
+    {
+        var view = (TerminalView)sender;
+        var mode = (SkiaRenderModePreference)args.NewValue;
+        if (!Enum.IsDefined(mode))
+        {
+            throw new ArgumentOutOfRangeException(nameof(args));
+        }
+
+        view._presentedFrame = null;
+        if (mode == SkiaRenderModePreference.Software)
+        {
+            if (view._gpuPanel is not null)
+            {
+                view._gpuPanel.Opacity = 0;
+                view._gpuPanel.Visibility = Visibility.Collapsed;
+            }
+            if (view._image is not null)
+            {
+                view._image.Visibility = Visibility.Visible;
+            }
+        }
+        else
+        {
+            view._gpuFailed = false;
+            if (view._gpuPanel is not null)
+            {
+                view._gpuPanel.Opacity = 0;
+                view._gpuPanel.Visibility = Visibility.Visible;
+            }
+            if (view._image is not null)
+            {
+                view._image.Visibility = Visibility.Visible;
+            }
+        }
+        view.RenderCurrentFrame();
+    }
+
     private void OnLoaded(object sender, RoutedEventArgs args)
     {
         _ = sender;
@@ -387,7 +442,9 @@ public sealed partial class TerminalView : Control, IDisposable
         _gpuFailed = false;
         if (_gpuPanel is not null)
         {
-            _gpuPanel.Visibility = Visibility.Visible;
+            _gpuPanel.Visibility = RequestedRenderMode == SkiaRenderModePreference.Software
+                ? Visibility.Collapsed
+                : Visibility.Visible;
             _gpuPanel.Opacity = 0;
         }
         if (_image is not null)
@@ -612,7 +669,8 @@ public sealed partial class TerminalView : Control, IDisposable
 
     private void RenderCurrentFrame()
     {
-        if (!_gpuFailed && _gpuPanel is not null)
+        if (!_gpuFailed && _gpuPanel is not null &&
+            RequestedRenderMode != SkiaRenderModePreference.Software)
         {
             if (ActiveRenderMode != SkiaRenderMode.Gpu)
             {
@@ -695,7 +753,9 @@ public sealed partial class TerminalView : Control, IDisposable
         _ = sender;
         TerminalRenderFrame? frame = _frame;
         SkiaTerminalRenderBackend? backend = _backend;
-        if (_disposed || _gpuFailed || frame is null || backend is null)
+        if (_disposed || _gpuFailed ||
+            RequestedRenderMode == SkiaRenderModePreference.Software ||
+            frame is null || backend is null)
         {
             return;
         }

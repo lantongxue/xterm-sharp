@@ -15,9 +15,11 @@ public sealed class TerminalViewTests
         Assert.NotNull(type.GetProperty(nameof(TerminalView.TerminalTheme))?.SetMethod);
         Assert.NotNull(type.GetProperty(nameof(TerminalView.RenderOptions))?.SetMethod);
         Assert.NotNull(type.GetProperty(nameof(TerminalView.ShowRenderingDebugOverlay))?.SetMethod);
+        Assert.NotNull(type.GetProperty(nameof(TerminalView.RequestedRenderMode))?.SetMethod);
         Assert.NotNull(type.GetProperty(nameof(TerminalView.ActiveRenderMode)));
         Assert.NotNull(type.GetProperty(nameof(TerminalView.IsGpuAccelerated)));
         Assert.NotNull(TerminalView.ShowRenderingDebugOverlayProperty);
+        Assert.NotNull(TerminalView.RequestedRenderModeProperty);
         Assert.Null(type.GetProperty(nameof(TerminalView.Columns))?.SetMethod);
         Assert.Null(type.GetProperty(nameof(TerminalView.Rows))?.SetMethod);
         Assert.NotNull(type.GetMethod(nameof(TerminalView.CopySelectionAsync)));
