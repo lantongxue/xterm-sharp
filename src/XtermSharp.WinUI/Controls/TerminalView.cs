@@ -342,7 +342,7 @@ public sealed partial class TerminalView : Control, IDisposable
     {
         _ = sender;
         _ = args;
-        DisposeBitmaps();
+        _prepareCancellation?.Cancel();
         SchedulePrepareFrame();
     }
 
@@ -350,7 +350,7 @@ public sealed partial class TerminalView : Control, IDisposable
     {
         _ = sender;
         _ = args;
-        DisposeBitmaps();
+        _prepareCancellation?.Cancel();
         SchedulePrepareFrame();
     }
 
@@ -460,26 +460,20 @@ public sealed partial class TerminalView : Control, IDisposable
         _prepareCancellation = cancellation;
         try
         {
-            Thickness padding = Padding;
-            double scale = Math.Max(0.01, XamlRoot?.RasterizationScale ?? 1);
-            var viewport = new TerminalViewport(
-                ActualWidth,
-                ActualHeight,
-                scale,
-                new TerminalThickness(padding.Left, padding.Top, padding.Right, padding.Bottom));
+            TerminalViewport viewport = GetCurrentViewport();
             TerminalRenderFrame frame = await Task.Run(
                 async () => await controller.PrepareFrameAsync(viewport, cancellation.Token).ConfigureAwait(false),
                 cancellation.Token);
-            if (!ReferenceEquals(controller, _controller))
+            if (!ReferenceEquals(controller, _controller) || viewport != GetCurrentViewport())
             {
                 return;
             }
             TerminalRenderFrame? previousFrame = _frame;
             PublishFrame(frame);
             int columns = Math.Max(2, (int)Math.Floor(
-                (ActualWidth - padding.Left - padding.Right) / frame.Metrics.CellWidth));
+                (viewport.Width - viewport.Padding.Left - viewport.Padding.Right) / frame.Metrics.CellWidth));
             int rows = Math.Max(1, (int)Math.Floor(
-                (ActualHeight - padding.Top - padding.Bottom) / frame.Metrics.CellHeight));
+                (viewport.Height - viewport.Padding.Top - viewport.Padding.Bottom) / frame.Metrics.CellHeight));
             if (columns != _lastColumns || rows != _lastRows)
             {
                 _lastColumns = columns;
@@ -585,6 +579,16 @@ public sealed partial class TerminalView : Control, IDisposable
         }
     }
 
+    private TerminalViewport GetCurrentViewport()
+    {
+        Thickness padding = Padding;
+        return new TerminalViewport(
+            ActualWidth,
+            ActualHeight,
+            Math.Max(0.01, XamlRoot?.RasterizationScale ?? 1),
+            new TerminalThickness(padding.Left, padding.Top, padding.Right, padding.Bottom));
+    }
+
     private bool EnsureBitmaps()
     {
         double scale = Math.Max(0.01, XamlRoot?.RasterizationScale ?? 1);
@@ -595,17 +599,18 @@ public sealed partial class TerminalView : Control, IDisposable
         {
             return false;
         }
-        DisposeBitmaps();
-        _bitmap = new WriteableBitmap(width, height);
-        _skiaBitmap = new SKBitmap(new SKImageInfo(
+
+        var bitmap = new WriteableBitmap(width, height);
+        var skiaBitmap = new SKBitmap(new SKImageInfo(
             width,
             height,
             SKColorType.Bgra8888,
             SKAlphaType.Premul));
-        if (_image is not null)
-        {
-            _image.Source = _bitmap;
-        }
+        SKBitmap? previousSkiaBitmap = _skiaBitmap;
+        _bitmap = bitmap;
+        _skiaBitmap = skiaBitmap;
+        _presentedFrame = null;
+        previousSkiaBitmap?.Dispose();
         return true;
     }
 
