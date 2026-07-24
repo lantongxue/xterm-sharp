@@ -34,10 +34,10 @@ internal sealed class BufferService : IDisposable
         int previousBase = buffer.YBase;
         int previousDisplay = buffer.YDisp;
         bool full = buffer.LineCount >= buffer.MaximumLineCount;
-        bool wholeViewport = buffer.ScrollTop == 0 && buffer.ScrollBottom == Rows - 1;
+        bool scrollsIntoScrollback = buffer.ScrollTop == 0;
 
-        buffer.ScrollUp(1, eraseStyle);
-        if (wholeViewport)
+        buffer.Scroll(1, eraseStyle);
+        if (scrollsIntoScrollback)
         {
             if (IsUserScrolling)
             {

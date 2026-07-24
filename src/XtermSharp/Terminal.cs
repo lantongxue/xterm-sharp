@@ -361,6 +361,13 @@ public sealed class Terminal : IDisposable, IAsyncDisposable
     public ValueTask ScrollLinesAsync(int amount, CancellationToken cancellationToken = default) =>
         EnqueueMutationAsync(engine => { engine.ScrollLines(amount); return ValueTask.CompletedTask; }, false, 0, cancellationToken);
 
+    /// <summary>
+    /// Handles wheel input by scrolling the active buffer, or by sending an arrow key when the
+    /// active buffer has no scrollback, as is typical for full-screen terminal applications.
+    /// </summary>
+    public ValueTask ScrollWheelAsync(int amount, CancellationToken cancellationToken = default) =>
+        EnqueueMutationAsync(engine => { engine.ScrollWheel(amount); return ValueTask.CompletedTask; }, false, 0, cancellationToken);
+
     public ValueTask ScrollPagesAsync(int pageCount, CancellationToken cancellationToken = default) =>
         ScrollLinesAsync(pageCount * Rows, cancellationToken);
 

@@ -1008,6 +1008,24 @@ internal sealed class TerminalEngine : IDisposable
         MarkDirty(0, Rows - 1);
     }
 
+    public void ScrollWheel(int amount)
+    {
+        if (amount == 0)
+        {
+            return;
+        }
+        // xterm.js bases this decision on whether the active buffer supports scrollback, not on
+        // whether it has accumulated any rows yet. A normal buffer at startup can have YBase == 0
+        // while still owning scrollback, and wheel input must remain local viewport scrolling.
+        if (_active.Kind == TerminalBufferKind.Alternate || _active.MaximumLineCount <= Rows)
+        {
+            string sequence = $"\x1b{(_modes.ApplicationCursorKeys ? 'O' : '[')}{(amount < 0 ? 'A' : 'B')}";
+            SendInput(sequence, wasUserInput: true);
+            return;
+        }
+        ScrollLines(amount);
+    }
+
     public void ScrollTo(int line)
     {
         _active.ScrollTo(line);
@@ -1188,12 +1206,11 @@ internal sealed class TerminalEngine : IDisposable
 
     private void LineFeed(bool carriageReturn)
     {
-        int previousBase = _active.YBase;
         int previousRow = _active.CursorY;
         bool scrolled = _active.CursorY == _active.ScrollBottom;
         if (scrolled)
         {
-            _active.ScrollUp(1, EraseStyle);
+            _active.Scroll(1, EraseStyle);
         }
         else
         {
@@ -1206,11 +1223,11 @@ internal sealed class TerminalEngine : IDisposable
         _active.WrapPending = false;
         _lastPrintedRune = null;
         _lastPrintedGrapheme = null;
-        _events.Add(new EngineEvent(EngineEventKind.LineFeed));
-        if (_active.YBase != previousBase)
+        if (scrolled)
         {
             ScrollChanged();
         }
+        _events.Add(new EngineEvent(EngineEventKind.LineFeed));
         if (scrolled)
         {
             MarkDirty(_active.ScrollTop, _active.ScrollBottom);
@@ -1497,7 +1514,7 @@ internal sealed class TerminalEngine : IDisposable
                     }
                     for (int row = 0; row <= lastContentRow; row++)
                     {
-                        _active.ScrollUp(1, EraseStyle);
+                        _active.Scroll(1, EraseStyle);
                     }
                     ScrollChanged();
                 }

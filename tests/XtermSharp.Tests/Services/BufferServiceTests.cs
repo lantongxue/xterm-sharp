@@ -87,6 +87,25 @@ public sealed class BufferServiceTests
         Assert.Equal("D", GetRow(buffer, 2));
         Assert.Equal(string.Empty, GetRow(buffer, 3));
         Assert.Equal("E", GetRow(buffer, 4));
+
+        buffer.Reset(CellStyle.Default);
+        MarkRow(buffer, 0, 'A');
+        MarkRow(buffer, 1, 'B');
+        MarkRow(buffer, 2, 'C');
+        MarkRow(buffer, 3, 'D');
+        MarkRow(buffer, 4, 'E');
+        buffer.ScrollTop = 0;
+        buffer.ScrollBottom = 3;
+
+        service.Scroll(CellStyle.Default);
+
+        Assert.Equal(1, buffer.YBase);
+        Assert.Equal("A", buffer.GetLine(0).TranslateToString(true));
+        Assert.Equal("B", GetRow(buffer, 0));
+        Assert.Equal("C", GetRow(buffer, 1));
+        Assert.Equal("D", GetRow(buffer, 2));
+        Assert.Equal(string.Empty, GetRow(buffer, 3));
+        Assert.Equal("E", GetRow(buffer, 4));
     }
 
     [UpstreamFact("XTJS-1244", "BufferService scrollLines should move ydisp and set isUserScrolling when scrolling up")]

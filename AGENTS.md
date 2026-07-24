@@ -36,10 +36,10 @@ Last fully verified on 2026-07-24. Update this section whenever the pinned basel
 | Upstream escape-sequence fixtures | 76/76 matching |
 | Complex reflow differential scenarios | 14/14 matching |
 | Marker and metadata differential scenarios | 7/7 matching |
-| Main xUnit suite | 1,462/1,462 passing |
+| Main xUnit suite | 1,464/1,464 passing |
 | Reference infrastructure suite | 1/1 passing |
 | Rendering suites | 46/46 passing |
-| .NET MAUI suite | 25/25 passing |
+| .NET MAUI suite | 24/24 passing |
 | Web links addon suite | 12/12 passing |
 | Search addon suite | 14/14 passing |
 | Progress addon suite | 12/12 passing |
@@ -49,8 +49,8 @@ Last fully verified on 2026-07-24. Update this section whenever the pinned basel
 131,072-code-point array chunks; XtermSharp streams each `Rune` without an intermediate parse
 array and tests the equivalent bounded, ordered behavior.
 
-The 1,462 main tests consist of 1,307 upstream bindings, 76 escape fixtures, two manifest audit
-tests and 77 local production-parser, Unicode, resize/reflow, option-plumbing, marker/link-lifetime,
+The 1,464 main tests consist of 1,307 upstream bindings, 76 escape fixtures, two manifest audit
+tests and 79 local production-parser, Unicode, resize/reflow, option-plumbing, marker/link-lifetime,
 public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
 1,307 unique bindings and must remain free of duplicate or missing IDs.
 
@@ -311,8 +311,8 @@ node tools/compare-marker-scenarios.mjs
 node tools/compare-fixtures.mjs
 ```
 
-Expected final signals are zero build warnings/errors, 1,462 main tests passing, 46 rendering
-tests passing, 25 MAUI tests passing, 12 web-links addon tests passing, 14 search addon tests
+Expected final signals are zero build warnings/errors, 1,464 main tests passing, 46 rendering
+tests passing, 24 MAUI tests passing, 12 web-links addon tests passing, 14 search addon tests
 passing, 12 progress addon tests passing, 19 clipboard addon tests passing, one reference test
 passing, 1,307 verified
 bindings, `MATCH`, `MATCH 14/14 complex reflow scenarios`, `MATCH 7/7 marker and metadata

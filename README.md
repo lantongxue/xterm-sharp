@@ -397,12 +397,12 @@ architecture-equivalent streaming test.
 
 The current verification results are:
 
-- 1,462/1,462 main xUnit tests passing, including all 1,307 upstream bindings,
-  all 76 escape-sequence fixtures, two manifest audits and 77 local parser, Unicode,
+- 1,464/1,464 main xUnit tests passing, including all 1,307 upstream bindings,
+  all 76 escape-sequence fixtures, two manifest audits and 79 local parser, Unicode,
   resize/reflow, option-plumbing, marker/link-lifetime, public OSC 8 and safety regressions.
 - Forty-six rendering tests passing across the backend-neutral, Skia, Avalonia, Windows Forms,
   WPF and WinUI suites.
-- Twenty-five .NET MAUI Skia-integration, input, clipboard and ownership tests passing.
+- Twenty-four .NET MAUI Skia-integration, input, clipboard and ownership tests passing.
 - Twelve `addon-web-links` compatibility and integration tests passing.
 - Fourteen `addon-search` compatibility, regression and rendering-integration tests passing.
 - Twelve `addon-progress` compatibility, programmatic-state and lifecycle tests passing.

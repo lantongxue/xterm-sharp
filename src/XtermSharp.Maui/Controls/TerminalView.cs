@@ -422,7 +422,7 @@ public sealed class TerminalView : ContentView
         int lines = MauiTerminalInput.GetWheelLines(delta);
         return lines == 0
             ? ValueTask.CompletedTask
-            : ScrollLinesAsync(delta > 0 ? -lines : lines, cancellationToken);
+            : Terminal?.ScrollWheelAsync(delta > 0 ? -lines : lines, cancellationToken) ?? ValueTask.CompletedTask;
     }
 
     public ValueTask SendKeyAsync(TerminalKeyEvent key, CancellationToken cancellationToken = default) =>

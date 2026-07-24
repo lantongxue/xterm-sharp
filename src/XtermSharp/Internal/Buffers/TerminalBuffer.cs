@@ -193,6 +193,49 @@ internal sealed class TerminalBuffer : IDisposable
         }
     }
 
+    /// <summary>
+    /// Scrolls output through the active region using xterm.js BufferService semantics.
+    /// When the region starts at the top of the screen, the line leaving the region is kept
+    /// in scrollback and the new line is inserted after the region so rows below it remain fixed.
+    /// </summary>
+    public void Scroll(int count, CellStyle eraseStyle)
+    {
+        for (int n = 0; n < count; n++)
+        {
+            if (ScrollTop == 0)
+            {
+                bool wasAtBottom = YDisp == YBase;
+                int insertionIndex = YBase + ScrollBottom + 1;
+                BufferLine newLine = new(_columns, eraseStyle, stringCache: _stringCache);
+                if (insertionIndex == _lines.Count)
+                {
+                    _lines.Add(newLine);
+                }
+                else
+                {
+                    _lines.Insert(insertionIndex, newLine);
+                    InsertMarkers(insertionIndex, 1);
+                }
+
+                YBase++;
+                if (wasAtBottom)
+                {
+                    YDisp = YBase;
+                }
+                TrimScrollback();
+            }
+            else
+            {
+                int start = YBase + ScrollTop;
+                int end = YBase + ScrollBottom;
+                _lines.RemoveAt(start);
+                DeleteMarkers(start, 1);
+                _lines.Insert(end, new BufferLine(_columns, eraseStyle, stringCache: _stringCache));
+                InsertMarkers(end, 1);
+            }
+        }
+    }
+
     public void ScrollDown(int count, CellStyle eraseStyle)
     {
         for (int n = 0; n < count; n++)

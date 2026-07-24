@@ -547,7 +547,7 @@ public sealed class TerminalView : TemplatedControl
         else
         {
             int lines = Math.Max(1, (int)Math.Round(Math.Abs(e.Delta.Y) * 3));
-            SendWithoutThrow(terminal.ScrollLinesAsync(e.Delta.Y > 0 ? -lines : lines));
+            SendWithoutThrow(terminal.ScrollWheelAsync(e.Delta.Y > 0 ? -lines : lines));
         }
         e.Handled = true;
     }

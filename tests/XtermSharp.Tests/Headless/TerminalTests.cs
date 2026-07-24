@@ -394,6 +394,88 @@ public sealed class TerminalTests
         Assert.Equal(5, terminal.Buffer.Active.BaseY);
     }
 
+    [Fact]
+    public async Task ScrollWheel_ScrollsHistoryOrSendsArrowKeysWhenScrollbackIsUnavailable()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        await using var terminal = CreateTerminal(columns: 5, rows: 2);
+        var data = new List<string>();
+        terminal.Data += (_, args) => data.Add(args.Data);
+
+        await terminal.ScrollWheelAsync(-3, cancellationToken);
+
+        Assert.Empty(data);
+        Assert.Equal(0, terminal.Buffer.Active.ViewportY);
+        data.Clear();
+        await terminal.WriteAsync("0\r\n1\r\n2", cancellationToken);
+
+        await terminal.ScrollWheelAsync(-3, cancellationToken);
+
+        Assert.Equal(0, terminal.Buffer.Active.ViewportY);
+        Assert.Empty(data);
+
+        await terminal.WriteAsync("\x1b[?1049h", cancellationToken);
+        await terminal.ScrollWheelAsync(-3, cancellationToken);
+        await terminal.WriteAsync("\x1b[?1h", cancellationToken);
+        await terminal.ScrollWheelAsync(3, cancellationToken);
+
+        Assert.Equal(["\x1b[A", "\x1bOB"], data);
+
+        await using var noScrollback = new Terminal(new TerminalOptions
+        {
+            Columns = 5,
+            Rows = 2,
+            Scrollback = 0
+        });
+        var noScrollbackData = new List<string>();
+        noScrollback.Data += (_, args) => noScrollbackData.Add(args.Data);
+
+        await noScrollback.ScrollWheelAsync(-1, cancellationToken);
+        await noScrollback.ScrollWheelAsync(0, cancellationToken);
+
+        Assert.Equal(["\x1b[A"], noScrollbackData);
+    }
+
+    [Fact]
+    public async Task OutputScrollWithTopMargin_PreservesTranscriptInScrollback()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        await using var terminal = new Terminal(new TerminalOptions
+        {
+            Columns = 8,
+            Rows = 4,
+            Scrollback = 2,
+            AllowProposedApi = true
+        });
+        await terminal.WriteAsync("A\r\nB\r\nC\r\nD", cancellationToken);
+        TerminalMarker marker = await terminal.RegisterMarkerAsync(cancellationToken: cancellationToken);
+        var events = new List<string>();
+        terminal.Scrolled += (_, args) => events.Add($"scroll:{args.ViewportY}");
+        terminal.LineFeed += (_, _) => events.Add("lineFeed");
+
+        // Codex inserts completed transcript rows while a top-origin partial scroll region is active.
+        await terminal.WriteAsync("\x1b[1;3r\x1b[3;1H\r\nT1\r\nT2\x1b[r", cancellationToken);
+
+        TerminalSnapshot snapshot = await terminal.GetSnapshotAsync(SnapshotScope.ActiveBuffer, cancellationToken);
+        Assert.Equal(2, snapshot.ActiveBuffer.BaseY);
+        Assert.Equal(["A", "B", "C", "T1", "T2", "D"],
+            snapshot.ActiveBuffer.Lines.Select(line => line.TranslateToString(trimRight: true)).ToArray());
+        Assert.False(marker.IsDisposed);
+        Assert.Equal(5, marker.Line);
+        Assert.Equal(["scroll:1", "lineFeed", "scroll:2", "lineFeed"], events);
+
+        events.Clear();
+        await terminal.WriteAsync("\x1b[1;3r\x1b[3;1H\r\nT3\x1b[r", cancellationToken);
+
+        snapshot = await terminal.GetSnapshotAsync(SnapshotScope.ActiveBuffer, cancellationToken);
+        Assert.Equal(2, snapshot.ActiveBuffer.BaseY);
+        Assert.Equal(["B", "C", "T1", "T2", "T3", "D"],
+            snapshot.ActiveBuffer.Lines.Select(line => line.TranslateToString(trimRight: true)).ToArray());
+        Assert.False(marker.IsDisposed);
+        Assert.Equal(5, marker.Line);
+        Assert.Equal(["scroll:2", "lineFeed"], events);
+    }
+
     [UpstreamFact("XTJS-1345", "Headless API Tests buffer length")]
     public async Task Buffer_ReportsTotalLineCountIncludingScrollback()
     {

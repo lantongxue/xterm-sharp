@@ -183,7 +183,7 @@ public sealed partial class TerminalView
         else
         {
             int lines = Math.Max(1, Math.Abs(delta) * 3 / 120);
-            SendWithoutThrow(terminal.ScrollLinesAsync(delta > 0 ? -lines : lines));
+            SendWithoutThrow(terminal.ScrollWheelAsync(delta > 0 ? -lines : lines));
         }
         args.Handled = true;
     }

@@ -576,7 +576,7 @@ public sealed class TerminalView : Control
         else
         {
             int lines = Math.Max(1, Math.Abs(e.Delta) * 3 / SystemInformation.MouseWheelScrollDelta);
-            SendWithoutThrow(terminal.ScrollLinesAsync(e.Delta > 0 ? -lines : lines));
+            SendWithoutThrow(terminal.ScrollWheelAsync(e.Delta > 0 ? -lines : lines));
         }
     }
 
