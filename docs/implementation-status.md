@@ -95,7 +95,7 @@
   SHA-256 host-key verification and remote PTY resize updates.
 - The no-PTY Avalonia demo loads both optional addons and exposes interactive link activation plus
   case-sensitive, whole-word and regex search controls with previous/next result navigation.
-- The MAUI SSH demo targets Android, iOS and Mac Catalyst and compiles the same transport source as
+- The MAUI SSH demo targets Android, iOS, Mac Catalyst and Windows and compiles the same transport source as
   the Avalonia SSH demo for identical authentication, host-key verification and PTY behavior.
 
 ## Still required before 1.0

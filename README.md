@@ -139,9 +139,11 @@ await terminal.WriteAsync("\x1b[32mhello from MAUI Skia\x1b[0m\r\n");
 
 The MAUI control reuses `XtermSharp.Rendering.Skia` for font measurement, HarfBuzz shaping and
 retained row pictures, then presents them through GPU-backed `SKGLView` with `SKCanvasView`
-fallback. `UseXtermSharpMaui()` registers the required SkiaSharp MAUI handler. The view handles device-pixel scaling, resize, soft-keyboard
-input, touch selection, mouse-protocol forwarding, link activation and clipboard operations while
-leaving terminal and transport ownership with the application. Changing `RequestedRenderMode`
+fallback. `UseXtermSharpMaui()` registers the required SkiaSharp MAUI handler and supported native
+input shims, so applications do not need a separate Windows input adapter. The view handles
+device-pixel scaling, resize, committed text, soft-keyboard input, touch selection,
+mouse-protocol forwarding, link activation and clipboard operations while leaving terminal and
+transport ownership with the application. Changing `RequestedRenderMode`
 switches between the `SKGLView` and `SKCanvasView` without recreating the terminal session.
 
 ### Windows Forms control
@@ -379,7 +381,7 @@ The non-PTY `XtermSharp.Avalonia.Demo` loads both `WebLinksAddon` and `SearchAdd
 demonstrates regex, case-sensitive and whole-word buffer searches with highlighted results, while
 the terminal content includes clickable web links.
 
-`XtermSharp.Maui.Demo.SSH` provides the equivalent Android, iOS and Mac Catalyst application with
+`XtermSharp.Maui.Demo.SSH` provides the equivalent Android, iOS, Mac Catalyst and Windows application with
 SkiaSharp/HarfBuzz rendering. Its Core project compiles the same SSH transport source files used
 by the Avalonia demo, so authentication, host-key verification, PTY resize and ordered data pumps
 stay identical. See the [MAUI SSH demo README](samples/XtermSharp.Maui.Demo.SSH/README.md).
@@ -398,9 +400,9 @@ The current verification results are:
 - 1,462/1,462 main xUnit tests passing, including all 1,307 upstream bindings,
   all 76 escape-sequence fixtures, two manifest audits and 77 local parser, Unicode,
   resize/reflow, option-plumbing, marker/link-lifetime, public OSC 8 and safety regressions.
-- Forty-three rendering tests passing across the backend-neutral, Skia, Avalonia, Windows Forms,
+- Forty-six rendering tests passing across the backend-neutral, Skia, Avalonia, Windows Forms,
   WPF and WinUI suites.
-- Eight .NET MAUI Skia-integration, input, clipboard and ownership tests passing.
+- Twenty .NET MAUI Skia-integration, input, clipboard and ownership tests passing.
 - Twelve `addon-web-links` compatibility and integration tests passing.
 - Fourteen `addon-search` compatibility, regression and rendering-integration tests passing.
 - Twelve `addon-progress` compatibility, programmatic-state and lifecycle tests passing.

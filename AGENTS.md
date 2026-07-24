@@ -23,7 +23,7 @@
 
 ## Current conformance status
 
-Last fully verified on 2026-07-22. Update this section whenever the pinned baseline or counts change.
+Last fully verified on 2026-07-24. Update this section whenever the pinned baseline or counts change.
 
 | Item | Current result |
 | --- | ---: |
@@ -38,8 +38,8 @@ Last fully verified on 2026-07-22. Update this section whenever the pinned basel
 | Marker and metadata differential scenarios | 7/7 matching |
 | Main xUnit suite | 1,462/1,462 passing |
 | Reference infrastructure suite | 1/1 passing |
-| Rendering suites | 43/43 passing |
-| .NET MAUI suite | 8/8 passing |
+| Rendering suites | 46/46 passing |
+| .NET MAUI suite | 20/20 passing |
 | Web links addon suite | 12/12 passing |
 | Search addon suite | 14/14 passing |
 | Progress addon suite | 12/12 passing |
@@ -85,8 +85,8 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
   and `Input`, with GPU-aware presentation through Avalonia's current Skia lease and
   automatic software fallback.
 - `src/XtermSharp.Maui/`: interactive .NET MAUI adapter using the shared SkiaSharp/HarfBuzz backend
-  through `SKGLView` with `SKCanvasView` fallback, with soft-keyboard/touch input and system
-  clipboard integration.
+  through `SKGLView` with `SKCanvasView` fallback, with shared soft-keyboard/touch input, platform
+  keyboard/mouse shims and system clipboard integration.
 - `src/XtermSharp.WinForms/`: interactive Windows Forms adapter grouped into `Clipboard`,
   `Controls` and `Input`; `EnableGpuRendering` opts into its modern OpenTK surface with software
   fallback.
@@ -98,7 +98,7 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
   interactive web-links and search-addon demonstrations.
 - `samples/XtermSharp.Avalonia.Demo.SSH/`: real SSH PTY integration sample with configurable
   password/private-key authentication and host-key verification.
-- `samples/XtermSharp.Maui.Demo.SSH/`: Android, iOS and Mac Catalyst SSH PTY sample. Its Core
+- `samples/XtermSharp.Maui.Demo.SSH/`: Android, iOS, Mac Catalyst and Windows SSH PTY sample. Its Core
   project links the Avalonia sample's platform-neutral SSH transport source so both demos preserve
   identical authentication, host-key, PTY resize and data-pump behavior.
 - `samples/XtermSharp.WinForms.Demo.SSH/`: Windows Forms SSH PTY integration sample with the same
@@ -311,8 +311,8 @@ node tools/compare-marker-scenarios.mjs
 node tools/compare-fixtures.mjs
 ```
 
-Expected final signals are zero build warnings/errors, 1,462 main tests passing, 43 rendering
-tests passing, eight MAUI tests passing, 12 web-links addon tests passing, 14 search addon tests
+Expected final signals are zero build warnings/errors, 1,462 main tests passing, 46 rendering
+tests passing, 20 MAUI tests passing, 12 web-links addon tests passing, 14 search addon tests
 passing, 12 progress addon tests passing, 19 clipboard addon tests passing, one reference test
 passing, 1,307 verified
 bindings, `MATCH`, `MATCH 14/14 complex reflow scenarios`, `MATCH 7/7 marker and metadata

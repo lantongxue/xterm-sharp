@@ -133,7 +133,11 @@ The MAUI adapter uses the same `SkiaTerminalRenderBackend` and retained row pict
 It presents them through `SKGLView` first and `SKCanvasView` on fallback, scales logical terminal
 coordinates to the platform surface and maps Skia touch coordinates back to MAUI logical units.
 Applications call `UseXtermSharpMaui()` while building their `MauiApp` to register the SkiaSharp
-view handler.
+view handler and supported platform input shims. `TerminalView` owns the shared committed-text,
+selection, clipboard, key and wheel semantics; target-specific shims only translate native events
+into those APIs. Windows hardware keyboard and mouse-wheel routing therefore stays in the MAUI
+component instead of requiring an application-side adapter, while touch and committed-input fixes
+remain shared by Android, iOS, Mac Catalyst and Windows.
 
 ## Platform ownership
 

@@ -14,9 +14,7 @@ internal static class MauiTextInputTranslator
         {
             return MauiTextInput.None;
         }
-        string text = value.StartsWith(Sentinel, StringComparison.Ordinal)
-            ? value[Sentinel.Length..]
-            : value;
+        string text = value.Replace(Sentinel, string.Empty, StringComparison.Ordinal);
         return text.Length == 0
             ? MauiTextInput.None
             : new MauiTextInput(MauiTextInputKind.Text, text);

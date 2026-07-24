@@ -327,7 +327,7 @@ public sealed class TerminalView : ContentView
 
     private void OnTouch(object? sender, SKTouchEventArgs args)
     {
-        _ = sender;
+        VisualElement surface = sender as VisualElement ?? _canvasView;
         float scaleX = Math.Max(0.01f, Volatile.Read(ref _surfaceScaleX));
         float scaleY = Math.Max(0.01f, Volatile.Read(ref _surfaceScaleY));
         var position = new PointF(args.Location.X / scaleX, args.Location.Y / scaleY);
@@ -344,7 +344,7 @@ public sealed class TerminalView : ContentView
                 break;
             case SKTouchAction.Released when _activeTouchId == args.Id:
                 _activeTouchId = null;
-                OnEndInteraction(position, IsInsideCanvas(position));
+                OnEndInteraction(position, IsInsideSurface(position, surface));
                 args.Handled = true;
                 break;
             case SKTouchAction.Cancelled when _activeTouchId == args.Id:
@@ -355,9 +355,9 @@ public sealed class TerminalView : ContentView
         }
     }
 
-    private bool IsInsideCanvas(PointF position) =>
+    private static bool IsInsideSurface(PointF position, VisualElement surface) =>
         position.X >= 0 && position.Y >= 0 &&
-        position.X <= _canvasView.Width && position.Y <= _canvasView.Height;
+        position.X <= surface.Width && position.Y <= surface.Height;
 
     public void ClearSelection() => Terminal?.ClearSelection();
 
@@ -414,6 +414,15 @@ public sealed class TerminalView : ContentView
 
     public ValueTask ScrollLinesAsync(int lines, CancellationToken cancellationToken = default) =>
         Terminal?.ScrollLinesAsync(lines, cancellationToken) ?? ValueTask.CompletedTask;
+
+    /// <summary>Scrolls the active buffer by a platform mouse-wheel delta.</summary>
+    public ValueTask ScrollWheelAsync(int delta, CancellationToken cancellationToken = default)
+    {
+        int lines = MauiTerminalInput.GetWheelLines(delta);
+        return lines == 0
+            ? ValueTask.CompletedTask
+            : ScrollLinesAsync(delta > 0 ? -lines : lines, cancellationToken);
+    }
 
     public ValueTask SendKeyAsync(TerminalKeyEvent key, CancellationToken cancellationToken = default) =>
         Terminal?.SendKeyAsync(key, cancellationToken) ?? ValueTask.CompletedTask;
@@ -729,6 +738,7 @@ public sealed class TerminalView : ContentView
         }
         else if (!_interactionDragged && isInsideBounds)
         {
+            Terminal.ClearSelection();
             _ = ActivateLinkAsync(position, frame);
         }
     }
@@ -824,6 +834,7 @@ public sealed class TerminalView : ContentView
 
     private void OnInputFocused(object? sender, FocusEventArgs args)
     {
+        ResetInputEntry();
         if (_controller is not null)
         {
             _controller.IsFocused = true;

@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <RootNamespace>XtermSharp.Maui.Demo.SSH</RootNamespace>
     <UseMaui>true</UseMaui>
@@ -10,13 +11,20 @@
     <ApplicationId>io.xtermsharp.maui.demo.ssh</ApplicationId>
     <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
+    <WindowsPackageType Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">None</WindowsPackageType>
+    <RuntimeIdentifier Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' and '$(RuntimeIdentifier)' == ''">win-$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant())</RuntimeIdentifier>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
     <NoWarn>$(NoWarn);XTSR0001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="XtermSharp.Maui.Demo.SSH.Core.csproj" />
+    <ProjectReference Include="XtermSharp.Maui.Demo.SSH.Core.csproj">
+      <AdditionalProperties Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">TargetPlatformMinVersion=$(TargetPlatformMinVersion);RuntimeIdentifier=$(RuntimeIdentifier)</AdditionalProperties>
+    </ProjectReference>
+    <ProjectReference Include="../../src/XtermSharp.Maui/XtermSharp.Maui.csproj" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
   </ItemGroup>
   <ItemGroup>
@@ -24,5 +32,6 @@
     <Compile Include="Platforms/Android/**/*.cs" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'" />
     <Compile Include="Platforms/iOS/**/*.cs" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'" />
     <Compile Include="Platforms/MacCatalyst/**/*.cs" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'" />
+    <Compile Include="Platforms/Windows/**/*.cs" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
   </ItemGroup>
 </Project>

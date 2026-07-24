@@ -22,6 +22,9 @@
     <Compile Include="../XtermSharp.Avalonia.Demo.SSH/Services/**/*.cs" Link="Shared/Services/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
+    <MauiXaml Remove="**/*.xaml" />
+  </ItemGroup>
+  <ItemGroup>
     <Using Include="XtermSharp" />
     <Using Include="XtermSharp.Events" />
     <Using Include="XtermSharp.Input" />

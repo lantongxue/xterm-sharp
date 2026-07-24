@@ -6,13 +6,25 @@ Rendering uses the shared SkiaSharp/HarfBuzz backend through `SKCanvasView`.
 The transport, authentication, host-key verification, output pump and PTY resize implementation are
 compiled from the same source files as the Avalonia SSH demo. The MAUI-specific Core project keeps
 the page buildable on machines without platform workloads, while the app project targets Android,
-iOS and Mac Catalyst.
+iOS, Mac Catalyst and Windows.
 
 Install the MAUI workload, then build the desired target framework:
 
 - net10.0-android
 - net10.0-ios
 - net10.0-maccatalyst
+- net10.0-windows10.0.19041.0
+
+The Windows target uses MAUI's unpackaged local-development mode. Run it with:
+
+```bash
+dotnet build samples/XtermSharp.Maui.Demo.SSH/XtermSharp.Maui.Demo.SSH.csproj -f net10.0-windows10.0.19041.0 -m:1
+dotnet run --project samples/XtermSharp.Maui.Demo.SSH/XtermSharp.Maui.Demo.SSH.csproj -f net10.0-windows10.0.19041.0 --no-build
+```
+
+The app only calls `UseXtermSharpMaui()` during startup. Keyboard shortcuts, committed text,
+selection clearing and mouse-wheel forwarding are registered by the shared `XtermSharp.Maui`
+component; no application-side Windows input adapter is required.
 
 The connection form supports password and private-key authentication, encrypted private keys,
 configurable terminal type, SHA-256 host-key verification and a test-only verification bypass.

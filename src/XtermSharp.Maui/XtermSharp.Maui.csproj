@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
     <RootNamespace>XtermSharp.Maui</RootNamespace>
     <AssemblyName>XtermSharp.Maui</AssemblyName>
     <PackageId>XtermSharp.Maui</PackageId>
@@ -9,9 +10,24 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/xterm-sharp/xterm-sharp</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;XTSR0001</NoWarn>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Platforms/**/*.cs" />
+    <Compile Include="Platforms/Android/**/*.cs" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'" />
+    <Compile Include="Platforms/iOS/**/*.cs" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'" />
+    <Compile Include="Platforms/MacCatalyst/**/*.cs" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'" />
+    <Compile Include="Platforms/Windows/**/*.cs" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
+    <Compile Include="../../src/XtermSharp.WinUI/Input/WinUIKeyMapper.cs" Link="Platforms/Windows/WinUIKeyMapper.cs" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../XtermSharp.Addons.Clipboard/XtermSharp.Addons.Clipboard.csproj" />
     <ProjectReference Include="../XtermSharp.Rendering/XtermSharp.Rendering.csproj" />

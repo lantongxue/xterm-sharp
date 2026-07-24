@@ -20,6 +20,18 @@ public sealed class MauiTextInputTranslatorTests
         Assert.Equal("你好", input.Text);
     }
 
+    [Theory]
+    [InlineData("l\u200B", "l")]
+    [InlineData("l\u200Bs", "ls")]
+    [InlineData("\u200Bl\u200B", "l")]
+    public void SentinelIsRemovedRegardlessOfNativeCaretPosition(string value, string expected)
+    {
+        MauiTextInput input = MauiTextInputTranslator.Translate(value);
+
+        Assert.Equal(MauiTextInputKind.Text, input.Kind);
+        Assert.Equal(expected, input.Text);
+    }
+
     [Fact]
     public void RemovingSentinelEmitsBackspace()
     {
