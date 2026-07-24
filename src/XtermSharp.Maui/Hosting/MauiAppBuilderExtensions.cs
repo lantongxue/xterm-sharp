@@ -10,9 +10,9 @@ public static partial class MauiAppBuilderExtensions
     public static MauiAppBuilder UseXtermSharpMaui(this MauiAppBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        RegisterPlatformInput();
+        RegisterPlatformInput(builder);
         return builder.UseSkiaSharp();
     }
 
-    static partial void RegisterPlatformInput();
+    static partial void RegisterPlatformInput(MauiAppBuilder builder);
 }

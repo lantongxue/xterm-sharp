@@ -402,7 +402,7 @@ The current verification results are:
   resize/reflow, option-plumbing, marker/link-lifetime, public OSC 8 and safety regressions.
 - Forty-six rendering tests passing across the backend-neutral, Skia, Avalonia, Windows Forms,
   WPF and WinUI suites.
-- Twenty .NET MAUI Skia-integration, input, clipboard and ownership tests passing.
+- Twenty-five .NET MAUI Skia-integration, input, clipboard and ownership tests passing.
 - Twelve `addon-web-links` compatibility and integration tests passing.
 - Fourteen `addon-search` compatibility, regression and rendering-integration tests passing.
 - Twelve `addon-progress` compatibility, programmatic-state and lifecycle tests passing.

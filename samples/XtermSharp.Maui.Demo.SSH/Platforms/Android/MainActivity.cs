@@ -4,6 +4,7 @@ using Android.Content.PM;
 namespace XtermSharp.Maui.Demo.SSH;
 
 [Activity(
+    Theme = "@style/XtermSharp.SplashTheme",
     MainLauncher = true,
     ConfigurationChanges =
         ConfigChanges.ScreenSize |

@@ -32,7 +32,8 @@ On a first connection, leave the fingerprint empty. The connection stops before 
 fills in the server fingerprint; verify it through a trusted channel, then connect again.
 
 Use the **Rendering** selector in the settings panel to switch live between `Auto`, `Software` and
-`Gpu`; the terminal keeps the current session while the requested surface changes.
+`Gpu`; the terminal keeps the current session while the requested surface changes. Android starts
+in `Software` mode for reliable presentation on devices where the OpenGL surface is unavailable.
 
 The same environment variables supported by the Avalonia SSH demo can prefill the form:
 

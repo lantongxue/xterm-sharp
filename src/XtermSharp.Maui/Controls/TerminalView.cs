@@ -70,7 +70,7 @@ public sealed class TerminalView : ContentView
 
     private readonly SKCanvasView _canvasView;
     private readonly SKGLView _gpuView;
-    private readonly Entry _inputEntry;
+    private readonly TerminalInputEntry _inputEntry;
     private SkiaTerminalRenderBackend? _backend;
     private TerminalRenderController? _controller;
     private TerminalRenderFrame? _frame;
@@ -109,7 +109,7 @@ public sealed class TerminalView : ContentView
             HorizontalOptions = LayoutOptions.Fill,
             VerticalOptions = LayoutOptions.Fill
         };
-        _inputEntry = new Entry
+        _inputEntry = new TerminalInputEntry
         {
             Text = MauiTextInputTranslator.Sentinel,
             Keyboard = Keyboard.Plain,
@@ -141,6 +141,7 @@ public sealed class TerminalView : ContentView
         _inputEntry.Completed += OnInputCompleted;
         _inputEntry.Focused += OnInputFocused;
         _inputEntry.Unfocused += OnInputUnfocused;
+        _inputEntry.BackspaceRequested += OnNativeBackspaceRequested;
     }
 
     public Terminal? Terminal
@@ -808,10 +809,25 @@ public sealed class TerminalView : ContentView
                 Observe(Terminal.SendInputAsync(input.Text));
                 break;
             case MauiTextInputKind.Backspace when Terminal is not null:
-                Observe(Terminal.SendKeyAsync(new TerminalKeyEvent("Backspace", "Backspace", 8)));
+                SendBackspaces(1);
                 break;
         }
         ResetInputEntry();
+    }
+
+    private void OnNativeBackspaceRequested(int count) => SendBackspaces(count);
+
+    private void SendBackspaces(int count)
+    {
+        Terminal? terminal = Terminal;
+        if (terminal is null)
+        {
+            return;
+        }
+        for (int index = 0; index < count; index++)
+        {
+            Observe(terminal.SendKeyAsync(new TerminalKeyEvent("Backspace", "Backspace", 8)));
+        }
     }
 
     private void OnInputCompleted(object? sender, EventArgs args)

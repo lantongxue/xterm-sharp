@@ -1,4 +1,5 @@
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Devices;
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Layouts;
 using Microsoft.Maui.Storage;
@@ -9,6 +10,20 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
 {
     private const string PasswordAuthentication = "Password";
     private const string PrivateKeyAuthentication = "Private key";
+
+    private static readonly Color AndroidPageBackground = Color.FromArgb("#F6F8FB");
+    private static readonly Color AndroidHeaderBackground = Color.FromArgb("#FFFFFF");
+    private static readonly Color AndroidKeyBarBackground = Color.FromArgb("#E8EEF5");
+    private static readonly Color AndroidTextColor = Color.FromArgb("#172033");
+    private static readonly Color AndroidMutedTextColor = Color.FromArgb("#526176");
+    private static readonly Color AndroidConnectedTextColor = Color.FromArgb("#1F7A4D");
+    private static readonly Color AndroidErrorTextColor = Color.FromArgb("#B42318");
+    private static readonly Color AndroidButtonColor = Color.FromArgb("#2F6EA5");
+
+    private static bool IsAndroid => DeviceInfo.Platform == DevicePlatform.Android;
+    private static SkiaRenderModePreference DefaultRenderingMode =>
+        IsAndroid ? SkiaRenderModePreference.Software : SkiaRenderModePreference.Auto;
+    private static Color FormTextColor => IsAndroid ? AndroidTextColor : Colors.White;
 
     private readonly Terminal _terminal;
     private readonly TerminalView _terminalView;
@@ -36,7 +51,7 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
     public SshDemoPage()
     {
         Title = "XtermSharp MAUI SSH";
-        BackgroundColor = Color.FromArgb("#101214");
+        BackgroundColor = IsAndroid ? AndroidPageBackground : Color.FromArgb("#101214");
 
         _terminal = new Terminal(new TerminalOptions
         {
@@ -49,10 +64,12 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         _terminalView = new TerminalView
         {
             Terminal = _terminal,
+            BackgroundColor = Colors.Black,
             Padding = new Thickness(8),
             HorizontalOptions = LayoutOptions.Fill,
             VerticalOptions = LayoutOptions.Fill,
-            ShowRenderingDebugOverlay = true
+            ShowRenderingDebugOverlay = true,
+            RequestedRenderMode = DefaultRenderingMode
         };
 
         _hostText = EntryValue(GetEnvironmentValue("SSH_HOST", "localhost"));
@@ -61,13 +78,15 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         _authenticationPicker = new Picker
         {
             ItemsSource = new[] { PasswordAuthentication, PrivateKeyAuthentication },
-            SelectedIndex = string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SSH_PRIVATE_KEY")) ? 0 : 1
+            SelectedIndex = string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SSH_PRIVATE_KEY")) ? 0 : 1,
+            TextColor = FormTextColor
         };
         _renderingModePicker = new Picker
         {
             ItemsSource = Enum.GetValues<SkiaRenderModePreference>(),
-            SelectedItem = SkiaRenderModePreference.Auto,
-            Title = "Rendering mode"
+            SelectedItem = DefaultRenderingMode,
+            Title = "Rendering mode",
+            TextColor = FormTextColor
         };
         _passwordText = EntryValue(Environment.GetEnvironmentVariable("SSH_PASSWORD") ?? string.Empty);
         _passwordText.IsPassword = true;
@@ -88,17 +107,25 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         _connectButton = new Button
         {
             Text = "Connect",
-            MinimumWidthRequest = 110
+            MinimumWidthRequest = 110,
+            BackgroundColor = AndroidButtonColor,
+            TextColor = Colors.White,
+            CornerRadius = 8,
+            MinimumHeightRequest = 44
         };
         _settingsButton = new Button
         {
             Text = "Settings",
-            IsVisible = false
+            IsVisible = false,
+            BackgroundColor = AndroidButtonColor,
+            TextColor = Colors.White,
+            CornerRadius = 8,
+            MinimumHeightRequest = 44
         };
         _statusText = new Label
         {
             Text = "Disconnected",
-            TextColor = Colors.Gray,
+            TextColor = IsAndroid ? AndroidMutedTextColor : Colors.Gray,
             VerticalTextAlignment = TextAlignment.Center,
             LineBreakMode = LineBreakMode.TailTruncation
         };
@@ -129,7 +156,7 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
                 new ColumnDefinition(GridLength.Star),
                 new ColumnDefinition(GridLength.Auto)
             },
-            BackgroundColor = Color.FromArgb("#1B1F23")
+            BackgroundColor = IsAndroid ? AndroidHeaderBackground : Color.FromArgb("#1B1F23")
         };
         header.Add(_connectButton);
         header.Add(_statusText, 1);
@@ -222,7 +249,8 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
                 new Label
                 {
                     Text = "Skip host key verification (test only)",
-                    VerticalTextAlignment = TextAlignment.Center
+                    VerticalTextAlignment = TextAlignment.Center,
+                    TextColor = FormTextColor
                 }
             }
         };
@@ -240,7 +268,8 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
                     {
                         Text = "SSH connection",
                         FontSize = 18,
-                        FontAttributes = FontAttributes.Bold
+                        FontAttributes = FontAttributes.Bold,
+                        TextColor = FormTextColor
                     },
                     fields
                 }
@@ -275,7 +304,7 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         return new ScrollView
         {
             Orientation = ScrollOrientation.Horizontal,
-            BackgroundColor = Color.FromArgb("#171A1D"),
+            BackgroundColor = IsAndroid ? AndroidKeyBarBackground : Color.FromArgb("#171A1D"),
             Content = keys
         };
     }
@@ -287,7 +316,10 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
             Text = text,
             FontSize = 12,
             Padding = new Thickness(10, 5),
-            MinimumHeightRequest = 34
+            MinimumHeightRequest = 44,
+            BackgroundColor = IsAndroid ? Color.FromArgb("#355B7A") : null,
+            TextColor = IsAndroid ? Colors.White : null,
+            CornerRadius = 6
         };
         button.Clicked += async (_, _) => await _terminalView.SendKeyAsync(key);
         return button;
@@ -304,7 +336,7 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         };
         if (label.Length != 0)
         {
-            field.Children.Insert(0, new Label { Text = label, FontSize = 12 });
+            field.Children.Insert(0, new Label { Text = label, FontSize = 12, TextColor = FormTextColor });
         }
         return field;
     }
@@ -518,10 +550,16 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
     {
         _statusText.Text = message;
         _statusText.TextColor = isError
-            ? Colors.OrangeRed
+            ? IsAndroid
+                ? AndroidErrorTextColor
+                : Colors.OrangeRed
             : isConnected
-                ? Colors.LimeGreen
-                : Colors.Gray;
+                ? IsAndroid
+                    ? AndroidConnectedTextColor
+                    : Colors.LimeGreen
+                : IsAndroid
+                    ? AndroidMutedTextColor
+                    : Colors.Gray;
     }
 
     private void OnTerminalTitleChanged(object? sender, TerminalTitleChangedEventArgs args)
@@ -540,7 +578,9 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
     private static Entry EntryValue(string value, Keyboard? keyboard = null) => new()
     {
         Text = value,
-        Keyboard = keyboard ?? Keyboard.Default
+        Keyboard = keyboard ?? Keyboard.Default,
+        TextColor = FormTextColor,
+        PlaceholderColor = AndroidMutedTextColor
     };
 
     private static string Required(string? value, string message)

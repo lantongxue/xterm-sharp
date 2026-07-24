@@ -39,7 +39,7 @@ Last fully verified on 2026-07-24. Update this section whenever the pinned basel
 | Main xUnit suite | 1,462/1,462 passing |
 | Reference infrastructure suite | 1/1 passing |
 | Rendering suites | 46/46 passing |
-| .NET MAUI suite | 20/20 passing |
+| .NET MAUI suite | 25/25 passing |
 | Web links addon suite | 12/12 passing |
 | Search addon suite | 14/14 passing |
 | Progress addon suite | 12/12 passing |
@@ -312,7 +312,7 @@ node tools/compare-fixtures.mjs
 ```
 
 Expected final signals are zero build warnings/errors, 1,462 main tests passing, 46 rendering
-tests passing, 20 MAUI tests passing, 12 web-links addon tests passing, 14 search addon tests
+tests passing, 25 MAUI tests passing, 12 web-links addon tests passing, 14 search addon tests
 passing, 12 progress addon tests passing, 19 clipboard addon tests passing, one reference test
 passing, 1,307 verified
 bindings, `MATCH`, `MATCH 14/14 complex reflow scenarios`, `MATCH 7/7 marker and metadata

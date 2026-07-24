@@ -4,6 +4,18 @@ internal static class MauiTextInputTranslator
 {
     public const string Sentinel = "\u200B";
 
+    public static int GetNativeBackspaceCount(
+        string? value,
+        int beforeLength,
+        int afterLength)
+    {
+        return value == Sentinel &&
+            beforeLength > 0 &&
+            afterLength == 0
+                ? beforeLength
+                : 0;
+    }
+
     public static MauiTextInput Translate(string? value)
     {
         if (string.IsNullOrEmpty(value))

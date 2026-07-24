@@ -40,4 +40,35 @@ public sealed class MauiTextInputTranslatorTests
         Assert.Equal(MauiTextInputKind.Backspace, input.Kind);
         Assert.Empty(input.Text);
     }
+
+    [Fact]
+    public void NativeBackspaceAtSentinelCanBeInterceptedRepeatedly()
+    {
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            Assert.Equal(
+                1,
+                MauiTextInputTranslator.GetNativeBackspaceCount(
+                    MauiTextInputTranslator.Sentinel,
+                    1,
+                    0));
+        }
+    }
+
+    [Theory]
+    [InlineData("text", 1, 0)]
+    [InlineData("\u200B", 0, 0)]
+    [InlineData("\u200B", 1, 1)]
+    public void NativeDeletionOutsideIdleSentinelIsNotIntercepted(
+        string value,
+        int beforeLength,
+        int afterLength)
+    {
+        Assert.Equal(
+            0,
+            MauiTextInputTranslator.GetNativeBackspaceCount(
+                value,
+                beforeLength,
+                afterLength));
+    }
 }
