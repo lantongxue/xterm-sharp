@@ -8,6 +8,10 @@ provide a backend-neutral display list, a SkiaSharp/HarfBuzz backend and interac
 buffer search,
 ConEmu progress tracking and policy-controlled OSC 52 clipboard access.
 
+[Documentation](https://lantongxue.github.io/xterm-sharp/) ·
+[Getting started](https://lantongxue.github.io/xterm-sharp/getting-started/) ·
+[Package map](https://lantongxue.github.io/xterm-sharp/packages/)
+
 > Current version: `0.1.0-alpha.1`. All 1,307 headless-applicable cases in the
 > pinned upstream inventory are covered by C# tests. XtermSharp remains a
 > pre-release package and does not include a PTY. See the detailed
@@ -402,7 +406,7 @@ The current verification results are:
   resize/reflow, option-plumbing, marker/link-lifetime, public OSC 8 and safety regressions.
 - Forty-six rendering tests passing across the backend-neutral, Skia, Avalonia, Windows Forms,
   WPF and WinUI suites.
-- Twenty-four .NET MAUI Skia-integration, input, clipboard and ownership tests passing.
+- Twenty-five .NET MAUI Skia-integration, input, clipboard and ownership tests passing.
 - Twelve `addon-web-links` compatibility and integration tests passing.
 - Fourteen `addon-search` compatibility, regression and rendering-integration tests passing.
 - Twelve `addon-progress` compatibility, programmatic-state and lifecycle tests passing.

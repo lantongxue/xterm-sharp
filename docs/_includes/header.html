@@ -1,0 +1,23 @@
+<header class="site-header" data-site-header>
+  <div class="header-inner">
+    <a class="brand" href="{{ '/' | relative_url }}" aria-label="XtermSharp home">
+      <img src="{{ '/assets/xtermsharp-mark.svg' | relative_url }}" alt="" width="34" height="34">
+      <span>Xterm<span>Sharp</span></span>
+    </a>
+
+    <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-menu-toggle>
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav class="header-nav" aria-label="Primary navigation" data-header-nav>
+      <a {% if page.url == '/' %}class="is-active"{% endif %} href="{{ '/' | relative_url }}">Overview</a>
+      <a {% if page.layout == 'doc' %}class="is-active"{% endif %} href="{{ '/getting-started/' | relative_url }}">Docs</a>
+      <a href="{{ '/packages/' | relative_url }}">Packages</a>
+      <a href="https://github.com/{{ site.repository }}">GitHub</a>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open>Search</button>
+        <button class="theme-toggle" type="button" aria-label="Change color theme" title="Change color theme" data-theme-toggle>&#9680;</button>
+      </div>
+    </nav>
+  </div>
+</header>

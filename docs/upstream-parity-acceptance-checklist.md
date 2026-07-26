@@ -1,3 +1,11 @@
+---
+layout: doc
+title: Upstream parity acceptance checklist
+description: Track acceptance work outside the verified xterm.js common and headless inventory.
+category: Project
+search: true
+---
+
 # Upstream parity acceptance checklist
 
 This document is the implementation and acceptance backlog for capabilities that remain outside
@@ -23,7 +31,7 @@ from the inventory, or provided by upstream addons that have not been fully port
 - [x] 1,306 cases are direct ports and `XTJS-0799` is architecture-equivalent.
 - [x] The reference scenario reports `MATCH`.
 - [x] All 76 escape-sequence fixtures report `MATCH 76/76`.
-- [x] The solution test run passes 1,558/1,558 tests across all eleven test projects.
+- [x] The solution test run passes 1,593/1,593 tests across all thirteen test projects.
 
 ## Priority definitions
 

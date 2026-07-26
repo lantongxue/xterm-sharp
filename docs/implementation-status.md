@@ -1,3 +1,11 @@
+---
+layout: doc
+title: Implementation status
+description: Review the implemented xterm.js headless behavior, rendering integrations, addons, verification coverage, and prerelease limits.
+category: Start
+search: true
+---
+
 # Implementation status
 
 ## Implemented in 0.1 alpha
@@ -38,7 +46,7 @@
 - The optional `XtermSharp.Addons.Clipboard` port handles OSC 52 query, set and explicit clear
   operations through a platform-neutral provider. Read and write permissions default to denied,
   decoded UTF-8 payloads are bounded, malformed input is rejected without changing clipboard
-  state, and the Avalonia, Windows Forms, WPF and WinUI packages supply UI-dispatched system
+  state, and the Avalonia, MAUI, Windows Forms, WPF and WinUI packages supply UI-dispatched system
   clipboard adapters.
 - The pinned xterm.js 6.0.0 inventory contains 1,361 concrete upstream cases:
   54 front-end renderer cases are explicitly excluded, while all 1,307

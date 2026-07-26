@@ -1,3 +1,11 @@
+---
+layout: doc
+title: Web links addon
+description: Detect validated URLs across wrapped, wide, and combined cells with configurable activation and hover behavior.
+category: Addons
+search: true
+---
+
 # Web links addon
 
 `XtermSharp.Addons.WebLinks` ports the pinned xterm.js 6.0.0 `addon-web-links` behavior to .NET.

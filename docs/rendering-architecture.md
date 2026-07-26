@@ -1,3 +1,11 @@
+---
+layout: doc
+title: Rendering architecture
+description: Follow immutable snapshots through backend-neutral display lists, retained Skia rows, and native platform presentation.
+category: Rendering
+search: true
+---
+
 # Rendering architecture
 
 The renderer is optional and keeps the headless core independent from UI and graphics libraries.

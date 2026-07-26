@@ -1,3 +1,11 @@
+---
+layout: doc
+title: OSC 8 hyperlinks
+description: Resolve snapshot-scoped link metadata and handle terminal-provided URIs through an application-owned security policy.
+category: Core
+search: true
+---
+
 # OSC 8 hyperlinks
 
 OSC 8 cells expose immutable metadata through `TerminalSnapshot.Hyperlinks`. The numeric

@@ -1,3 +1,11 @@
+---
+layout: doc
+title: Rendering debug overlay
+description: Diagnose actual presentation FPS and frame timing through the shared Skia telemetry overlay.
+category: Engineering notes
+search: true
+---
+
 # Rendering debug overlay change log - 2026-07-17, shared backend update 2026-07-23
 
 ## Summary

@@ -1,3 +1,11 @@
+---
+layout: doc
+title: Architecture
+description: Follow ordered writes through the shared VT parser, mutable engine state, revisions, events, and immutable snapshots.
+category: Core
+search: true
+---
+
 # Architecture
 
 ```text

@@ -1,0 +1,241 @@
+---
+layout: home
+title: XtermSharp
+description: A pure C# terminal emulator for .NET 10 with verified xterm.js headless compatibility and native controls for five UI stacks.
+search: false
+---
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <p class="hero-kicker">0.1.0-alpha.1 for .NET 10</p>
+      <h1>Xterm<span>Sharp</span></h1>
+      <p class="hero-lead">
+        A pure C# terminal engine with ordered async input, immutable snapshots, and native controls
+        from Avalonia to WinUI. Built against the behavior of xterm.js, without bringing the browser
+        into your application.
+      </p>
+      <div class="button-row">
+        <a class="button" href="{{ '/getting-started/' | relative_url }}">Get started</a>
+        <a class="button secondary" href="https://github.com/{{ site.repository }}">View source</a>
+      </div>
+    </div>
+
+    <div class="terminal-stage" role="img" aria-label="XtermSharp terminal output and runtime inspector">
+      <div class="terminal-bar">
+        <div class="terminal-lights" aria-hidden="true"><span></span><span></span><span></span></div>
+        <span>xtermsharp / preview</span>
+        <span></span>
+      </div>
+      <div class="terminal-body">
+        <div class="terminal-output">
+          <p><span class="prompt">$</span> <span class="command">dotnet add package XtermSharp --prerelease</span></p>
+          <p class="dim">info : Installed XtermSharp 0.1.0-alpha.1</p>
+          <p>&nbsp;</p>
+          <p><span class="prompt">$</span> <span class="command">dotnet run</span></p>
+          <p><span class="violet">XtermSharp</span> / VT500 / Unicode 15</p>
+          <p><span class="success">OK</span> 1,307 upstream bindings verified</p>
+          <p><span class="success">OK</span> ordered write committed at revision 42</p>
+          <p><span class="prompt">terminal&gt;</span><span class="terminal-cursor" aria-hidden="true"></span></p>
+        </div>
+        <div class="terminal-inspector">
+          <span>Immutable snapshot</span>
+          <div class="inspector-row"><span>buffer</span><strong>normal</strong></div>
+          <div class="inspector-row"><span>viewport</span><strong>80 x 24</strong></div>
+          <div class="inspector-row"><span>revision</span><strong>42</strong></div>
+          <div class="inspector-row"><span>renderer</span><strong>Skia GPU</strong></div>
+          <div class="inspector-row"><span>queue</span><strong>ordered</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="metrics-band" aria-label="Project conformance metrics">
+  <div class="metrics-inner">
+    <div class="metric"><strong>1,307</strong><span>verified upstream bindings</span></div>
+    <div class="metric"><strong>76 / 76</strong><span>escape fixtures matching</span></div>
+    <div class="metric"><strong>5</strong><span>native UI adapters</span></div>
+    <div class="metric"><strong>4</strong><span>optional addons</span></div>
+  </div>
+</section>
+
+<section class="home-section">
+  <div class="section-inner">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">The terminal pipeline</p>
+        <h2>One engine from incoming bytes to the frame on screen.</h2>
+      </div>
+      <p>
+        The headless core owns terminal semantics. Rendering and platform packages stay optional,
+        so services, tests, and desktop applications can all use the same state model.
+      </p>
+    </div>
+    <div class="architecture-flow">
+      <div class="flow-step">
+        <span>01 / INPUT</span>
+        <h3>Ordered writes</h3>
+        <p>Streaming UTF-8 and UTF-16 enter one bounded asynchronous queue.</p>
+      </div>
+      <div class="flow-step">
+        <span>02 / ENGINE</span>
+        <h3>VT500 parsing</h3>
+        <p>One production parser mutates modes, cursors, and terminal buffers.</p>
+      </div>
+      <div class="flow-step">
+        <span>03 / STATE</span>
+        <h3>Immutable snapshots</h3>
+        <p>Consumers read stable viewport or full-buffer state by revision.</p>
+      </div>
+      <div class="flow-step">
+        <span>04 / DISPLAY</span>
+        <h3>Native presentation</h3>
+        <p>Retained Skia rows reach the UI through platform-native controls.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="home-section alt">
+  <div class="section-inner">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Composable packages</p>
+        <h2>Take the core. Add only the integration you own.</h2>
+      </div>
+      <p>
+        UI frameworks, graphics libraries, link detection, search, progress, and clipboard policy
+        remain outside the common package boundary.
+      </p>
+    </div>
+    <div class="package-table">
+      <div class="package-row">
+        <h3>XtermSharp</h3>
+        <p>Parser, buffers, snapshots, input encoding, selection, links, and addon contracts.</p>
+        <span class="package-kind">Headless</span>
+      </div>
+      <div class="package-row">
+        <h3>XtermSharp.Rendering</h3>
+        <p>Backend-neutral themes, geometry, selection, damage tracking, and display lists.</p>
+        <span class="package-kind">Neutral</span>
+      </div>
+      <div class="package-row">
+        <h3>XtermSharp.Rendering.Skia</h3>
+        <p>HarfBuzz shaping, font fallback, retained row pictures, and render telemetry.</p>
+        <span class="package-kind">Backend</span>
+      </div>
+      <div class="package-row">
+        <h3>Platform controls</h3>
+        <p>Avalonia, .NET MAUI, Windows Forms, WPF, and WinUI adapters with software fallback.</p>
+        <span class="package-kind">Optional</span>
+      </div>
+      <div class="package-row">
+        <h3>Addons</h3>
+        <p>Web links, buffer search, OSC 9;4 progress, and policy-controlled OSC 52 clipboard.</p>
+        <span class="package-kind">Optional</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="home-section">
+  <div class="section-inner code-feature">
+    <div class="code-copy">
+      <p class="eyebrow">Headless first</p>
+      <h2>Parse output. Inspect stable state.</h2>
+      <p>
+        Writes complete after parsing, and snapshots never expose live mutable buffers. Connect the
+        <code>Data</code> event to an application-owned PTY or transport when the terminal emits input or a response.
+      </p>
+      <ul class="plain-list">
+        <li>No browser or DOM dependency</li>
+        <li>No built-in process, PTY, or SSH ownership</li>
+        <li>Cancellation only before queue admission</li>
+      </ul>
+      <a href="{{ '/getting-started/' | relative_url }}">Read the core walkthrough</a>
+    </div>
+    <div class="home-code">
+      <pre><code class="language-csharp">using XtermSharp;
+using XtermSharp.Options;
+using XtermSharp.Snapshots;
+
+await using var terminal = new Terminal(new TerminalOptions
+{
+    Columns = 80,
+    Rows = 24,
+    Scrollback = 1000
+});
+
+terminal.Data += (_, e) =&gt; pty.Write(e.Data);
+
+await terminal.WriteAsync(
+    "\x1b[32mhello from XtermSharp\x1b[0m\r\n");
+
+TerminalSnapshot snapshot =
+    await terminal.GetSnapshotAsync();</code></pre>
+    </div>
+  </div>
+</section>
+
+<section class="home-section alt">
+  <div class="section-inner">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Documentation</p>
+        <h2>Start with the boundary you are integrating.</h2>
+      </div>
+      <p>Each guide names ownership, threading, fallback, and security constraints where they matter.</p>
+    </div>
+    <div class="doc-grid">
+      <a class="doc-card" href="{{ '/getting-started/' | relative_url }}">
+        <span class="card-index">01</span>
+        <h3>Getting started</h3>
+        <p>Install the core, process terminal output, and connect a transport.</p>
+        <span class="card-link">Open guide &rarr;</span>
+      </a>
+      <a class="doc-card" href="{{ '/platforms/' | relative_url }}">
+        <span class="card-index">02</span>
+        <h3>Platform controls</h3>
+        <p>Choose Avalonia, MAUI, WinForms, WPF, or WinUI and assign terminal ownership.</p>
+        <span class="card-link">Compare controls &rarr;</span>
+      </a>
+      <a class="doc-card" href="{{ '/addons/' | relative_url }}">
+        <span class="card-index">03</span>
+        <h3>Addons</h3>
+        <p>Add links, search, progress, or clipboard behavior without changing the core.</p>
+        <span class="card-link">Browse addons &rarr;</span>
+      </a>
+      <a class="doc-card" href="{{ '/architecture.html' | relative_url }}">
+        <span class="card-index">04</span>
+        <h3>Core architecture</h3>
+        <p>Understand queue ordering, parser execution, revisions, and immutable snapshots.</p>
+        <span class="card-link">Read architecture &rarr;</span>
+      </a>
+      <a class="doc-card" href="{{ '/rendering-architecture.html' | relative_url }}">
+        <span class="card-index">05</span>
+        <h3>Rendering</h3>
+        <p>Follow display lists through retained Skia pictures to native presentation.</p>
+        <span class="card-link">Read rendering guide &rarr;</span>
+      </a>
+      <a class="doc-card" href="{{ '/implementation-status.html' | relative_url }}">
+        <span class="card-index">06</span>
+        <h3>Compatibility status</h3>
+        <p>Review implemented behavior, verified upstream coverage, and current limits.</p>
+        <span class="card-link">Review status &rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="section-inner">
+    <div>
+      <h2>Build on the terminal engine, not around it.</h2>
+      <p>Start headless, then attach the renderer or platform control your application needs.</p>
+    </div>
+    <div class="button-row">
+      <a class="button" href="{{ '/getting-started/' | relative_url }}">Install XtermSharp</a>
+    </div>
+  </div>
+</section>

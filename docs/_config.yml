@@ -1,0 +1,33 @@
+title: XtermSharp
+description: A pure C# terminal emulator for .NET 10, aligned with xterm.js headless behavior.
+url: https://lantongxue.github.io
+baseurl: /xterm-sharp
+repository: lantongxue/xterm-sharp
+lang: en
+version: 0.1.0-alpha.1
+
+markdown: kramdown
+highlighter: rouge
+permalink: pretty
+
+plugins:
+  - jekyll-relative-links
+
+relative_links:
+  enabled: true
+  collections: true
+
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      image: /assets/xtermsharp-social.png

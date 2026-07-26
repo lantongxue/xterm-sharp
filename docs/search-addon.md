@@ -1,3 +1,11 @@
+---
+layout: doc
+title: Search addon
+description: Search committed buffer snapshots with wrapped-cell mapping, result tracking, selection, and backend-neutral decorations.
+category: Addons
+search: true
+---
+
 # Search addon
 
 `XtermSharp.Addons.Search` ports the pinned xterm.js 6.0.0 `addon-search` behavior to .NET. It

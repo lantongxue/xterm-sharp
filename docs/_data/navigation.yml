@@ -1,0 +1,49 @@
+- label: Start
+  items:
+    - title: Getting started
+      url: /getting-started/
+    - title: Package map
+      url: /packages/
+    - title: Implementation status
+      url: /implementation-status.html
+
+- label: Core
+  items:
+    - title: Architecture
+      url: /architecture.html
+    - title: OSC 8 hyperlinks
+      url: /osc-hyperlinks.html
+
+- label: Rendering
+  items:
+    - title: Platform controls
+      url: /platforms/
+    - title: Rendering architecture
+      url: /rendering-architecture.html
+
+- label: Addons
+  items:
+    - title: Addon overview
+      url: /addons/
+    - title: Web links
+      url: /web-links-addon.html
+    - title: Search
+      url: /search-addon.html
+    - title: Progress
+      url: /progress-addon.html
+    - title: Clipboard
+      url: /clipboard-addon.html
+
+- label: Project
+  items:
+    - title: Code organization
+      url: /code-organization.html
+    - title: Upstream acceptance
+      url: /upstream-parity-acceptance-checklist.html
+
+- label: Engineering notes
+  items:
+    - title: Rendering performance
+      url: /rendering-performance-2026-07-17.html
+    - title: Debug overlay
+      url: /rendering-debug-overlay-2026-07-17.html

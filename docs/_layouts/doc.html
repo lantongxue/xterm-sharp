@@ -1,0 +1,29 @@
+---
+layout: default
+---
+<main id="main-content" class="docs-page">
+  <button class="sidebar-trigger" type="button" data-sidebar-open>Browse documentation</button>
+  <div class="docs-shell">
+    {% include sidebar.html %}
+    <article class="doc-content" data-doc-content>
+      <div class="doc-heading">
+        <p class="eyebrow">{{ page.category | default: 'Documentation' }}</p>
+        <h1>{{ page.title }}</h1>
+        {% if page.description %}<p class="doc-lead">{{ page.description }}</p>{% endif %}
+      </div>
+      {{ content }}
+      <div class="doc-feedback">
+        <div>
+          <strong>Found an issue?</strong>
+          <span>Documentation changes are reviewed with the code they describe.</span>
+        </div>
+        <a href="https://github.com/{{ site.repository }}/edit/main/docs/{{ page.path | split: '/' | last }}">Edit this page</a>
+      </div>
+    </article>
+    <aside class="page-toc" aria-label="On this page">
+      <p>On this page</p>
+      <ol data-page-toc></ol>
+    </aside>
+  </div>
+  <div class="sidebar-scrim" data-sidebar-scrim></div>
+</main>

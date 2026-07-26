@@ -1,0 +1,22 @@
+<nav class="docs-sidebar" aria-label="Documentation navigation" data-docs-sidebar>
+  <div class="sidebar-mobile-heading">
+    <span>Documentation</span>
+    <button type="button" data-sidebar-close aria-label="Close documentation navigation">&times;</button>
+  </div>
+  {% assign current_url = page.url | replace: 'index.html', '' %}
+  {% for group in site.data.navigation %}
+    <section class="sidebar-group">
+      <h2>{{ group.label }}</h2>
+      <ul>
+        {% for item in group.items %}
+          {% assign item_url = item.url | replace: 'index.html', '' %}
+          <li>
+            <a href="{{ item.url | relative_url }}" {% if current_url == item_url %}class="is-current" aria-current="page"{% endif %}>
+              {{ item.title }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endfor %}
+</nav>

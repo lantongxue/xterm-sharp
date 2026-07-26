@@ -1,3 +1,11 @@
+---
+layout: doc
+title: Rendering performance
+description: Review the display-list batching, retained-row rendering, and scheduling work behind the current rendering path.
+category: Engineering notes
+search: true
+---
+
 # Rendering performance optimization log — 2026-07-17
 
 ## Summary

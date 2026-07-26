@@ -1,3 +1,11 @@
+---
+layout: doc
+title: Progress addon
+description: Track strict ConEmu OSC 9;4 progress state without adding platform or rendering dependencies.
+category: Addons
+search: true
+---
+
 # Progress addon
 
 `XtermSharp.Addons.Progress` ports the pinned xterm.js 6.0.0 `addon-progress` behavior to .NET. It

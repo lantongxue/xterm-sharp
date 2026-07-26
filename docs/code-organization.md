@@ -1,3 +1,11 @@
+---
+layout: doc
+title: Code organization
+description: Navigate the core, rendering, platform, sample, test, and tool projects by their responsibility-based namespaces.
+category: Project
+search: true
+---
+
 # Code organization
 
 XtermSharp uses one C# type per file, including internal command, cache, state and test-helper

@@ -1,3 +1,11 @@
+---
+layout: doc
+title: Clipboard addon
+description: Apply explicit OSC 52 read and write policy with strict encoding, payload limits, and platform clipboard providers.
+category: Addons
+search: true
+---
+
 # Clipboard addon
 
 `XtermSharp.Addons.Clipboard` ports the pinned xterm.js 6.0.0 `addon-clipboard` OSC 52 behavior to
