@@ -110,8 +110,8 @@ decoration ordering. `tests/XtermSharp.Addons.Progress.Tests/` covers every pinn
 case plus programmatic state and handler lifecycle behavior.
 `tests/XtermSharp.Addons.Clipboard.Tests/` covers every pinned upstream clipboard behavior plus
 permissions, payload limits, invalid input, cancellation and handler lifecycle.
-`tests/XtermSharp.Maui.Tests/` covers Skia backend/view integration, shared soft-keyboard and
-platform input routing, clipboard mapping, terminal ownership and public key forwarding. The
+`tests/XtermSharp.Maui.Tests/` covers Skia backend/view integration, shared soft-keyboard,
+touch scrolling and platform input routing, clipboard mapping, terminal ownership and public key forwarding. The
 MAUI SSH Core sample links the existing Avalonia SSH transport sources and compiles in the default
 solution; its platform app project is built separately with the requested MAUI workload.
 `tests/XtermSharp.WinForms.Tests/` covers platform ownership, keyboard mapping, clipboard dispatch

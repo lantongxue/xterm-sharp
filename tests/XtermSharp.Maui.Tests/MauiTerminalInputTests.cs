@@ -38,4 +38,13 @@ public sealed class MauiTerminalInputTests
     {
         Assert.Equal(expected, MauiTerminalInput.GetWheelLines(delta));
     }
+
+    [Fact]
+    public void TouchDragQuantizesRowsAndPreservesDirection()
+    {
+        Assert.Equal(2, MauiTerminalInput.GetTouchScrollLines(35, 17));
+        Assert.Equal(-2, MauiTerminalInput.GetTouchScrollLines(-35, 17));
+        Assert.Equal(0, MauiTerminalInput.GetTouchScrollLines(8, 17));
+        Assert.Equal(0, MauiTerminalInput.GetTouchScrollLines(35, 0));
+    }
 }

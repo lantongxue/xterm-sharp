@@ -21,9 +21,11 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
     private static readonly Color AndroidButtonColor = Color.FromArgb("#2F6EA5");
 
     private static bool IsAndroid => DeviceInfo.Platform == DevicePlatform.Android;
+    private static bool IsIos => DeviceInfo.Platform == DevicePlatform.iOS;
     private static SkiaRenderModePreference DefaultRenderingMode =>
         IsAndroid ? SkiaRenderModePreference.Software : SkiaRenderModePreference.Auto;
-    private static Color FormTextColor => IsAndroid ? AndroidTextColor : Colors.White;
+    private static Color FormInputTextColor => IsAndroid || IsIos ? AndroidTextColor : Colors.White;
+    private static Color FormLabelTextColor => IsAndroid ? AndroidTextColor : Colors.White;
 
     private readonly Terminal _terminal;
     private readonly TerminalView _terminalView;
@@ -42,8 +44,9 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
     private readonly Button _connectButton;
     private readonly Button _settingsButton;
     private readonly Label _statusText;
-    private readonly VisualElement _configurationPanel;
+    private readonly ScrollView _configurationPanel;
     private readonly List<VisualElement> _configurationControls;
+    private readonly List<(View Control, double PreferredWidth)> _responsiveControls = [];
     private readonly CancellationTokenSource _pageCancellation = new();
     private SshTerminalSession? _session;
     private int _disposed;
@@ -52,6 +55,10 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
     {
         Title = "XtermSharp MAUI SSH";
         BackgroundColor = IsAndroid ? AndroidPageBackground : Color.FromArgb("#101214");
+        if (DeviceInfo.Platform == DevicePlatform.iOS)
+        {
+            SafeAreaEdges = Microsoft.Maui.SafeAreaEdges.All;
+        }
 
         _terminal = new Terminal(new TerminalOptions
         {
@@ -79,14 +86,14 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         {
             ItemsSource = new[] { PasswordAuthentication, PrivateKeyAuthentication },
             SelectedIndex = string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SSH_PRIVATE_KEY")) ? 0 : 1,
-            TextColor = FormTextColor
+            TextColor = FormInputTextColor
         };
         _renderingModePicker = new Picker
         {
             ItemsSource = Enum.GetValues<SkiaRenderModePreference>(),
             SelectedItem = DefaultRenderingMode,
             Title = "Rendering mode",
-            TextColor = FormTextColor
+            TextColor = FormInputTextColor
         };
         _passwordText = EntryValue(Environment.GetEnvironmentVariable("SSH_PASSWORD") ?? string.Empty);
         _passwordText.IsPassword = true;
@@ -196,6 +203,7 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         };
         _terminal.TitleChanged += OnTerminalTitleChanged;
         Appearing += (_, _) => _terminalView.Focus();
+        SizeChanged += (_, _) => UpdateResponsiveLayout();
         UpdateAuthenticationControls();
     }
 
@@ -218,7 +226,7 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         _pageCancellation.Dispose();
     }
 
-    private VisualElement CreateConfigurationPanel()
+    private ScrollView CreateConfigurationPanel()
     {
         var fields = new FlexLayout
         {
@@ -238,22 +246,28 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         fields.Add(CreateField("Terminal type", _terminalTypeText, 180));
         fields.Add(CreateField("Host key SHA-256", _hostKeyFingerprintText, 360));
 
-        var verification = new HorizontalStackLayout
+        var verification = new Grid
         {
-            Spacing = 8,
             Margin = new Thickness(4, 4, 12, 8),
             VerticalOptions = LayoutOptions.Center,
-            Children =
+            ColumnSpacing = 8,
+            ColumnDefinitions =
             {
-                _acceptAnyHostKeyCheck,
-                new Label
-                {
-                    Text = "Skip host key verification (test only)",
-                    VerticalTextAlignment = TextAlignment.Center,
-                    TextColor = FormTextColor
-                }
+                new ColumnDefinition(GridLength.Auto),
+                new ColumnDefinition(GridLength.Star)
             }
         };
+        verification.Add(_acceptAnyHostKeyCheck);
+        verification.Add(
+            new Label
+            {
+                Text = "Skip host key verification (test only)",
+                VerticalTextAlignment = TextAlignment.Center,
+                TextColor = FormLabelTextColor,
+                LineBreakMode = LineBreakMode.WordWrap
+            },
+            1);
+        _responsiveControls.Add((verification, 360));
         fields.Add(verification);
 
         return new ScrollView
@@ -269,7 +283,7 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
                         Text = "SSH connection",
                         FontSize = 18,
                         FontAttributes = FontAttributes.Bold,
-                        TextColor = FormTextColor
+                        TextColor = FormLabelTextColor
                     },
                     fields
                 }
@@ -317,17 +331,18 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
             FontSize = 12,
             Padding = new Thickness(10, 5),
             MinimumHeightRequest = 44,
-            BackgroundColor = IsAndroid ? Color.FromArgb("#355B7A") : null,
-            TextColor = IsAndroid ? Colors.White : null,
+            BackgroundColor = IsAndroid ? Color.FromArgb("#355B7A") : Color.FromArgb("#252A31"),
+            TextColor = Colors.White,
             CornerRadius = 6
         };
         button.Clicked += async (_, _) => await _terminalView.SendKeyAsync(key);
         return button;
     }
 
-    private static VerticalStackLayout CreateField(string label, View control, double width)
+    private VerticalStackLayout CreateField(string label, View control, double width)
     {
         control.WidthRequest = width;
+        _responsiveControls.Add((control, width));
         var field = new VerticalStackLayout
         {
             Spacing = 3,
@@ -336,9 +351,32 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
         };
         if (label.Length != 0)
         {
-            field.Children.Insert(0, new Label { Text = label, FontSize = 12, TextColor = FormTextColor });
+            field.Children.Insert(
+                0,
+                new Label { Text = label, FontSize = 12, TextColor = FormLabelTextColor });
         }
         return field;
+    }
+
+    private void UpdateResponsiveLayout()
+    {
+        if (Width <= 0)
+        {
+            return;
+        }
+
+        bool compact = Width < 700;
+        double availableWidth = Math.Max(120, Width - 40);
+        foreach ((View control, double preferredWidth) in _responsiveControls)
+        {
+            control.WidthRequest = compact ? availableWidth : preferredWidth;
+        }
+        bool landscapePhone = DeviceInfo.Idiom == DeviceIdiom.Phone && Width > Height;
+        _configurationPanel.MaximumHeightRequest = landscapePhone
+            ? Math.Clamp(Height * 0.38, 140, 220)
+            : compact && Height > 0
+                ? Math.Clamp(Height * 0.48, 240, 420)
+                : 310;
     }
 
     private async Task ToggleConnectionAsync()
@@ -579,7 +617,7 @@ internal sealed class SshDemoPage : ContentPage, IAsyncDisposable
     {
         Text = value,
         Keyboard = keyboard ?? Keyboard.Default,
-        TextColor = FormTextColor,
+        TextColor = FormInputTextColor,
         PlaceholderColor = AndroidMutedTextColor
     };
 

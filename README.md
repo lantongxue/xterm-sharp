@@ -141,7 +141,7 @@ The MAUI control reuses `XtermSharp.Rendering.Skia` for font measurement, HarfBu
 retained row pictures, then presents them through GPU-backed `SKGLView` with `SKCanvasView`
 fallback. `UseXtermSharpMaui()` registers the required SkiaSharp MAUI handler and supported native
 input shims, so applications do not need a separate Windows input adapter. The view handles
-device-pixel scaling, resize, committed text, soft-keyboard input, touch selection,
+device-pixel scaling, resize, committed text, soft-keyboard input, touch scrollback, pointer selection,
 mouse-protocol forwarding, link activation and clipboard operations while leaving terminal and
 transport ownership with the application. Changing `RequestedRenderMode`
 switches between the `SKGLView` and `SKCanvasView` without recreating the terminal session.

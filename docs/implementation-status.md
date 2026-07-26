@@ -75,8 +75,9 @@
   resizing, worker-side frame preparation, change-only binding notifications, keyboard/mouse
   protocols, local selection, clipboard, focus, IME preedit and registered-link interaction.
 - `XtermSharp.Maui` provides an externally bound `TerminalView` that reuses the SkiaSharp/HarfBuzz
-  backend through `SKGLView` with `SKCanvasView` fallback. It supports device-pixel scaling, resize, touch selection,
-  tracked mouse input, link activation, soft-keyboard text/backspace/enter input, scrolling and
+  backend through `SKGLView` with `SKCanvasView` fallback. It supports device-pixel scaling, resize,
+  touch scrollback, pointer selection, tracked mouse input, link activation,
+  soft-keyboard text/backspace/enter input, scrolling and
   clipboard integration.
 - `XtermSharp.WinForms` provides an externally bound, DPI-aware OpenTK GPU/Software-Skia
   `TerminalView` with worker-side frame preparation, browser-compatible keyboard coordinates, committed text/IME input,

@@ -78,6 +78,9 @@ public sealed class TerminalView : ContentView
     private IDispatcherTimer? _blinkTimer;
     private TerminalPoint _interactionAnchor;
     private PointF _interactionStart;
+    private SKTouchDeviceType _interactionDeviceType;
+    private double _touchScrollPixels;
+    private float _touchScrollLastY;
     private long? _activeTouchId;
     private bool _interactionDragged;
     private bool _updatingInput;
@@ -336,7 +339,7 @@ public sealed class TerminalView : ContentView
         {
             case SKTouchAction.Pressed when _activeTouchId is null:
                 _activeTouchId = args.Id;
-                OnStartInteraction(position);
+                OnStartInteraction(position, args.DeviceType);
                 args.Handled = true;
                 break;
             case SKTouchAction.Moved when _activeTouchId == args.Id:
@@ -686,7 +689,7 @@ public sealed class TerminalView : ContentView
         _canvasView.InvalidateSurface();
     }
 
-    private void OnStartInteraction(PointF position)
+    private void OnStartInteraction(PointF position, SKTouchDeviceType deviceType)
     {
         if (_frame is null || Terminal is null)
         {
@@ -694,6 +697,9 @@ public sealed class TerminalView : ContentView
         }
         _inputEntry.Focus();
         _interactionStart = position;
+        _interactionDeviceType = deviceType;
+        _touchScrollPixels = 0;
+        _touchScrollLastY = position.Y;
         _interactionAnchor = HitCell(_interactionStart, _frame);
         _interactionDragged = false;
         if ((_frame.Modes?.MouseTracking ?? TerminalMouseTrackingMode.None) != TerminalMouseTrackingMode.None)
@@ -713,6 +719,11 @@ public sealed class TerminalView : ContentView
             SendMouse(position, TerminalMouseAction.Move);
             return;
         }
+        if (_interactionDeviceType == SKTouchDeviceType.Touch)
+        {
+            ScrollTouchInteraction(position, _frame, Terminal);
+            return;
+        }
         if (!_interactionDragged && DistanceSquared(_interactionStart, position) < 16)
         {
             return;
@@ -724,6 +735,25 @@ public sealed class TerminalView : ContentView
             (int)_interactionAnchor.Y,
             (int)cell.X + 1,
             (int)cell.Y));
+    }
+
+    private void ScrollTouchInteraction(PointF position, TerminalRenderFrame frame, Terminal terminal)
+    {
+        _touchScrollPixels += position.Y - _touchScrollLastY;
+        _touchScrollLastY = position.Y;
+        if (!_interactionDragged && DistanceSquared(_interactionStart, position) < 16)
+        {
+            return;
+        }
+
+        _interactionDragged = true;
+        int lines = MauiTerminalInput.GetTouchScrollLines(_touchScrollPixels, frame.Metrics.CellHeight);
+        if (lines == 0)
+        {
+            return;
+        }
+        _touchScrollPixels -= lines * frame.Metrics.CellHeight;
+        Observe(terminal.ScrollWheelAsync(-lines));
     }
 
     private void OnEndInteraction(PointF position, bool isInsideBounds)

@@ -16,4 +16,13 @@ internal static class MauiTerminalInput
         }
         return Math.Max(1, Math.Abs(delta) * 3 / 120);
     }
+
+    public static int GetTouchScrollLines(double accumulatedPixels, double cellHeight)
+    {
+        if (!double.IsFinite(accumulatedPixels) || !double.IsFinite(cellHeight) || cellHeight <= 0)
+        {
+            return 0;
+        }
+        return (int)(accumulatedPixels / Math.Max(1, cellHeight));
+    }
 }

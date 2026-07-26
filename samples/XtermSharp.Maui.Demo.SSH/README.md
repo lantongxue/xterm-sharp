@@ -22,6 +22,21 @@ dotnet build samples/XtermSharp.Maui.Demo.SSH/XtermSharp.Maui.Demo.SSH.csproj -f
 dotnet run --project samples/XtermSharp.Maui.Demo.SSH/XtermSharp.Maui.Demo.SSH.csproj -f net10.0-windows10.0.19041.0 --no-build
 ```
 
+On an Apple Silicon Mac, select an available iOS simulator and run the app with:
+
+```bash
+xcrun simctl list devices available
+open -a Simulator
+IOS_SIMULATOR_UDID=PASTE_UDID_HERE
+dotnet build samples/XtermSharp.Maui.Demo.SSH/XtermSharp.Maui.Demo.SSH.csproj \
+  -f net10.0-ios -t:Run -p:RuntimeIdentifier=iossimulator-arm64 \
+  -p:_DeviceName=:v2:udid=$IOS_SIMULATOR_UDID -m:1
+```
+
+Use `iossimulator-x64` instead when running the simulator under an Intel Mac. The iOS target supports
+iPhone and iPad portrait and landscape layouts, keeps controls inside the safe area and declares the
+local-network usage needed when the SSH host is on the device's LAN.
+
 The app only calls `UseXtermSharpMaui()` during startup. Keyboard shortcuts, committed text,
 selection clearing and mouse-wheel forwarding are registered by the shared `XtermSharp.Maui`
 component; no application-side Windows input adapter is required.
