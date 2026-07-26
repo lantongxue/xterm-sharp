@@ -1,0 +1,225 @@
+name: Publish packages to NuGet
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package version, with an optional v prefix
+        required: true
+        default: 0.1.0-alpha.1
+        type: string
+      publish:
+        description: Publish after packing; leave disabled for a dry run
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nuget-${{ github.event.release.tag_name || inputs.version || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pack:
+    name: Build NuGet packages
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.package-version.outputs.version }}
+      artifact-name: ${{ steps.package-version.outputs.artifact-name }}
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
+
+      - name: Resolve package version
+        id: package-version
+        shell: pwsh
+        run: |
+          $rawVersion = if ($env:GITHUB_EVENT_NAME -eq 'release') {
+            '${{ github.event.release.tag_name }}'
+          } else {
+            '${{ inputs.version }}'
+          }
+
+          $version = $rawVersion -replace '^v', ''
+          if ($version -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$') {
+            throw "'$rawVersion' is not a supported NuGet package version."
+          }
+
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "artifact-name=nuget-packages-$version" >> $env:GITHUB_OUTPUT
+          "PACKAGE_VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Validate project versions
+        shell: pwsh
+        run: |
+          $projects = @(
+            'src/XtermSharp/XtermSharp.csproj',
+            'src/XtermSharp.Addons.WebLinks/XtermSharp.Addons.WebLinks.csproj',
+            'src/XtermSharp.Addons.Search/XtermSharp.Addons.Search.csproj',
+            'src/XtermSharp.Addons.Progress/XtermSharp.Addons.Progress.csproj',
+            'src/XtermSharp.Addons.Clipboard/XtermSharp.Addons.Clipboard.csproj',
+            'src/XtermSharp.Rendering/XtermSharp.Rendering.csproj',
+            'src/XtermSharp.Rendering.Skia/XtermSharp.Rendering.Skia.csproj',
+            'src/XtermSharp.Avalonia/XtermSharp.Avalonia.csproj',
+            'src/XtermSharp.Maui/XtermSharp.Maui.csproj',
+            'src/XtermSharp.WinForms/XtermSharp.WinForms.csproj',
+            'src/XtermSharp.Wpf/XtermSharp.Wpf.csproj',
+            'src/XtermSharp.WinUI/XtermSharp.WinUI.csproj'
+          )
+
+          foreach ($project in $projects) {
+            [xml]$projectXml = Get-Content $project
+            $versions = @($projectXml.Project.PropertyGroup.Version | Where-Object { $_ })
+            if ($versions.Count -ne 1 -or $versions[0] -ne $env:PACKAGE_VERSION) {
+              throw "$project declares '$($versions -join ', ')' but the release version is '$env:PACKAGE_VERSION'."
+            }
+          }
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore MAUI workloads
+        shell: pwsh
+        run: dotnet workload restore src/XtermSharp.Maui/XtermSharp.Maui.csproj
+
+      - name: Restore and pack projects
+        shell: pwsh
+        run: |
+          $projects = @(
+            'src/XtermSharp/XtermSharp.csproj',
+            'src/XtermSharp.Addons.WebLinks/XtermSharp.Addons.WebLinks.csproj',
+            'src/XtermSharp.Addons.Search/XtermSharp.Addons.Search.csproj',
+            'src/XtermSharp.Addons.Progress/XtermSharp.Addons.Progress.csproj',
+            'src/XtermSharp.Addons.Clipboard/XtermSharp.Addons.Clipboard.csproj',
+            'src/XtermSharp.Rendering/XtermSharp.Rendering.csproj',
+            'src/XtermSharp.Rendering.Skia/XtermSharp.Rendering.Skia.csproj',
+            'src/XtermSharp.Avalonia/XtermSharp.Avalonia.csproj',
+            'src/XtermSharp.Maui/XtermSharp.Maui.csproj',
+            'src/XtermSharp.WinForms/XtermSharp.WinForms.csproj',
+            'src/XtermSharp.Wpf/XtermSharp.Wpf.csproj',
+            'src/XtermSharp.WinUI/XtermSharp.WinUI.csproj'
+          )
+
+          New-Item -ItemType Directory -Force artifacts | Out-Null
+          foreach ($project in $projects) {
+            dotnet restore $project
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            dotnet pack $project --configuration Release --no-restore --output artifacts `
+              -p:PackageVersion=$env:PACKAGE_VERSION `
+              -p:ContinuousIntegrationBuild=true `
+              -p:RepositoryUrl="$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY" `
+              -p:RepositoryCommit=$env:GITHUB_SHA
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Verify package set
+        shell: pwsh
+        run: |
+          $packageIds = @(
+            'XtermSharp',
+            'XtermSharp.Addons.WebLinks',
+            'XtermSharp.Addons.Search',
+            'XtermSharp.Addons.Progress',
+            'XtermSharp.Addons.Clipboard',
+            'XtermSharp.Rendering',
+            'XtermSharp.Rendering.Skia',
+            'XtermSharp.Avalonia',
+            'XtermSharp.Maui',
+            'XtermSharp.WinForms',
+            'XtermSharp.Wpf',
+            'XtermSharp.WinUI'
+          )
+
+          $packages = @(Get-ChildItem artifacts -Filter '*.nupkg')
+          if ($packages.Count -ne $packageIds.Count) {
+            throw "Expected $($packageIds.Count) packages but found $($packages.Count)."
+          }
+
+          foreach ($packageId in $packageIds) {
+            $path = Join-Path artifacts "$packageId.$env:PACKAGE_VERSION.nupkg"
+            if (-not (Test-Path $path)) {
+              throw "Missing expected package: $path"
+            }
+          }
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package-version.outputs.artifact-name }}
+          path: artifacts/*.nupkg
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: Publish packages
+    if: github.event_name == 'release' || inputs.publish
+    needs: pack
+    runs-on: ubuntu-latest
+    environment: nuget
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+    steps:
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Download package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.pack.outputs.artifact-name }}
+          path: artifacts
+
+      - name: Authenticate with NuGet Trusted Publishing
+        if: env.NUGET_API_KEY == ''
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Push packages to NuGet.org
+        shell: pwsh
+        env:
+          PUBLISH_KEY: ${{ env.NUGET_API_KEY || steps.nuget-login.outputs.NUGET_API_KEY }}
+          PACKAGE_VERSION: ${{ needs.pack.outputs.version }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:PUBLISH_KEY)) {
+            throw 'NuGet authentication failed. Configure NUGET_API_KEY or Trusted Publishing.'
+          }
+
+          $packageIds = @(
+            'XtermSharp',
+            'XtermSharp.Addons.WebLinks',
+            'XtermSharp.Addons.Search',
+            'XtermSharp.Addons.Progress',
+            'XtermSharp.Addons.Clipboard',
+            'XtermSharp.Rendering',
+            'XtermSharp.Rendering.Skia',
+            'XtermSharp.Avalonia',
+            'XtermSharp.Maui',
+            'XtermSharp.WinForms',
+            'XtermSharp.Wpf',
+            'XtermSharp.WinUI'
+          )
+
+          foreach ($packageId in $packageIds) {
+            $package = Join-Path artifacts "$packageId.$env:PACKAGE_VERSION.nupkg"
+            dotnet nuget push $package `
+              --api-key $env:PUBLISH_KEY `
+              --source https://api.nuget.org/v3/index.json `
+              --skip-duplicate
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }

@@ -17,6 +17,10 @@ ConEmu progress tracking and policy-controlled OSC 52 clipboard access.
 > pre-release package and does not include a PTY. See the detailed
 > [implementation status](docs/implementation-status.md).
 
+Maintainers can publish all 12 NuGet packages from a GitHub Release. See the
+[NuGet release guide](docs/releasing.md) for version validation, package authentication and dry-run
+instructions.
+
 ## Highlights
 
 - Ordered asynchronous string and byte writes with bounded pending-input

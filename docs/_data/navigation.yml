@@ -38,6 +38,8 @@
   items:
     - title: Code organization
       url: /code-organization.html
+    - title: NuGet releases
+      url: /releasing.html
     - title: Upstream acceptance
       url: /upstream-parity-acceptance-checklist.html
 
