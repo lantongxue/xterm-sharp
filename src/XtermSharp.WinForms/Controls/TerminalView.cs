@@ -39,11 +39,15 @@ public sealed class TerminalView : Control
     private int _lastColumns;
     private int _lastRows;
     private char _pendingHighSurrogate;
+    private Rectangle _imeCursorBounds;
+    private int _nativeCaretHeight;
     private bool _cursorPhase = true;
     private bool _blinkPhase = true;
     private bool _selecting;
     private bool _pointerInside;
     private bool _linkCursorApplied;
+    private bool _nativeCaretCreated;
+    private bool _positioningIme;
     private TerminalPoint _selectionAnchor;
     private SkiaRenderMode _activeRenderMode = SkiaRenderMode.Unknown;
 
@@ -296,6 +300,16 @@ public sealed class TerminalView : Control
             base.IsInputKey(keyData);
     }
 
+    protected override void WndProc(ref Message message)
+    {
+        bool positionIme = WinFormsImePositioner.IsPositioningMessage(message.Msg);
+        if (positionIme)
+        {
+            UpdateImePosition(force: true);
+        }
+        base.WndProc(ref message);
+    }
+
     protected override void OnHandleCreated(EventArgs e)
     {
         base.OnHandleCreated(e);
@@ -308,6 +322,7 @@ public sealed class TerminalView : Control
         _blinkTimer.Stop();
         _pressedKeys.Clear();
         _suppressedReleases.Clear();
+        DestroyImeCaret();
         DetachTerminal();
         DisableGpuRendering();
         base.OnHandleDestroyed(e);
@@ -342,6 +357,7 @@ public sealed class TerminalView : Control
         {
             _controller.IsFocused = true;
         }
+        UpdateImePosition(force: true);
         SendWithoutThrow(Terminal?.SendFocusAsync(true) ?? ValueTask.CompletedTask);
     }
 
@@ -350,6 +366,7 @@ public sealed class TerminalView : Control
         _pressedKeys.Clear();
         _suppressedReleases.Clear();
         _pendingHighSurrogate = default;
+        DestroyImeCaret();
         if (_controller is not null)
         {
             _controller.IsFocused = false;
@@ -858,6 +875,7 @@ public sealed class TerminalView : Control
         _prepareCancellation?.Cancel();
         _linkCancellation?.Cancel();
         _pendingHighSurrogate = default;
+        DestroyImeCaret();
         _selecting = false;
         Capture = false;
         _pressedLink = null;
@@ -1055,6 +1073,10 @@ public sealed class TerminalView : Control
         int previousRows = Rows;
         TerminalRenderFrame? previousFrame = _frame;
         _frame = frame;
+        if (frame is not null)
+        {
+            UpdateImePosition();
+        }
         if (previousScrollValue != ScrollValue || previousScrollMaximum != ScrollMaximum ||
             previousColumns != Columns || previousRows != Rows)
         {
@@ -1216,6 +1238,53 @@ public sealed class TerminalView : Control
         _cursorPhase = !_cursorPhase;
         _blinkPhase = !_blinkPhase;
         _controller?.SetBlinkPhases(_cursorPhase, _blinkPhase);
+    }
+
+    private void UpdateImePosition(bool force = false)
+    {
+        if (_positioningIme || !Focused || !IsHandleCreated || _frame is not TerminalRenderFrame frame)
+        {
+            return;
+        }
+
+        _positioningIme = true;
+        try
+        {
+            Rectangle cursorBounds = WinFormsImePositioner.GetCursorBounds(frame);
+            bool boundsChanged = cursorBounds != _imeCursorBounds;
+            int caretHeight = Math.Max(1, cursorBounds.Height);
+            if (!_nativeCaretCreated || _nativeCaretHeight != caretHeight)
+            {
+                DestroyImeCaret();
+                _nativeCaretCreated = WinFormsImePositioner.CreateNativeCaret(Handle, caretHeight);
+                _nativeCaretHeight = _nativeCaretCreated ? caretHeight : 0;
+                boundsChanged = true;
+            }
+            if (_nativeCaretCreated && boundsChanged)
+            {
+                WinFormsImePositioner.SetNativeCaretPosition(cursorBounds.Location);
+            }
+            if (force || boundsChanged)
+            {
+                WinFormsImePositioner.UpdateImeWindows(Handle, cursorBounds);
+            }
+            _imeCursorBounds = cursorBounds;
+        }
+        finally
+        {
+            _positioningIme = false;
+        }
+    }
+
+    private void DestroyImeCaret()
+    {
+        if (_nativeCaretCreated)
+        {
+            WinFormsImePositioner.DestroyNativeCaret();
+        }
+        _nativeCaretCreated = false;
+        _nativeCaretHeight = 0;
+        _imeCursorBounds = Rectangle.Empty;
     }
 
     private void EnsureBitmap()

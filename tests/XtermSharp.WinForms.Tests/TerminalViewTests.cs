@@ -171,6 +171,29 @@ public sealed class TerminalViewTests
     }
 
     [Fact]
+    public void ImeCursorBoundsFollowRenderedCursorAndDpiScale()
+    {
+        var frame = new TerminalRenderFrame(
+            1,
+            new TerminalViewport(400, 200, 1.5, new TerminalThickness(8, 6, 0, 0)),
+            new TerminalFontMetrics(10, 20, 15, 17, 1, 10),
+            40,
+            10,
+            0,
+            0,
+            TerminalDisplayList.Empty,
+            TerminalDamage.Empty)
+        {
+            CursorColumn = 3,
+            CursorRow = 2
+        };
+
+        Rectangle bounds = WinFormsImePositioner.GetCursorBounds(frame);
+
+        Assert.Equal(new Rectangle(57, 69, 15, 30), bounds);
+    }
+
+    [Fact]
     public async Task ClipboardProviderUsesConfiguredDispatcherOperations()
     {
         using var dispatcher = new Control();

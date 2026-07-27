@@ -23,7 +23,7 @@
 
 ## Current conformance status
 
-Last fully verified on 2026-07-24. Update this section whenever the pinned baseline or counts change.
+Last fully verified on 2026-07-27. Update this section whenever the pinned baseline or counts change.
 
 | Item | Current result |
 | --- | ---: |
@@ -38,7 +38,7 @@ Last fully verified on 2026-07-24. Update this section whenever the pinned basel
 | Marker and metadata differential scenarios | 7/7 matching |
 | Main xUnit suite | 1,464/1,464 passing |
 | Reference infrastructure suite | 1/1 passing |
-| Rendering suites | 46/46 passing |
+| Rendering suites | 47/47 passing |
 | .NET MAUI suite | 25/25 passing |
 | Web links addon suite | 12/12 passing |
 | Search addon suite | 14/14 passing |
@@ -213,7 +213,9 @@ public OSC 8 and safety regressions. `tests/upstream-port-map.json` contains
   Control elsewhere, and copy only consumes the shortcut when the selection is non-empty.
 - The Windows Forms adapter renders in logical coordinates onto a DPI-scaled software Skia surface.
   Its `KeyPress` path carries committed printable/IME text, while non-text keys and enhanced
-  keyboard press/repeat/release events use `SendKeyAsync`; AltGr text must not be double-sent.
+  keyboard press/repeat/release events use `SendKeyAsync`; AltGr text must not be double-sent. Its
+  native caret and IME composition/candidate windows must track the rendered cursor in client-pixel
+  coordinates across cursor movement and DPI changes.
 - The WPF adapter renders retained Skia rows into a per-monitor-DPI `WriteableBitmap` and exposes
   viewport values as read-only dependency properties. Its preview text path carries committed
   printable/IME text, while non-text keys and enhanced keyboard press/repeat/release events use
@@ -311,7 +313,7 @@ node tools/compare-marker-scenarios.mjs
 node tools/compare-fixtures.mjs
 ```
 
-Expected final signals are zero build warnings/errors, 1,464 main tests passing, 46 rendering
+Expected final signals are zero build warnings/errors, 1,464 main tests passing, 47 rendering
 tests passing, 25 MAUI tests passing, 12 web-links addon tests passing, 14 search addon tests
 passing, 12 progress addon tests passing, 19 clipboard addon tests passing, one reference test
 passing, 1,307 verified
