@@ -5,47 +5,47 @@
     - title: Package map
       url: /packages/
     - title: Implementation status
-      url: /implementation-status.html
+      url: /implementation-status/
 
 - label: Core
   items:
     - title: Architecture
-      url: /architecture.html
+      url: /architecture/
     - title: OSC 8 hyperlinks
-      url: /osc-hyperlinks.html
+      url: /osc-hyperlinks/
 
 - label: Rendering
   items:
     - title: Platform controls
       url: /platforms/
     - title: Rendering architecture
-      url: /rendering-architecture.html
+      url: /rendering-architecture/
 
 - label: Addons
   items:
     - title: Addon overview
       url: /addons/
     - title: Web links
-      url: /web-links-addon.html
+      url: /web-links-addon/
     - title: Search
-      url: /search-addon.html
+      url: /search-addon/
     - title: Progress
-      url: /progress-addon.html
+      url: /progress-addon/
     - title: Clipboard
-      url: /clipboard-addon.html
+      url: /clipboard-addon/
 
 - label: Project
   items:
     - title: Code organization
-      url: /code-organization.html
+      url: /code-organization/
     - title: NuGet releases
-      url: /releasing.html
+      url: /releasing/
     - title: Upstream acceptance
-      url: /upstream-parity-acceptance-checklist.html
+      url: /upstream-parity-acceptance-checklist/
 
 - label: Engineering notes
   items:
     - title: Rendering performance
-      url: /rendering-performance-2026-07-17.html
+      url: /rendering-performance-2026-07-17/
     - title: Debug overlay
-      url: /rendering-debug-overlay-2026-07-17.html
+      url: /rendering-debug-overlay-2026-07-17/
