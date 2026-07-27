@@ -17,7 +17,7 @@ is implemented and accepted, rather than serving only as a point-in-time status 
 - Audit date: 2026-07-17
 - Upstream: xterm.js 6.0.0
 - Commit: `b1aee19ac6d6f4e4d11e4a10a3731b852956bdb7`
-- XtermSharp package version: `0.1.0-alpha.1`
+- XtermSharp.Core package version: `0.1.0-alpha.1`
 
 The verified common/headless inventory has no pending applicable cases. This checklist covers
 capabilities that are incomplete, represented only by an architectural approximation, excluded

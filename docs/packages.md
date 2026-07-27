@@ -16,11 +16,11 @@ optional terminal behavior arrive through separate packages.
 
 | Package | Purpose | UI dependency |
 | --- | --- | --- |
-| `XtermSharp` | VT parser, buffers, immutable snapshots, input encoding, links, selection, decorations, and addon contracts | None |
+| `XtermSharp.Core` | VT parser, buffers, immutable snapshots, input encoding, links, selection, decorations, and addon contracts | None |
 | `XtermSharp.Rendering` | Themes, geometry, damage tracking, selection resolution, and backend-neutral display lists | None |
 | `XtermSharp.Rendering.Skia` | SkiaSharp/HarfBuzz shaping, font fallback, retained rows, and telemetry overlay | SkiaSharp |
 
-Start with `XtermSharp` for services, tests, transcript processing, or a custom renderer. Applications
+Start with `XtermSharp.Core` for services, tests, transcript processing, or a custom renderer. Applications
 normally reference a platform package directly; its transitive references provide the shared
 rendering layers.
 

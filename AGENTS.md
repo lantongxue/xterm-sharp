@@ -11,7 +11,7 @@
   `b1aee19ac6d6f4e4d11e4a10a3731b852956bdb7`.
 - `xterm.js/` is the pinned development reference. Do not modify it or change its commit unless the
   task is explicitly an upstream-baseline upgrade.
-- `XtermSharp` remains a common/headless package. Optional `XtermSharp.Addons.WebLinks`,
+- `XtermSharp.Core` remains the common/headless package. Optional `XtermSharp.Addons.WebLinks`,
   `XtermSharp.Addons.Search`, `XtermSharp.Addons.Progress`, `XtermSharp.Addons.Clipboard`,
   `XtermSharp.Rendering`, `XtermSharp.Rendering.Skia`, `XtermSharp.Avalonia`, `XtermSharp.Maui`,
   `XtermSharp.WinForms`, `XtermSharp.Wpf` and `XtermSharp.WinUI` packages provide

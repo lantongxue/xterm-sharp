@@ -126,7 +126,7 @@ jobs:
         shell: pwsh
         run: |
           $packageIds = @(
-            'XtermSharp',
+            'XtermSharp.Core',
             'XtermSharp.Addons.WebLinks',
             'XtermSharp.Addons.Search',
             'XtermSharp.Addons.Progress',
@@ -201,7 +201,7 @@ jobs:
           }
 
           $packageIds = @(
-            'XtermSharp',
+            'XtermSharp.Core',
             'XtermSharp.Addons.WebLinks',
             'XtermSharp.Addons.Search',
             'XtermSharp.Addons.Progress',

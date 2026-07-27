@@ -17,7 +17,8 @@ The publish job uses the `nuget` GitHub environment. Configure one of these auth
 
 1. Recommended: create a NuGet.org Trusted Publishing policy for this repository, the
    `.github/workflows/nuget.yml` workflow, and the `nuget` environment. Add the NuGet.org account
-   name as the `NUGET_USER` GitHub environment variable.
+   username of the policy creator as the `NUGET_USER` GitHub environment variable. This is the
+   creator's personal NuGet.org username, not the package-owner organization or GitHub username.
 2. Alternative: add a `NUGET_API_KEY` repository or `nuget` environment secret. Scope the key to
    the `XtermSharp` package prefix, grant only package push permission, and use a short expiration.
 

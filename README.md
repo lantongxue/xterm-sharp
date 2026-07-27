@@ -13,7 +13,7 @@ ConEmu progress tracking and policy-controlled OSC 52 clipboard access.
 [Package map](https://lantongxue.github.io/xterm-sharp/packages/)
 
 > Current version: `0.1.0-alpha.1`. All 1,307 headless-applicable cases in the
-> pinned upstream inventory are covered by C# tests. XtermSharp remains a
+> pinned upstream inventory are covered by C# tests. XtermSharp.Core remains a
 > pre-release package and does not include a PTY. See the detailed
 > [implementation status](docs/implementation-status.md).
 

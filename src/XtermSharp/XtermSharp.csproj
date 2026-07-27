@@ -3,7 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>XtermSharp</RootNamespace>
     <AssemblyName>XtermSharp</AssemblyName>
-    <PackageId>XtermSharp</PackageId>
+    <PackageId>XtermSharp.Core</PackageId>
     <Version>0.1.0-alpha.1</Version>
     <Description>A headless terminal emulator for .NET, derived from xterm.js.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

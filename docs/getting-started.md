@@ -25,7 +25,7 @@ important.
 ## Install the core
 
 ```bash
-dotnet add package XtermSharp --version 0.1.0-alpha.1
+dotnet add package XtermSharp.Core --version 0.1.0-alpha.1
 ```
 
 The core package has no UI framework or graphics dependency. See the [package map](packages.md) when
